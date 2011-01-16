@@ -61,7 +61,6 @@ public final class ClassBytesReader {
 	private final int nClassItems;
 
 
-	// FIXME Maybe read the bytes lazily
 	public ClassBytesReader(InputStream stream) throws IOException {
 		this(readClassBytes(stream));
 	}
