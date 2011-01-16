@@ -1,0 +1,25 @@
+# Dependency rules for JDepChk
+
+shortcuts:
+	$impl = api.impl
+
+scope: $default
+	packages: java.**
+
+scope: api
+	packages: api.** # implied
+	uses: api.impl
+
+scope: api.impl
+	packages: api.impl.** # implied
+	extends: api
+
+scope: $impl.one
+	extends: api
+
+scope: $impl.two
+	extends: api
+	uses: $impl.one
+
+scope: user
+	uses: api
