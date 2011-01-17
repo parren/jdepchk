@@ -59,4 +59,8 @@ public class DirectClassFileReader implements ClassFile {
 	}
 
 	@Override public void close() throws IOException {}
+	
+	@Override public String toString() {
+		return this.name;
+	}
 }

@@ -51,7 +51,7 @@ public final class RuleSetBuilder {
 				throw new IllegalStateException("The " + refd + " has not been defined.");
 		final RuleSet ruleSet = new RuleSet(name);
 		for (ScopeBuilder defd : scopesInDefinitionOrder)
-			defd.define();
+			defd.define(ruleSet);
 		for (ScopeBuilder defd : scopesInDefinitionOrder)
 			defd.finish();
 		for (ScopeBuilder defd : scopesToCheck)

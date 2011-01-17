@@ -2,9 +2,8 @@ package ch.parren.jdepchk.rules;
 
 import java.util.regex.Pattern;
 
-import ch.parren.java.lang.Predicate;
 
-public final class PatternMatcher implements Predicate<String> {
+public final class PatternMatcher implements ClassFileFilter {
 
 	private final Pattern pattern;
 
@@ -12,8 +11,12 @@ public final class PatternMatcher implements Predicate<String> {
 		this.pattern = pattern;
 	}
 
-	@Override public boolean accepts(String tested) {
-		return pattern.matcher(tested).matches();
+	@Override public boolean mightIntersectPackage(String packagePath) {
+		return true;
+	}
+	
+	@Override public boolean allowsClassFile(String internalClassName) {
+		return pattern.matcher(internalClassName).matches();
 	}
 
 }

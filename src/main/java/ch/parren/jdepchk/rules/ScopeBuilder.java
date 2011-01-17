@@ -5,13 +5,12 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import ch.parren.java.lang.New;
-import ch.parren.java.lang.Predicate;
 
 public final class ScopeBuilder {
 
 	public static final String DEFAULT_NAME = "$default";
 
-	private final Collection<Predicate<String>> filters = New.linkedList();
+	private final Collection<ClassFileFilter> filters = New.linkedList();
 	private final Set<ScopeBuilder> extended = New.hashSet();
 	private final Set<ScopeBuilder> used = New.hashSet();
 
@@ -28,18 +27,18 @@ public final class ScopeBuilder {
 			use(DEFAULT_NAME);
 	}
 
-	public ScopeBuilder pattern(final Pattern pattern) {
+	public ScopeBuilder pattern(Pattern pattern) {
 		filters.add(new PatternMatcher(pattern));
 		return this;
 	}
 
-	public ScopeBuilder prefix(final String prefix) {
-		filters.add(new PrefixMatcher(prefix));
+	public ScopeBuilder prefix(String prefix) {
+		filters.add(new PrefixMatcher(prefix.replace('.', '/')));
 		return this;
 	}
 
 	public ScopeBuilder packages(String spec) {
-		if (spec.endsWith("**") && spec.indexOf('*') < (spec.length() - 2))
+		if (spec.endsWith("**") && spec.indexOf('*') >= (spec.length() - 2))
 			return prefix(spec.substring(0, spec.length() - 2));
 		return pattern(packageSpecToPattern(spec));
 	}
@@ -74,8 +73,8 @@ public final class ScopeBuilder {
 		used.add(scope);
 	}
 
-	void define() {
-		scope = new Scope(name, filters);
+	void define(RuleSet ruleSet) {
+		scope = new Scope(ruleSet, name, filters);
 	}
 
 	void finish() {

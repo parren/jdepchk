@@ -3,24 +3,30 @@ package ch.parren.jdepchk.rules;
 import java.util.Collection;
 
 import ch.parren.java.lang.New;
-import ch.parren.java.lang.Predicate;
 
 public final class Scope {
 
 	private final Collection<Scope> used = New.linkedList();
 
-	private final Collection<Predicate<String>> filters;
+	private final RuleSet ruleSet;
 	private final String name;
-	
+	private final Collection<ClassFileFilter> filters;
+
+	public static int nIntersects = 0;
 	public static int nContains = 0;
 	public static int nSees = 0;
 	public static int nTests = 0;
 
-	public Scope(String name, Collection<Predicate<String>> patterns) {
+	public Scope(RuleSet ruleSet, String name, Collection<ClassFileFilter> patterns) {
+		this.ruleSet = ruleSet;
 		this.name = name;
 		this.filters = New.arrayList(patterns);
 	}
 
+	public RuleSet ruleSet() {
+		return ruleSet;
+	}
+	
 	public String name() {
 		return name;
 	}
@@ -29,11 +35,21 @@ public final class Scope {
 		used.add(scope);
 	}
 
+	public boolean mightIntersectPackage(String packageName) {
+		nIntersects++;
+		for (ClassFileFilter f : filters) {
+			nTests++;
+			if (f.mightIntersectPackage(packageName))
+				return true;
+		}
+		return false;
+	}
+
 	public boolean contains(String compiledClassName) {
 		nContains++;
-		for (Predicate<String> f : filters) {
+		for (ClassFileFilter f : filters) {
 			nTests++;
-			if (f.accepts(compiledClassName))
+			if (f.allowsClassFile(compiledClassName))
 				return true;
 		}
 		return false;

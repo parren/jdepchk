@@ -6,8 +6,8 @@ import ch.parren.jdepchk.check.Checker;
 import ch.parren.jdepchk.check.Violation;
 import ch.parren.jdepchk.check.ViolationListener;
 import ch.parren.jdepchk.classes.ClassBytesReader;
-import ch.parren.jdepchk.classes.ClassFileIterator;
-import ch.parren.jdepchk.classes.PathIterator;
+import ch.parren.jdepchk.classes.ClassFileSet;
+import ch.parren.jdepchk.classes.PathClassFileSet;
 import ch.parren.jdepchk.rules.RuleSet;
 import ch.parren.jdepchk.rules.RuleSetBuilder;
 import ch.parren.jdepchk.rules.Scope;
@@ -32,20 +32,19 @@ public final class JDepChk {
 	// Features:
 	// TODO Scan .jar files too
 	// TODO FlatteningIterator to extract the commonalities of Dirs, Jars
-	
+
 	// To turn this into a real speed demon:
 	// TODO Read class files lazily, or use mapped i/o (especially with HDD, zipped jars)
-	// TODO PathPrefix to stop scanning dirs early
 	// TODO Dir emulation in .jar scanning
 	// TODO Use full ASM-based reader only if at least one containing scope has visibility-scoped rules
 	// TODO Form a hierarchy of scopes by path prefix to exit matching early
 	// TODO Profile!
 	// TODO Feed the classfile iterator into a checker queue and use multiple checking workers
 	// TODO See if can avoid conversion from bytes to chars (when doing only prefix matching)
-	
+
 	public static void main(String[] args) throws Exception {
 		final RuleSet rules = makeDemoRules();
-		final ClassFileIterator classes = new PathIterator(new File("/home/peo/dev/aba/trunk/abajava/temp/eclipse"));
+		final ClassFileSet classes = new PathClassFileSet(new File("/home/peo/dev/aba/trunk/abajava/temp/eclipse"));
 		final ViolationListener listener = new ViolationListener() {
 			private int nViol = 0;
 			@Override protected boolean report(Violation v) {
@@ -68,8 +67,9 @@ public final class JDepChk {
 		System.out.println((after - before) + " ms taken.");
 		System.out.println(checker.nContains + " containment checks.");
 		System.out.println(checker.nSees + " usage checks.");
-		System.out.println(Scope.nSees + " Scope.sees checks.");
+		System.out.println(Scope.nIntersects + " Scope.intersects checks.");
 		System.out.println(Scope.nContains + " Scope.contains checks.");
+		System.out.println(Scope.nSees + " Scope.sees checks.");
 		System.out.println(Scope.nTests + " predicate tests.");
 		System.out.println(ClassBytesReader.nBytesRead + " class bytes read.");
 		System.out.println(ClassBytesReader.nBytesUsed + " class bytes accessed.");

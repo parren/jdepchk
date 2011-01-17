@@ -9,8 +9,7 @@ import org.junit.Test;
 import ch.parren.jdepchk.check.Checker;
 import ch.parren.jdepchk.check.Violation;
 import ch.parren.jdepchk.check.ViolationListener;
-import ch.parren.jdepchk.classes.ClassFileIterator;
-import ch.parren.jdepchk.classes.PathIterator;
+import ch.parren.jdepchk.classes.PathClassFileSet;
 import ch.parren.jdepchk.rules.RuleSet;
 import ch.parren.jdepchk.rules.RuleSetBuilder;
 
@@ -18,7 +17,7 @@ public class JDepChkTest {
 
 	@Test public void allRules() throws Exception {
 		final RuleSet rules = makeDemoRules();
-		final ClassFileIterator classes = new PathIterator(new File("temp/classes/test-examples"));
+		final PathClassFileSet classes = new PathClassFileSet(new File("temp/classes/test-examples"));
 		final StringBuilder violations = new StringBuilder();
 		final ViolationListener listener = new ViolationListener() {
 			@Override protected boolean report(Violation v) {
