@@ -29,20 +29,12 @@ public final class ScopeBuilder {
 	}
 
 	public ScopeBuilder pattern(final Pattern pattern) {
-		filters.add(new Predicate<String>() {
-			@Override public boolean accepts(String tested) {
-				return pattern.matcher(tested).matches();
-			}
-		});
+		filters.add(new PatternMatcher(pattern));
 		return this;
 	}
 
 	public ScopeBuilder prefix(final String prefix) {
-		filters.add(new Predicate<String>() {
-			@Override public boolean accepts(String tested) {
-				return tested.startsWith(prefix);
-			}
-		});
+		filters.add(new PrefixMatcher(prefix));
 		return this;
 	}
 
