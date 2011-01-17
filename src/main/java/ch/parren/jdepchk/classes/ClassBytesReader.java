@@ -1,10 +1,11 @@
 package ch.parren.jdepchk.classes;
 
+import java.io.Closeable;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Arrays;
 
-public final class ClassBytesReader {
+public final class ClassBytesReader implements Closeable {
 
 	private static final int UTF8 = 1;
 	private static final int INT = 3;
@@ -26,11 +27,12 @@ public final class ClassBytesReader {
 	 * The class to be parsed. <i>The content of this array must not be
 	 * modified.
 	 */
-	public final byte[] b;
+	public final byte[] bytes;
 
 	/**
-	 * The start index of each constant pool item in {@link #b b}, plus one. The
-	 * one byte offset skips the constant pool item tag that indicates its type.
+	 * The start index of each constant pool item in {@link #bytes b}, plus one.
+	 * The one byte offset skips the constant pool item tag that indicates its
+	 * type.
 	 */
 	private final int[] items;
 
@@ -52,7 +54,7 @@ public final class ClassBytesReader {
 
 	/**
 	 * Start index of the class header information (access, name...) in
-	 * {@link #b b}.
+	 * {@link #bytes b}.
 	 */
 	public final int header;
 
@@ -61,51 +63,26 @@ public final class ClassBytesReader {
 	private final int nClassItems;
 
 
-	public ClassBytesReader(InputStream stream) throws IOException {
-		this(readClassBytes(stream));
-	}
+	private int red = 0;
+	private FileInputStream stream;
 
-	private static byte[] readClassBytes(InputStream stream) throws IOException {
-		byte[] bytes = new byte[32 * 1024];
-		int len = bytes.length;
-		int offs = 0;
-		int red;
-		while ((red = stream.read(bytes, offs, len)) > 0) {
-			if (red < len)
-				break;
-			bytes = Arrays.copyOf(bytes, bytes.length * 2);
-			offs += red;
-			len = bytes.length - offs;
-		}
-		nBytesRead += offs + red;
-		return bytes;
-	}
-
-	public ClassBytesReader(byte[] b) {
-		this(b, 0, b.length);
-	}
-
-	/**
-	 * Constructs a new {@link ClassBytesReader} object.
-	 * 
-	 * @param b the bytecode of the class to be read.
-	 * @param off the start offset of the class data.
-	 * @param len the length of the class data.
-	 */
-	public ClassBytesReader(byte[] b, int off, @SuppressWarnings("unused") int len) {
-		this.b = b;
+	public ClassBytesReader(File file) throws IOException {
+		this.bytes = new byte[(int) file.length()];
+		this.red = 0;
+		this.stream = new FileInputStream(file);
 		// parses the constant pool
-		int n = readUnsignedShort(off + 8);
+		int n = readUnsignedShort(8);
 		items = new int[n];
 		strings = new String[n];
 		classItems = new int[n];
 		int nCls = 0;
 		int max = 0;
-		int index = off + 10;
+		int index = 10;
 		for (int i = 1; i < n; ++i) {
 			items[i] = index + 1;
 			int size;
-			switch (b[index]) {
+			readTo(index);
+			switch (bytes[index]) {
 			case FIELD:
 			case METH:
 			case IMETH:
@@ -148,7 +125,7 @@ public final class ClassBytesReader {
 	 * 
 	 * @return the internal class name
 	 */
-	public String getClassName() {
+	public String getClassName() throws IOException {
 		return readClass(header + 2, new char[maxStringLength]);
 	}
 
@@ -158,7 +135,7 @@ public final class ClassBytesReader {
 	 * @return the internal name of super class, or <tt>null</tt> for
 	 *         {@link Object} class.
 	 */
-	public String getSuperName() {
+	public String getSuperName() throws IOException {
 		int n = items[readUnsignedShort(header + 4)];
 		return n == 0 ? null : readUTF8(n, new char[maxStringLength]);
 	}
@@ -169,7 +146,7 @@ public final class ClassBytesReader {
 	 * @return the array of internal names for all implemented interfaces or
 	 *         <tt>null</tt>.
 	 */
-	public String[] getInterfaces() {
+	public String[] getInterfaces() throws IOException {
 		int index = header + 6;
 		int n = readUnsignedShort(index);
 		String[] interfaces = new String[n];
@@ -187,7 +164,7 @@ public final class ClassBytesReader {
 	 * Returns the names of all the classes referenced by the constant pool. May
 	 * contain nulls.
 	 */
-	public String[] getRefdClasses() {
+	public String[] getRefdClasses() throws IOException {
 		final String[] result = new String[nClassItems];
 		final char[] buf = new char[maxStringLength];
 		int n = 0;
@@ -208,66 +185,61 @@ public final class ClassBytesReader {
 		return name;
 	}
 
-	private void readTo(int index) {
-		if (index > highMark)
-			highMark = index;
-	}
-
 	/**
-	 * Reads a byte value in {@link #b b}.
+	 * Reads a byte value in {@link #bytes b}.
 	 * 
-	 * @param index the start index of the value to be read in {@link #b b}.
+	 * @param index the start index of the value to be read in {@link #bytes b}.
 	 * @return the read value.
 	 */
-	public int readByte(final int index) {
+	public int readByte(final int index) throws IOException {
 		readTo(index);
-		return b[index] & 0xFF;
+		return bytes[index] & 0xFF;
 	}
 
 	/**
-	 * Reads an unsigned short value in {@link #b b}.
+	 * Reads an unsigned short value in {@link #bytes b}.
 	 * 
-	 * @param index the start index of the value to be read in {@link #b b}.
-	 * @return the read value.
+	 * @param index the start index of the value to be read in {@link #bytes b}.
+	 * @return the read value. .
 	 */
-	public int readUnsignedShort(final int index) {
+	public int readUnsignedShort(final int index) throws IOException {
 		readTo(index + 1);
-		byte[] b = this.b;
+		byte[] b = this.bytes;
 		return ((b[index] & 0xFF) << 8) | (b[index + 1] & 0xFF);
 	}
 
 	/**
-	 * Reads a signed short value in {@link #b b}.
+	 * Reads a signed short value in {@link #bytes b}.
 	 * 
-	 * @param index the start index of the value to be read in {@link #b b}.
+	 * @param index the start index of the value to be read in {@link #bytes b}.
 	 * @return the read value.
 	 */
-	public short readShort(final int index) {
+	public short readShort(final int index) throws IOException {
 		readTo(index + 1);
-		byte[] b = this.b;
+		byte[] b = this.bytes;
 		return (short) (((b[index] & 0xFF) << 8) | (b[index + 1] & 0xFF));
 	}
 
 	/**
-	 * Reads a signed int value in {@link #b b}.
+	 * Reads a signed int value in {@link #bytes b}.
 	 * 
-	 * @param index the start index of the value to be read in {@link #b b}.
+	 * @param index the start index of the value to be read in {@link #bytes b}.
 	 * @return the read value.
 	 */
-	public int readInt(final int index) {
+	public int readInt(final int index) throws IOException {
 		readTo(index + 3);
-		byte[] b = this.b;
+		byte[] b = this.bytes;
 		return ((b[index] & 0xFF) << 24) | ((b[index + 1] & 0xFF) << 16) | ((b[index + 2] & 0xFF) << 8)
 				| (b[index + 3] & 0xFF);
 	}
 
 	/**
-	 * Reads a signed long value in {@link #b b}.
+	 * Reads a signed long value in {@link #bytes b}.
 	 * 
-	 * @param index the start index of the value to be read in {@link #b b}.
+	 * @param index the start index of the value to be read in {@link #bytes b}.
 	 * @return the read value.
 	 */
-	public long readLong(final int index) {
+	public long readLong(final int index) throws IOException {
 		readTo(index + 7);
 		long l1 = readInt(index);
 		long l0 = readInt(index + 4) & 0xFFFFFFFFL;
@@ -275,15 +247,15 @@ public final class ClassBytesReader {
 	}
 
 	/**
-	 * Reads an UTF8 string constant pool item in {@link #b b}.
+	 * Reads an UTF8 string constant pool item in {@link #bytes b}.
 	 * 
-	 * @param index the start index of an unsigned short value in {@link #b b},
-	 *            whose value is the index of an UTF8 constant pool item.
+	 * @param index the start index of an unsigned short value in {@link #bytes
+	 *            b}, whose value is the index of an UTF8 constant pool item.
 	 * @param buf buffer to be used to read the item. This buffer must be
 	 *            sufficiently large. It is not automatically resized.
 	 * @return the String corresponding to the specified UTF8 item.
 	 */
-	public String readUTF8(int index, final char[] buf) {
+	public String readUTF8(int index, final char[] buf) throws IOException {
 		int item = readUnsignedShort(index);
 		String s = strings[item];
 		if (s != null) {
@@ -294,7 +266,7 @@ public final class ClassBytesReader {
 	}
 
 	/**
-	 * Reads UTF8 string in {@link #b b}.
+	 * Reads UTF8 string in {@link #bytes b}.
 	 * 
 	 * @param index start offset of the UTF8 string to be read.
 	 * @param utfLen length of the UTF8 string to be read.
@@ -302,10 +274,10 @@ public final class ClassBytesReader {
 	 *            sufficiently large. It is not automatically resized.
 	 * @return the String corresponding to the specified UTF8 string.
 	 */
-	private String readUTF8(int index, final int utfLen, final char[] buf) {
+	private String readUTF8(int index, final int utfLen, final char[] buf) throws IOException {
 		int endIndex = index + utfLen;
 		readTo(endIndex);
-		byte[] b = this.b;
+		byte[] b = this.bytes;
 		int strLen = 0;
 		int c, d, e;
 		while (index < endIndex) {
@@ -340,23 +312,45 @@ public final class ClassBytesReader {
 	}
 
 	/**
-	 * Reads a class constant pool item in {@link #b b}.
+	 * Reads a class constant pool item in {@link #bytes b}.
 	 * 
-	 * @param index the start index of an unsigned short value in {@link #b b},
-	 *            whose value is the index of a class constant pool item.
+	 * @param index the start index of an unsigned short value in {@link #bytes
+	 *            b}, whose value is the index of a class constant pool item.
 	 * @param buf buffer to be used to read the item. This buffer must be
 	 *            sufficiently large. It is not automatically resized.
 	 * @return the String corresponding to the specified class item.
 	 */
-	public String readClass(final int index, final char[] buf) {
+	public String readClass(final int index, final char[] buf) throws IOException {
 		// computes the start index of the CONSTANT_Class item in b
 		// and reads the CONSTANT_Utf8 item designated by
 		// the first two bytes of this CONSTANT_Class item
 		return readUTF8(items[readUnsignedShort(index)], buf);
 	}
 
-	public void release() {
-		nBytesUsed += highMark;
+	private static final int CHUNK_SIZE = 4096;
+	
+	private void readTo(int index) throws IOException {
+		if (index > highMark)
+			highMark = index;
+		if (index < red)
+			return;
+		final int want = index + 1;
+		final int chunk = (want - red + CHUNK_SIZE - 1) / CHUNK_SIZE * CHUNK_SIZE;
+		final int remain = bytes.length - red;
+		final int redNow = stream.read(this.bytes, this.red, remain < chunk ? remain : chunk);
+		if (redNow > 0)
+			red += redNow;
+		if (index >= red)
+			throw new IndexOutOfBoundsException();
+	}
+
+	@Override public void close() throws IOException {
+		if (null == stream)
+			return;
+		stream.close();
+		stream = null;
+		nBytesRead += red;
+		nBytesUsed += highMark + 1;
 	}
 
 }

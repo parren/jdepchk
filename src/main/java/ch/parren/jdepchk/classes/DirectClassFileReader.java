@@ -1,9 +1,7 @@
 package ch.parren.jdepchk.classes;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Set;
 
 import ch.parren.java.lang.New;
@@ -31,14 +29,12 @@ public class DirectClassFileReader implements ClassFile {
 			return refdNames;
 		final Set<String> result = New.hashSet();
 
-		final InputStream stream = new FileInputStream(classFile);
+		final ClassBytesReader bytes = new ClassBytesReader(classFile);
 		try {
-			final ClassBytesReader bytes = new ClassBytesReader(stream);
 			assert name.equals(bytes.getClassName());
 			add(bytes.getRefdClasses(), result);
-			bytes.release();
 		} finally {
-			stream.close();
+			bytes.close();
 		}
 
 		refdNames = result;
@@ -59,7 +55,7 @@ public class DirectClassFileReader implements ClassFile {
 	}
 
 	@Override public void close() throws IOException {}
-	
+
 	@Override public String toString() {
 		return this.name;
 	}

@@ -34,7 +34,6 @@ public final class JDepChk {
 	// TODO FlatteningIterator to extract the commonalities of Dirs, Jars
 
 	// To turn this into a real speed demon:
-	// TODO Read class files lazily, or use mapped i/o (especially with HDD, zipped jars)
 	// TODO Dir emulation in .jar scanning
 	// TODO Use full ASM-based reader only if at least one containing scope has visibility-scoped rules
 	// TODO Form a hierarchy of scopes by path prefix to exit matching early
