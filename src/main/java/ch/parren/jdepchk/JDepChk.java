@@ -7,7 +7,6 @@ import ch.parren.jdepchk.check.Violation;
 import ch.parren.jdepchk.check.ViolationListener;
 import ch.parren.jdepchk.classes.ClassParser;
 import ch.parren.jdepchk.classes.ClassSet;
-import ch.parren.jdepchk.classes.JarPathClassSet;
 import ch.parren.jdepchk.classes.OutputDirClassSet;
 import ch.parren.jdepchk.rules.RuleSet;
 import ch.parren.jdepchk.rules.builder.RuleSetBuilder;
@@ -30,7 +29,6 @@ import ch.parren.jdepchk.rules.builder.RuleSetBuilder;
 public final class JDepChk {
 
 	// Features:
-	// TODO Re-enable components and libs with transitive closures for dependencies
 	// TODO Visibility-scoped rules (public, protected, etc.)
 
 	// To turn this into a real speed demon:
@@ -43,8 +41,9 @@ public final class JDepChk {
 
 	public static void main(String[] args) throws Exception {
 		final RuleSet rules = makeDemoRules();
-//		final ClassSet classes = new OutputDirClassSet(new File("/home/peo/dev/aba/trunk/abajava/temp/eclipse"));
-		final ClassSet classes = new JarPathClassSet(true, new File("/home/peo/dev/aba/trunk/abajars/jars/aba/"));
+		System.out.println(rules.describe());
+		final ClassSet classes = new OutputDirClassSet(new File("/home/peo/dev/aba/trunk/abajava/temp/eclipse"));
+//		final ClassSet classes = new JarPathClassSet(true, new File("/home/peo/dev/aba/trunk/abajars/jars/aba/"));
 		final ViolationListener listener = new ViolationListener() {
 			private int nViol = 0;
 			@Override protected boolean report(Violation v) {

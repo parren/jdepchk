@@ -21,4 +21,8 @@ public final class PatternMatcher implements ClassFileFilter {
 		return currentResult;
 	}
 
+	@Override public void describe(StringBuilder to, String indent) {
+		to.append("pattern: ").append(pattern);
+	}
+	
 }

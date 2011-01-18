@@ -6,7 +6,7 @@ public final class Scope {
 	private final String name;
 	private final CompositeClassFileFilter contains;
 	private final CompositeClassFileFilter allows;
-	
+
 	public Scope(RuleSet ruleSet, String name, CompositeClassFileFilter contains, CompositeClassFileFilter allows) {
 		this.ruleSet = ruleSet;
 		this.name = name;
@@ -17,7 +17,7 @@ public final class Scope {
 	public RuleSet ruleSet() {
 		return ruleSet;
 	}
-	
+
 	public String name() {
 		return name;
 	}
@@ -59,6 +59,18 @@ public final class Scope {
 		} else if (!name.equals(other.name))
 			return false;
 		return true;
+	}
+
+	public void describe(StringBuilder to, String indent) {
+		to.append(indent).append(this).append('\n');
+		final String sub = indent + '\t';
+		final String sub2 = sub + '\t';
+		to.append(sub).append(".contains: ");
+		contains.describe(to, sub2);
+		to.append('\n');
+		to.append(sub).append(".allows: ");
+		allows.describe(to, sub2);
+		to.append('\n');
 	}
 
 }

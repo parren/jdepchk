@@ -37,4 +37,17 @@ public final class CompositeClassFileFilter implements ClassFileFilter {
 		return allowsClassFile(internalClassName, defaultValue);
 	}
 
+	public boolean isEmpty() {
+		return filters.isEmpty();
+	}
+
+	@Override public void describe(StringBuilder to, String indent) {
+		to.append("composite; default: ").append(defaultValue);
+		final String sub = indent + '\t';
+		for (ClassFileFilter f : filters) {
+			to.append('\n').append(sub);
+			f.describe(to, sub);
+		}
+	}
+
 }

@@ -27,33 +27,33 @@ public class JDepChkTest {
 		};
 		final Checker checker = new Checker(listener, rules);
 		checker.check(classes);
-		assertEquals("...", violations.toString());
+		assertEquals("user/MyUser > api/impl/MyImpl\n", violations.toString());
 	}
 
 	private RuleSet makeDemoRules() {
 		final RuleSetBuilder b = new RuleSetBuilder("demo");
 
 		b.lib("$default") //
-				.packages("java.**") //
+				.contains(b.glob("java.**")) //
 		;
-		b.scope("api") //
-				.packages("api.**") //
+		b.comp("api") //
+				.contains(b.glob("api.*")) //
 				.use("api.impl") //
 		;
-		b.scope("api.impl") //
+		b.comp("api.impl") //
 				.impliedPackages() //
 				.extend("api") //
 		;
-		b.scope("api.impl.one") //
+		b.comp("api.impl.one") //
 				.impliedPackages() //
 				.extend("api") //
 		;
-		b.scope("api.impl.two") //
+		b.comp("api.impl.two") //
 				.impliedPackages() //
 				.extend("api") //
 				.use("api.impl.one") //
 		;
-		b.scope("user") //
+		b.comp("user") //
 				.impliedPackages() //
 				.use("api") //
 		;

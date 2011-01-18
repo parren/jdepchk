@@ -29,4 +29,16 @@ public final class RuleSet {
 		return "rule set " + name;
 	}
 
+	public void describe(StringBuilder to, String indent) {
+		to.append(indent).append(this).append('\n');
+		for (Scope s : scopesToCheck)
+			s.describe(to, indent + '\t');
+	}
+
+	public String describe() {
+		final StringBuilder b = new StringBuilder();
+		describe(b, "");
+		return b.toString();
+	}
+	
 }

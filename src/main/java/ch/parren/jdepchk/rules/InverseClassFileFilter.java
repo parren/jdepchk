@@ -18,4 +18,9 @@ public final class InverseClassFileFilter implements ClassFileFilter {
 		return currentResult;
 	}
 
+	@Override public void describe(StringBuilder to, String indent) {
+		to.append("not ");
+		base.describe(to, indent);
+	}
+	
 }

@@ -29,6 +29,7 @@ public final class OutputDirClassSet implements ClassSet {
 			else if (file.isDirectory())
 				accept(visitor, file, packagePath.isEmpty() ? name : packagePath + "/" + name);
 		}
+		visitor.visitPackageEnd();
 	}
 
 	private void accept(Visitor visitor, File file) throws IOException {

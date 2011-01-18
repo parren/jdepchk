@@ -13,31 +13,43 @@ import ch.parren.jdepchk.rules.RuleSet;
 
 public final class RuleSetBuilder {
 
-	private final Map<String, ScopeBuilder> scopesByName = New.hashMap();
-	private final Set<ScopeBuilder> scopesInDefinitionOrder = New.linkedHashSet();
-	private Collection<ScopeBuilder> scopesToCheck = New.linkedList();
+	private final Map<String, AbstractScopeBuilder> scopesByName = New.hashMap();
+	private final Set<AbstractScopeBuilder> scopesInDefinitionOrder = New.linkedHashSet();
+	private final Collection<AbstractScopeBuilder> scopesToCheck = New.linkedList();
 	private final String name;
+	private final ComponentBuilder defaultLib;
 
 	public RuleSetBuilder(String name) {
 		this.name = name;
-	}
-
-	public ScopeBuilder lib(String name) {
-		return define(referenceScope(name));
+		this.defaultLib = lib(ComponentBuilder.DEFAULT_NAME);
 	}
 
 	public ScopeBuilder scope(String name) {
-		return check(define(referenceScope(name)));
+		return (ScopeBuilder) define(referenceScope(name, new ScopeBuilder(name)));
 	}
 
-	private ScopeBuilder check(ScopeBuilder scope) {
-		scopesToCheck.add(scope);
+	public ComponentBuilder lib(String name) {
+		return (ComponentBuilder) define(referenceScope(name, new ComponentBuilder(this, name)));
+	}
+
+	public ComponentBuilder comp(String name) {
+		return check(lib(name));
+	}
+
+	ComponentBuilder ref(String name) {
+		return (ComponentBuilder) referenceScope(name, new ComponentBuilder(this, name));
+	}
+
+	private ComponentBuilder check(ComponentBuilder scope) {
+		scope.use(defaultLib);
+		// FIXME sees itself
 		return scope;
 	}
 
-	private ScopeBuilder define(ScopeBuilder scope) {
+	private AbstractScopeBuilder define(AbstractScopeBuilder scope) {
 		if (!scopesInDefinitionOrder.add(scope))
-			throw new IllegalStateException("The " + scope + " is already defined.");
+			if (!ComponentBuilder.DEFAULT_NAME.equals(scope.name))
+				throw new IllegalStateException("The " + scope + " is already defined.");
 		return scope;
 	}
 
@@ -63,28 +75,29 @@ public final class RuleSetBuilder {
 		final String regex = spec //
 				.replace('.', '/') //
 				.replaceAll("[*][*]", "~") //
-				.replaceAll("[*]", "[^.]*") //
+				.replaceAll("[*]", "[^/]*") //
 				.replaceAll("~", ".*");
 		return Pattern.compile(regex);
 	}
 
-	ScopeBuilder referenceScope(String name) {
-		final ScopeBuilder found = scopesByName.get(name);
+	AbstractScopeBuilder referenceScope(String name, AbstractScopeBuilder def) {
+		final AbstractScopeBuilder found = scopesByName.get(name);
 		if (null != found)
 			return found;
-		final ScopeBuilder made = new ScopeBuilder(name);
-		scopesByName.put(name, made);
-		return made;
+		scopesByName.put(name, def);
+		return def;
 	}
 
 	public RuleSet finish() {
-		for (ScopeBuilder refd : scopesByName.values())
+		for (AbstractScopeBuilder refd : scopesByName.values())
 			if (!scopesInDefinitionOrder.contains(refd))
 				throw new IllegalStateException("The " + refd + " has not been defined.");
 		final RuleSet ruleSet = new RuleSet(name);
-		for (ScopeBuilder defd : scopesInDefinitionOrder)
+		for (AbstractScopeBuilder defd : scopesInDefinitionOrder)
+			defd.prepare(ruleSet);
+		for (AbstractScopeBuilder defd : scopesInDefinitionOrder)
 			defd.finish(ruleSet);
-		for (ScopeBuilder defd : scopesToCheck)
+		for (AbstractScopeBuilder defd : scopesToCheck)
 			defd.checkIn(ruleSet);
 		return ruleSet;
 	}

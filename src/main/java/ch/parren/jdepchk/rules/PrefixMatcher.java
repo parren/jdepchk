@@ -26,4 +26,8 @@ public final class PrefixMatcher implements ClassFileFilter {
 		return currentResult;
 	}
 
+	@Override public void describe(StringBuilder to, String indent) {
+		to.append("prefix: ").append(prefix);
+	}
+	
 }

@@ -61,7 +61,8 @@ public final class Checker {
 							nContains++;
 							nSees++;
 							if (!scope.allows(refd))
-								listener.report(new Violation(scope.ruleSet(), scope, name, refd));
+								if (!scope.allows(refd)) // FIXME
+									listener.report(new Violation(scope.ruleSet(), scope, name, refd));
 						}
 					}
 				}
