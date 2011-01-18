@@ -15,8 +15,10 @@ public final class PatternMatcher implements ClassFileFilter {
 		return true;
 	}
 	
-	@Override public boolean allowsClassFile(String internalClassName) {
-		return pattern.matcher(internalClassName).matches();
+	@Override public boolean allowsClassFile(String internalClassName, boolean currentResult) {
+		if (pattern.matcher(internalClassName).matches())
+			return true;
+		return currentResult;
 	}
 
 }

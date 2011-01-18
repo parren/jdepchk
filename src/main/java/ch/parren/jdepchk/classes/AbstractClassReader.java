@@ -1,23 +1,17 @@
 package ch.parren.jdepchk.classes;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Set;
 
 import ch.parren.java.lang.New;
 
-public class DirectClassFileReader implements ClassFile {
-
-	private static final int CLASS_EXT_LEN = ".class".length();
+abstract class AbstractClassReader implements ClassReader {
 
 	private final String name;
-	private final File classFile;
 	private Set<String> refdNames = null;
 
-	public DirectClassFileReader(String rootPath, File classFile) {
-		final String fileName = classFile.getPath();
-		this.name = fileName.substring(rootPath.length(), fileName.length() - CLASS_EXT_LEN);
-		this.classFile = classFile;
+	protected AbstractClassReader(String compiledClassName) {
+		this.name = compiledClassName;
 	}
 
 	@Override public String compiledClassName() {
@@ -29,7 +23,7 @@ public class DirectClassFileReader implements ClassFile {
 			return refdNames;
 		final Set<String> result = New.hashSet();
 
-		final ClassBytesReader bytes = new ClassBytesReader(classFile);
+		final ClassParser bytes = newClassBytesReader();
 		try {
 			assert name.equals(bytes.getClassName());
 			add(bytes.getRefdClasses(), result);
@@ -40,6 +34,8 @@ public class DirectClassFileReader implements ClassFile {
 		refdNames = result;
 		return result;
 	}
+
+	abstract protected ClassParser newClassBytesReader() throws IOException;
 
 	private void add(String name, Set<String> result) {
 		if (null != name && !this.name.equals(name))
@@ -53,8 +49,6 @@ public class DirectClassFileReader implements ClassFile {
 		for (int i = 0; i < n; i++)
 			add(names[i], result);
 	}
-
-	@Override public void close() throws IOException {}
 
 	@Override public String toString() {
 		return this.name;

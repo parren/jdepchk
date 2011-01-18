@@ -5,8 +5,8 @@ import java.util.Collection;
 import java.util.Deque;
 
 import ch.parren.java.lang.New;
-import ch.parren.jdepchk.classes.ClassFile;
-import ch.parren.jdepchk.classes.ClassFileSet;
+import ch.parren.jdepchk.classes.ClassReader;
+import ch.parren.jdepchk.classes.ClassSet;
 import ch.parren.jdepchk.rules.RuleSet;
 import ch.parren.jdepchk.rules.Scope;
 
@@ -23,7 +23,7 @@ public final class Checker {
 		this.ruleSets = ruleSets;
 	}
 
-	public void check(ClassFileSet classes) throws IOException {
+	public void check(ClassSet classes) throws IOException {
 		final Deque<Collection<Scope>> scopeSetStack = New.arrayDeque();
 
 		final Collection<Scope> initalScopeSet = New.linkedList();
@@ -32,7 +32,7 @@ public final class Checker {
 				initalScopeSet.add(scope);
 		scopeSetStack.push(initalScopeSet);
 
-		classes.accept(new ClassFileSet.Visitor() {
+		classes.accept(new ClassSet.Visitor() {
 
 			@Override public boolean visitPackage(String packagePath) {
 				final Collection<Scope> scopeSet = scopeSetStack.peekLast();
@@ -50,7 +50,7 @@ public final class Checker {
 				scopeSetStack.removeLast();
 			}
 
-			@Override public void visitClassFile(ClassFile classFile) throws IOException {
+			@Override public void visitClassFile(ClassReader classFile) throws IOException {
 				final Collection<Scope> scopeSet = scopeSetStack.peekLast();
 				for (Scope scope : scopeSet) {
 					final String name = classFile.compiledClassName();
@@ -59,12 +59,9 @@ public final class Checker {
 						// System.out.println(name + " is in " + scope);
 						for (String refd : classFile.referencedClassNames()) {
 							nContains++;
-							if (!scope.contains(refd)) {
-								// System.out.println("  refs " + refd);
-								nSees++;
-								if (!scope.sees(refd))
-									listener.report(new Violation(scope.ruleSet(), scope, name, refd));
-							}
+							nSees++;
+							if (!scope.allows(refd))
+								listener.report(new Violation(scope.ruleSet(), scope, name, refd));
 						}
 					}
 				}

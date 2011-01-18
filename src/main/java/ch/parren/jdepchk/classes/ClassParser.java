@@ -4,8 +4,9 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
-public final class ClassBytesReader implements Closeable {
+public final class ClassParser implements Closeable {
 
 	private static final int UTF8 = 1;
 	private static final int INT = 3;
@@ -19,6 +20,7 @@ public final class ClassBytesReader implements Closeable {
 	private static final int IMETH = 11;
 	private static final int NAME_TYPE = 12;
 
+	public static long nFilesRead = 0;
 	public static long nBytesRead = 0;
 	public static long nBytesUsed = 0;
 	private int highMark = 0;
@@ -64,12 +66,22 @@ public final class ClassBytesReader implements Closeable {
 
 
 	private int red = 0;
-	private FileInputStream stream;
+	private InputStream stream;
+	private boolean shouldClose = false;
 
-	public ClassBytesReader(File file) throws IOException {
-		this.bytes = new byte[(int) file.length()];
+	public ClassParser(int size, InputStream stream) throws IOException {
+		this(size, stream, false);
+	}
+
+	public ClassParser(File file) throws IOException {
+		this((int) file.length(), new FileInputStream(file), true);
+	}
+
+	private ClassParser(int streamSize, InputStream stream, boolean shouldClose) throws IOException {
+		this.bytes = new byte[streamSize];
 		this.red = 0;
-		this.stream = new FileInputStream(file);
+		this.stream = stream;
+		this.shouldClose = shouldClose;
 		// parses the constant pool
 		int n = readUnsignedShort(8);
 		items = new int[n];
@@ -328,7 +340,7 @@ public final class ClassBytesReader implements Closeable {
 	}
 
 	private static final int CHUNK_SIZE = 4096;
-	
+
 	private void readTo(int index) throws IOException {
 		if (index > highMark)
 			highMark = index;
@@ -347,8 +359,10 @@ public final class ClassBytesReader implements Closeable {
 	@Override public void close() throws IOException {
 		if (null == stream)
 			return;
-		stream.close();
+		if (shouldClose)
+			stream.close();
 		stream = null;
+		nFilesRead++;
 		nBytesRead += red;
 		nBytesUsed += highMark + 1;
 	}

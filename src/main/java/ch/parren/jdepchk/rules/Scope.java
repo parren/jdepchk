@@ -1,26 +1,17 @@
 package ch.parren.jdepchk.rules;
 
-import java.util.Collection;
-
-import ch.parren.java.lang.New;
-
 public final class Scope {
-
-	private final Collection<Scope> used = New.linkedList();
 
 	private final RuleSet ruleSet;
 	private final String name;
-	private final Collection<ClassFileFilter> filters;
-
-	public static int nIntersects = 0;
-	public static int nContains = 0;
-	public static int nSees = 0;
-	public static int nTests = 0;
-
-	public Scope(RuleSet ruleSet, String name, Collection<ClassFileFilter> patterns) {
+	private final CompositeClassFileFilter contains;
+	private final CompositeClassFileFilter allows;
+	
+	public Scope(RuleSet ruleSet, String name, CompositeClassFileFilter contains, CompositeClassFileFilter allows) {
 		this.ruleSet = ruleSet;
 		this.name = name;
-		this.filters = New.arrayList(patterns);
+		this.contains = contains;
+		this.allows = allows;
 	}
 
 	public RuleSet ruleSet() {
@@ -31,36 +22,16 @@ public final class Scope {
 		return name;
 	}
 
-	void use(Scope scope) {
-		used.add(scope);
+	public boolean mightIntersectPackage(String packagePath) {
+		return this.contains.mightIntersectPackage(packagePath);
 	}
 
-	public boolean mightIntersectPackage(String packageName) {
-		nIntersects++;
-		for (ClassFileFilter f : filters) {
-			nTests++;
-			if (f.mightIntersectPackage(packageName))
-				return true;
-		}
-		return false;
+	public boolean contains(String internalClassName) {
+		return this.contains.allowsClassFile(internalClassName);
 	}
 
-	public boolean contains(String compiledClassName) {
-		nContains++;
-		for (ClassFileFilter f : filters) {
-			nTests++;
-			if (f.allowsClassFile(compiledClassName))
-				return true;
-		}
-		return false;
-	}
-
-	public boolean sees(String compiledClassName) {
-		nSees++;
-		for (Scope seen : used)
-			if (seen.contains(compiledClassName))
-				return true;
-		return false;
+	public boolean allows(String internalClassName) {
+		return this.allows.allowsClassFile(internalClassName);
 	}
 
 	@Override public String toString() {

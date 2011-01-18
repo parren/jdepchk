@@ -20,8 +20,10 @@ public final class PrefixMatcher implements ClassFileFilter {
 		return false;
 	}
 
-	@Override public boolean allowsClassFile(String internalClassName) {
-		return internalClassName.startsWith(prefix);
+	@Override public boolean allowsClassFile(String internalClassName, boolean currentResult) {
+		if (internalClassName.startsWith(prefix))
+			return true;
+		return currentResult;
 	}
 
 }

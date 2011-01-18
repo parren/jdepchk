@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry excluding="ch/parren/jdepchk/classes/AsmClassFileReader.java" kind="src" path="src/main/java"/>
+	<classpathentry excluding="ch/parren/jdepchk/classes/AsmClassFileReader.java|ch/parren/jdepchk/classes/AsmClassParser.java" kind="src" path="src/main/java"/>
 	<classpathentry kind="src" output="temp/classes/test" path="src/test/java"/>
 	<classpathentry kind="src" output="temp/classes/test-examples" path="src/test/java-examples"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>

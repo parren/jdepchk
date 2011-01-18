@@ -1,3 +1,4 @@
 ^temp/
 ^.settings/
+^build/classes/
 

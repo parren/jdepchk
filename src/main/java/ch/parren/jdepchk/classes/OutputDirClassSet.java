@@ -3,12 +3,12 @@ package ch.parren.jdepchk.classes;
 import java.io.File;
 import java.io.IOException;
 
-public final class PathClassFileSet implements ClassFileSet {
+public final class OutputDirClassSet implements ClassSet {
 
 	private final File baseDir;
 	private final String baseDirPath;
 
-	public PathClassFileSet(File baseDir) {
+	public OutputDirClassSet(File baseDir) {
 		this.baseDir = baseDir;
 		this.baseDirPath = baseDir.getPath() + File.separator;
 	}
@@ -32,7 +32,7 @@ public final class PathClassFileSet implements ClassFileSet {
 	}
 
 	private void accept(Visitor visitor, File file) throws IOException {
-		final DirectClassFileReader classFile = new DirectClassFileReader(this.baseDirPath, file);
+		final ClassFileReader classFile = new ClassFileReader(this.baseDirPath, file);
 		try {
 			visitor.visitClassFile(classFile);
 		} finally {

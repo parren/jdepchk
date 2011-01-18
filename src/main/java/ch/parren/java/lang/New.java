@@ -31,8 +31,20 @@ public final class New {
 		return new ArrayList<E>();
 	}
 
-	public static <E> ArrayList<E> arrayList(Collection<? extends E> patterns) {
-		return new ArrayList<E>(patterns);
+	public static <E> ArrayList<E> arrayList(Collection<? extends E> es) {
+		return new ArrayList<E>(es);
+	}
+
+	public static <E, A extends E> ArrayList<E> arrayList(A... es) {
+		final int n = es.length;
+		final ArrayList<E> res = new ArrayList<E>(n);
+		for (int i = 0; i < n; i++)
+			res.add(es[i]);
+		return res;
+	}
+
+	public static <E> ArrayList<E> arrayList(int size) {
+		return new ArrayList<E>(size);
 	}
 
 	public static <E> Deque<E> linkedDeque() {
