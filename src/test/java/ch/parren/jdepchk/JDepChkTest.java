@@ -36,25 +36,20 @@ public class JDepChkTest {
 		b.lib("$default") //
 				.contains(b.glob("java.**")) //
 		;
-		b.comp("api") //
-				.contains(b.glob("api.*")) //
+		b.comp("api.*") //
 				.use("api.impl") //
 		;
-		b.comp("api.impl") //
-				.impliedPackages() //
+		b.comp("api.impl.**") //
 				.extend("api") //
 		;
-		b.comp("api.impl.one") //
-				.impliedPackages() //
+		b.comp("api.impl.one.**") //
 				.extend("api") //
 		;
-		b.comp("api.impl.two") //
-				.impliedPackages() //
+		b.comp("api.impl.two.**") //
 				.extend("api") //
 				.use("api.impl.one") //
 		;
-		b.comp("user") //
-				.impliedPackages() //
+		b.comp("user.**") //
 				.use("api") //
 		;
 

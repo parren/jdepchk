@@ -17,7 +17,15 @@ public abstract class AbstractScopeBuilder {
 	private Scope scope = null;
 
 	protected AbstractScopeBuilder(String name) {
-		this.name = name;
+		if (name.endsWith(".**")) {
+			this.name = name.substring(0, name.length() - 3);
+			contains(RuleSetBuilder.glob(name));
+		} else if (name.endsWith(".*")) {
+			this.name = name.substring(0, name.length() - 2);
+			contains(RuleSetBuilder.glob(name));
+		} else {
+			this.name = name;
+		}
 	}
 
 	public AbstractScopeBuilder contains(FilterBuilder... filters) {

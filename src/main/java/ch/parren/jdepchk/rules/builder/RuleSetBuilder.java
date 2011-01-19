@@ -25,11 +25,13 @@ public final class RuleSetBuilder {
 	}
 
 	public ScopeBuilder scope(String name) {
-		return (ScopeBuilder) define(referenceScope(name, new ScopeBuilder(name)));
+		final ScopeBuilder def = new ScopeBuilder(name);
+		return (ScopeBuilder) define(referenceScope(def.name, def));
 	}
 
 	public ComponentBuilder lib(String name) {
-		return (ComponentBuilder) define(referenceScope(name, new ComponentBuilder(this, name)));
+		final ComponentBuilder def = new ComponentBuilder(this, name);
+		return (ComponentBuilder) define(referenceScope(def.name, def));
 	}
 
 	public ComponentBuilder comp(String name) {
@@ -37,12 +39,12 @@ public final class RuleSetBuilder {
 	}
 
 	ComponentBuilder ref(String name) {
-		return (ComponentBuilder) referenceScope(name, new ComponentBuilder(this, name));
+		final ComponentBuilder def = new ComponentBuilder(this, name);
+		return (ComponentBuilder) referenceScope(def.name, def);
 	}
 
 	private ComponentBuilder check(ComponentBuilder scope) {
 		scope.use(defaultLib);
-		// FIXME sees itself
 		return scope;
 	}
 

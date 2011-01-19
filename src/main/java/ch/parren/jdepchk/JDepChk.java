@@ -74,25 +74,20 @@ public final class JDepChk {
 	private static RuleSet makeDemoRules() {
 		final RuleSetBuilder b = new RuleSetBuilder("demo");
 
-		b.scope("ch.abacus.java") //
-				.contains(b.glob("ch.abacus.java.**")) //
+		b.scope("ch.abacus.java.**") //
 				.allows(b.glob("ch.abacus.**").not() //
 						, b.glob("ch.abacus.java.**") //
 				) //
 		;
 
-		b.scope("ch.abacus.ulc.client") //
-				.contains(b.glob("ch.abacus.ulc.client.**") //
-				) //
+		b.scope("ch.abacus.ulc.client.**") //
 				.allows(b.glob("ch.abacus.lib.**").not() //
 						, b.glob("ch.abacus.lib.swing.**") //
 						, b.glob("ch.abacus.lib.net.SocketServer*") //
 				) //
 		;
 
-		b.scope("ch.abacus.ulc.shared") //
-				.contains(b.glob("ch.abacus.ulc.shared.**") //
-				) //
+		b.scope("ch.abacus.ulc.shared.**") //
 				.allows(b.glob("ch.abacus.lib.**").not() //
 				) //
 		;
