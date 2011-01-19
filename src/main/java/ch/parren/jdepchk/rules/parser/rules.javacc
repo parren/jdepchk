@@ -1,0 +1,146 @@
+/* JavaCC syntax definition for .jdep rules files. */
+
+options
+	{
+		STATIC = false;
+	}
+
+PARSER_BEGIN(RuleSetParser)
+package ch.parren.jdepchk.rules.parser;
+
+import java.util.*;
+import ch.parren.jdepchk.rules.builder.*;
+
+@SuppressWarnings("unused")//
+class RuleSetParser {
+
+	RuleSetBuilder builder;
+
+}
+PARSER_END(RuleSetParser)
+
+
+SKIP: { " " | "\t" | "\n" | "\r" }
+
+SPECIAL_TOKEN: /* COMMENTS */
+	{	<SHELL_COMMENT: "#" (~["\n","\r"])* ("\n"|"\r"|"\r\n")>
+	|	<SINGLE_LINE_COMMENT: "//" (~["\n","\r"])* ("\n"|"\r"|"\r\n")>
+	|	<MULTI_LINE_COMMENT: "/*" (~["*"])* "*" ("*" | (~["*","/"] (~["*"])* "*"))* "/">
+	}
+
+TOKEN:
+	{	< Id: ( ["a"-"z","A"-"Z","0"-"9", ".", "*", "$"] )+ >
+	}
+
+void ruleSet():
+	{}
+	{
+		(	scope()
+		|	lib()
+		|	comp()
+		)*	
+		<EOF>
+	}
+
+void scope():
+	{
+		String name;
+		ScopeBuilder scope;
+	}
+	{
+		"scope:" name=id()
+			{ scope = builder.scope(name); }
+		(	scopeBody(scope) )*
+	}
+
+void scopeBody(ScopeBuilder scope):
+	{}
+	{
+			"contains:" filters(scope.containsFilters())
+		|	"allows:" filters(scope.allowsFilters())
+	}	
+
+void lib():
+	{
+		String name;
+		ComponentBuilder comp;
+	}
+	{
+		"lib:" name=id()
+			{ comp = builder.lib(name); }
+		compBody(comp)
+	}
+
+void comp():
+	{
+		String name;
+		ComponentBuilder comp;
+	}
+	{
+		"comp:" name=id()
+			{ comp = builder.comp(name); }
+		compBody(comp)
+	}
+
+void compBody(ComponentBuilder comp):
+	{}
+	{
+		(	"extends:" ext(comp)
+		|	"uses:" use(comp)
+		|	scopeBody(comp)
+		)+
+	}
+
+void ext(ComponentBuilder comp):
+	{
+		String name;
+	}
+	{
+		(	[ "-" ] name=id()
+			{ comp.extend(name); }
+		)+  // The dash allows YAMLish notation.
+	}
+
+void use(ComponentBuilder comp):
+	{
+		String name;
+	}
+	{
+		(	[ "-" ] name=id()
+			{ comp.use(name); }
+		)+  // The dash allows YAMLish notation.
+	}
+
+void filters(Collection<FilterBuilder> filters):
+	{}
+	{
+		( [ "-" ] filter(filters) )+  // The dash allows YAMLish notation.
+	}
+
+void filter(Collection<FilterBuilder> filters):
+	{
+		FilterBuilder filter;
+	}
+	{
+		(	filter=spec()
+		|	"!" filter=spec()
+				{ filter = filter.not(); }
+		)
+			{ filters.add(filter); } 
+	}
+
+FilterBuilder spec():
+	{
+		String glob;
+	}
+	{
+		glob=id()
+			{ return builder.glob(glob); }
+	}
+
+String id():
+	{}
+	{
+		<Id>
+			{ return token.image; }
+	}

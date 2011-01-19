@@ -55,21 +55,21 @@ public final class RuleSetBuilder {
 		return scope;
 	}
 
-	public FilterBuilder glob(String glob) {
+	public static FilterBuilder glob(String glob) {
 		if (glob.endsWith("**") && glob.indexOf('*') >= (glob.length() - 2))
 			return prefix(glob.substring(0, glob.length() - 2));
 		return pattern(globToPattern(glob));
 	}
 
-	public FilterBuilder pattern(Pattern pattern) {
+	public static FilterBuilder pattern(Pattern pattern) {
 		return filter(new PatternMatcher(pattern));
 	}
 
-	public FilterBuilder prefix(String prefix) {
+	public static FilterBuilder prefix(String prefix) {
 		return filter(new PrefixMatcher(prefix.replace('.', '/')));
 	}
 
-	public FilterBuilder filter(ClassFileFilter filter) {
+	public static FilterBuilder filter(ClassFileFilter filter) {
 		return new FilterBuilder(filter);
 	}
 

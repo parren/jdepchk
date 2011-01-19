@@ -1,0 +1,20 @@
+# Components (example from tests):
+
+lib: $default
+	contains: java.**
+
+comp: api.*
+	uses: api.impl
+
+comp: api.impl.**
+	extends: api
+
+comp: api.impl.one.**
+	extends: api
+
+comp: api.impl.two.**
+	extends: api
+	uses: api.impl.one
+
+comp: user.**
+	uses: api

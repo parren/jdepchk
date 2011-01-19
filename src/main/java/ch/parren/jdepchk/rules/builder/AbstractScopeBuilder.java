@@ -34,6 +34,10 @@ public abstract class AbstractScopeBuilder {
 		return this;
 	}
 
+	public Collection<FilterBuilder> containsFilters() {
+		return contains;
+	}
+
 	@SuppressWarnings("unused")//
 	protected void prepare(RuleSet ruleSet) {}
 

@@ -24,6 +24,10 @@ public class ScopeBuilder extends AbstractScopeBuilder {
 		return this;
 	}
 
+	public Collection<FilterBuilder> allowsFilters() {
+		return allows;
+	}
+	
 	@Override protected final CompositeClassFileFilter buildAllows() {
 		return buildFilter(allows);
 	}
