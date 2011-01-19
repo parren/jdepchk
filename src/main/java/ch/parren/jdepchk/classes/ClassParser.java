@@ -21,6 +21,7 @@ public final class ClassParser implements Closeable {
 	private static final int NAME_TYPE = 12;
 
 	public static long nFilesRead = 0;
+	public static long nBytesAvail = 0;
 	public static long nBytesRead = 0;
 	public static long nBytesUsed = 0;
 	private int highMark = 0;
@@ -339,21 +340,21 @@ public final class ClassParser implements Closeable {
 		return readUTF8(items[readUnsignedShort(index)], buf);
 	}
 
-	private static final int CHUNK_SIZE = 4096;
+	private static final int CHUNK_SIZE = 8 * 1024;
 
 	private void readTo(int index) throws IOException {
 		if (index > highMark)
 			highMark = index;
-		if (index < red)
-			return;
-		final int want = index + 1;
-		final int chunk = (want - red + CHUNK_SIZE - 1) / CHUNK_SIZE * CHUNK_SIZE;
-		final int remain = bytes.length - red;
-		final int redNow = stream.read(this.bytes, this.red, remain < chunk ? remain : chunk);
-		if (redNow > 0)
+		while (index >= red) {
+			final int want = index + 1 - red;
+			final int chunk = (want + CHUNK_SIZE - 1) / CHUNK_SIZE * CHUNK_SIZE;
+			final int remain = bytes.length - red;
+			final int len = remain < chunk ? remain : chunk;
+			final int redNow = stream.read(this.bytes, this.red, len);
+			if (redNow < 0)
+				throw new IOException();
 			red += redNow;
-		if (index >= red)
-			throw new IndexOutOfBoundsException();
+		}
 	}
 
 	@Override public void close() throws IOException {
@@ -363,6 +364,7 @@ public final class ClassParser implements Closeable {
 			stream.close();
 		stream = null;
 		nFilesRead++;
+		nBytesAvail += bytes.length;
 		nBytesRead += red;
 		nBytesUsed += highMark + 1;
 	}
