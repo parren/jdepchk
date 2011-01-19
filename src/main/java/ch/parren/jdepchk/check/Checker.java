@@ -13,12 +13,16 @@ import ch.parren.jdepchk.rules.Scope;
 public final class Checker {
 
 	private final ViolationListener listener;
-	private final RuleSet[] ruleSets;
+	private final Iterable<RuleSet> ruleSets;
 
 	public int nContains = 0;
 	public int nSees = 0;
 
 	public Checker(ViolationListener listener, RuleSet... ruleSets) {
+		this(listener, New.arrayList(ruleSets));
+	}
+
+	public Checker(ViolationListener listener, Iterable<RuleSet> ruleSets) {
 		this.listener = listener;
 		this.ruleSets = ruleSets;
 	}

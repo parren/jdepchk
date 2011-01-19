@@ -2,28 +2,19 @@ package ch.parren.jdepchk.classes;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
-
-import ch.parren.java.lang.New;
 
 public final class JarPathClassSet implements ClassSet {
 
 	private final boolean recursive;
-	private final Collection<File> dirs;
+	private final File dir;
 
-	public JarPathClassSet(boolean recursive, Collection<File> dirs) {
+	public JarPathClassSet(boolean recursive, File dir) {
 		this.recursive = recursive;
-		this.dirs = New.arrayList(dirs);
-	}
-
-	public JarPathClassSet(boolean recursive, File... dirs) {
-		// Blame javac for this kludge - Eclipse handles inference just fine!
-		this(recursive, New.<File, File>arrayList(dirs));
+		this.dir = dir;
 	}
 
 	@Override public void accept(Visitor visitor) throws IOException {
-		for (File dir : dirs)
-			accept(visitor, dir);
+		accept(visitor, dir);
 	}
 
 	private void accept(Visitor visitor, File dir) throws IOException {

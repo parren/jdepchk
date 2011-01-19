@@ -1,15 +1,18 @@
 package ch.parren.jdepchk;
 
 import java.io.File;
+import java.util.Collection;
 
+import ch.parren.java.lang.New;
 import ch.parren.jdepchk.check.Checker;
 import ch.parren.jdepchk.check.Violation;
 import ch.parren.jdepchk.check.ViolationListener;
 import ch.parren.jdepchk.classes.ClassParser;
 import ch.parren.jdepchk.classes.ClassSet;
+import ch.parren.jdepchk.classes.JarPathClassSet;
 import ch.parren.jdepchk.classes.OutputDirClassSet;
 import ch.parren.jdepchk.rules.RuleSet;
-import ch.parren.jdepchk.rules.builder.RuleSetBuilder;
+import ch.parren.jdepchk.rules.parser.RuleSetLoader;
 
 /**
  * Package and class dependency checker for the JVM. Operates on compiled JVM
@@ -40,10 +43,34 @@ public final class JDepChk {
 	// TODO See if can avoid conversion from bytes to chars (when doing only prefix matching)
 
 	public static void main(String[] args) throws Exception {
-		final RuleSet rules = makeDemoRules();
-		System.out.println(rules.describe());
-		final ClassSet classes = new OutputDirClassSet(new File("/home/peo/dev/aba/trunk/abajava/temp/eclipse"));
-//		final ClassSet classes = new JarPathClassSet(true, new File("/home/peo/dev/aba/trunk/abajars/jars/aba/"));
+		final Collection<RuleSet> ruleSets = New.linkedList();
+		final Collection<ClassSet> classSets = New.linkedList();
+		boolean showRules = false;
+		boolean showStats = false;
+
+		int i = 0;
+		while (i < args.length) {
+			final String arg = args[i++];
+			if ("--rules".equals(arg) || "-r".equals(arg))
+				ruleSets.add(RuleSetLoader.load(new File(args[i++])));
+			else if ("--classes".equals(arg) || "-c".equals(arg))
+				classSets.add(new OutputDirClassSet(new File(args[i++])));
+			else if ("--jars".equals(arg) || "-j".equals(arg))
+				classSets.add(new JarPathClassSet(true, new File(args[i++])));
+			else if ("--show-rules".equals(arg))
+				showRules = true;
+			else if ("--show-stats".equals(arg))
+				showStats = true;
+			else
+				throw new IllegalArgumentException("Invalid command line argument: " + arg);
+		}
+
+		if (showRules) {
+			for (RuleSet ruleSet : ruleSets)
+				System.out.println(ruleSet.describe());
+			System.out.println();
+		}
+
 		final ViolationListener listener = new ViolationListener() {
 			private int nViol = 0;
 			@Override protected boolean report(Violation v) {
@@ -57,42 +84,24 @@ public final class JDepChk {
 				return nViol + " violations.";
 			}
 		};
-		final Checker checker = new Checker(listener, rules);
+
+		final Checker checker = new Checker(listener, ruleSets);
 		final long before = System.currentTimeMillis();
-		checker.check(classes);
+		for (ClassSet classSet : classSets)
+			checker.check(classSet);
 		final long after = System.currentTimeMillis();
 
 		System.out.println(listener);
-		System.out.println((after - before) + " ms taken.");
-		System.out.println(checker.nContains + " containment checks.");
-		System.out.println(checker.nSees + " usage checks.");
-		System.out.println(ClassParser.nFilesRead + " class files read.");
-		System.out.println(ClassParser.nBytesRead + " class bytes read.");
-		System.out.println(ClassParser.nBytesUsed + " class bytes accessed.");
+
+		if (showStats) {
+			System.out.println();
+			System.out.println((after - before) + " ms taken.");
+			System.out.println(checker.nContains + " containment checks.");
+			System.out.println(checker.nSees + " usage checks.");
+			System.out.println(ClassParser.nFilesRead + " class files read.");
+			System.out.println(ClassParser.nBytesRead + " class bytes read.");
+			System.out.println(ClassParser.nBytesUsed + " class bytes accessed.");
+		}
 	}
 
-	private static RuleSet makeDemoRules() {
-		final RuleSetBuilder b = new RuleSetBuilder("demo");
-
-		b.scope("ch.abacus.java.**") //
-				.allows(b.glob("ch.abacus.**").not() //
-						, b.glob("ch.abacus.java.**") //
-				) //
-		;
-
-		b.scope("ch.abacus.ulc.client.**") //
-				.allows(b.glob("ch.abacus.lib.**").not() //
-						, b.glob("ch.abacus.lib.swing.**") //
-						, b.glob("ch.abacus.lib.net.SocketServer*") //
-				) //
-		;
-
-		b.scope("ch.abacus.ulc.shared.**") //
-				.allows(b.glob("ch.abacus.lib.**").not() //
-				) //
-		;
-
-		final RuleSet rules = b.finish();
-		return rules;
-	}
 }
