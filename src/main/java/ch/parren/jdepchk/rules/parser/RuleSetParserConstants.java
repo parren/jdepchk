@@ -17,7 +17,29 @@ public interface RuleSetParserConstants {
   /** RegularExpression Id. */
   int MULTI_LINE_COMMENT = 7;
   /** RegularExpression Id. */
-  int Id = 8;
+  int Def = 8;
+  /** RegularExpression Id. */
+  int Scope = 9;
+  /** RegularExpression Id. */
+  int Lib = 10;
+  /** RegularExpression Id. */
+  int Comp = 11;
+  /** RegularExpression Id. */
+  int Contains = 12;
+  /** RegularExpression Id. */
+  int Allows = 13;
+  /** RegularExpression Id. */
+  int Extends = 14;
+  /** RegularExpression Id. */
+  int Uses = 15;
+  /** RegularExpression Id. */
+  int Not = 16;
+  /** RegularExpression Id. */
+  int Intro = 17;
+  /** RegularExpression Id. */
+  int Bullet = 18;
+  /** RegularExpression Id. */
+  int Id = 19;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -32,16 +54,19 @@ public interface RuleSetParserConstants {
     "<SHELL_COMMENT>",
     "<SINGLE_LINE_COMMENT>",
     "<MULTI_LINE_COMMENT>",
-    "<Id>",
-    "\"scope:\"",
-    "\"contains:\"",
-    "\"allows:\"",
-    "\"lib:\"",
-    "\"comp:\"",
-    "\"extends:\"",
-    "\"uses:\"",
-    "\"-\"",
+    "\"def\"",
+    "\"scope\"",
+    "\"lib\"",
+    "\"comp\"",
+    "\"contains\"",
+    "\"allows\"",
+    "\"extends\"",
+    "\"uses\"",
     "\"!\"",
+    "\":\"",
+    "\"-\"",
+    "<Id>",
+    "\"=\"",
   };
 
 }

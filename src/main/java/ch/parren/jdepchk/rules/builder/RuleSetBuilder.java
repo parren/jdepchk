@@ -13,6 +13,7 @@ import ch.parren.jdepchk.rules.RuleSet;
 
 public final class RuleSetBuilder {
 
+	private final Collection<String[]> defs = New.linkedList();
 	private final Map<String, AbstractScopeBuilder> scopesByName = New.hashMap();
 	private final Set<AbstractScopeBuilder> scopesInDefinitionOrder = New.linkedHashSet();
 	private final Collection<AbstractScopeBuilder> scopesToCheck = New.linkedList();
@@ -24,13 +25,18 @@ public final class RuleSetBuilder {
 		this.defaultLib = lib(ComponentBuilder.DEFAULT_NAME);
 	}
 
+	public RuleSetBuilder define(String name, String value) {
+		defs.add(new String[] { name, value });
+		return this;
+	}
+
 	public ScopeBuilder scope(String name) {
-		final ScopeBuilder def = new ScopeBuilder(name);
+		final ScopeBuilder def = new ScopeBuilder(subst(name));
 		return (ScopeBuilder) define(referenceScope(def.name, def));
 	}
 
 	public ComponentBuilder lib(String name) {
-		final ComponentBuilder def = new ComponentBuilder(this, name);
+		final ComponentBuilder def = new ComponentBuilder(this, subst(name));
 		return (ComponentBuilder) define(referenceScope(def.name, def));
 	}
 
@@ -39,8 +45,15 @@ public final class RuleSetBuilder {
 	}
 
 	ComponentBuilder ref(String name) {
-		final ComponentBuilder def = new ComponentBuilder(this, name);
+		final ComponentBuilder def = new ComponentBuilder(this, subst(name));
 		return (ComponentBuilder) referenceScope(def.name, def);
+	}
+
+	public String subst(String str) {
+		String res = str;
+		for (String[] def : defs)
+			res = res.replace(def[0], def[1]);
+		return res;
 	}
 
 	private ComponentBuilder check(ComponentBuilder scope) {

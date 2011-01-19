@@ -13,9 +13,10 @@ class RuleSetParser implements RuleSetParserConstants {
     label_1:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 9:
-      case 12:
-      case 13:
+      case Def:
+      case Scope:
+      case Lib:
+      case Comp:
         ;
         break;
       default:
@@ -23,13 +24,16 @@ class RuleSetParser implements RuleSetParserConstants {
         break label_1;
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 9:
+      case Def:
+        def();
+        break;
+      case Scope:
         scope();
         break;
-      case 12:
+      case Lib:
         lib();
         break;
-      case 13:
+      case Comp:
         comp();
         break;
       default:
@@ -41,21 +45,47 @@ class RuleSetParser implements RuleSetParserConstants {
     jj_consume_token(0);
   }
 
+  final public void def() throws ParseException {
+                String name;
+                String value;
+    jj_consume_token(Def);
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case Intro:
+      jj_consume_token(Intro);
+      break;
+    default:
+      jj_la1[2] = jj_gen;
+      ;
+    }
+    name = id();
+    jj_consume_token(20);
+    value = id();
+                          builder.define(name, value);
+  }
+
   final public void scope() throws ParseException {
                 String name;
                 ScopeBuilder scope;
-    jj_consume_token(9);
+    jj_consume_token(Scope);
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case Intro:
+      jj_consume_token(Intro);
+      break;
+    default:
+      jj_la1[3] = jj_gen;
+      ;
+    }
     name = id();
                           scope = builder.scope(name);
     label_2:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 10:
-      case 11:
+      case Contains:
+      case Allows:
         ;
         break;
       default:
-        jj_la1[2] = jj_gen;
+        jj_la1[4] = jj_gen;
         break label_2;
       }
       scopeBody(scope);
@@ -64,16 +94,32 @@ class RuleSetParser implements RuleSetParserConstants {
 
   final public void scopeBody(ScopeBuilder scope) throws ParseException {
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 10:
-      jj_consume_token(10);
+    case Contains:
+      jj_consume_token(Contains);
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case Intro:
+        jj_consume_token(Intro);
+        break;
+      default:
+        jj_la1[5] = jj_gen;
+        ;
+      }
       filters(scope.containsFilters());
       break;
-    case 11:
-      jj_consume_token(11);
+    case Allows:
+      jj_consume_token(Allows);
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case Intro:
+        jj_consume_token(Intro);
+        break;
+      default:
+        jj_la1[6] = jj_gen;
+        ;
+      }
       filters(scope.allowsFilters());
       break;
     default:
-      jj_la1[3] = jj_gen;
+      jj_la1[7] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -82,7 +128,15 @@ class RuleSetParser implements RuleSetParserConstants {
   final public void lib() throws ParseException {
                 String name;
                 ComponentBuilder comp;
-    jj_consume_token(12);
+    jj_consume_token(Lib);
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case Intro:
+      jj_consume_token(Intro);
+      break;
+    default:
+      jj_la1[8] = jj_gen;
+      ;
+    }
     name = id();
                           comp = builder.lib(name);
     compBody(comp);
@@ -91,7 +145,15 @@ class RuleSetParser implements RuleSetParserConstants {
   final public void comp() throws ParseException {
                 String name;
                 ComponentBuilder comp;
-    jj_consume_token(13);
+    jj_consume_token(Comp);
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case Intro:
+      jj_consume_token(Intro);
+      break;
+    default:
+      jj_la1[9] = jj_gen;
+      ;
+    }
     name = id();
                           comp = builder.comp(name);
     compBody(comp);
@@ -101,33 +163,49 @@ class RuleSetParser implements RuleSetParserConstants {
     label_3:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 14:
-        jj_consume_token(14);
-        ext(comp);
-        break;
-      case 15:
-        jj_consume_token(15);
-        use(comp);
-        break;
-      case 10:
-      case 11:
-        scopeBody(comp);
-        break;
-      default:
-        jj_la1[4] = jj_gen;
-        jj_consume_token(-1);
-        throw new ParseException();
-      }
-      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 10:
-      case 11:
-      case 14:
-      case 15:
+      case Contains:
+      case Allows:
+      case Extends:
+      case Uses:
         ;
         break;
       default:
-        jj_la1[5] = jj_gen;
+        jj_la1[10] = jj_gen;
         break label_3;
+      }
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case Extends:
+        jj_consume_token(Extends);
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case Intro:
+          jj_consume_token(Intro);
+          break;
+        default:
+          jj_la1[11] = jj_gen;
+          ;
+        }
+        ext(comp);
+        break;
+      case Uses:
+        jj_consume_token(Uses);
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case Intro:
+          jj_consume_token(Intro);
+          break;
+        default:
+          jj_la1[12] = jj_gen;
+          ;
+        }
+        use(comp);
+        break;
+      case Contains:
+      case Allows:
+        scopeBody(comp);
+        break;
+      default:
+        jj_la1[13] = jj_gen;
+        jj_consume_token(-1);
+        throw new ParseException();
       }
     }
   }
@@ -137,22 +215,22 @@ class RuleSetParser implements RuleSetParserConstants {
     label_4:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 16:
-        jj_consume_token(16);
+      case Bullet:
+        jj_consume_token(Bullet);
         break;
       default:
-        jj_la1[6] = jj_gen;
+        jj_la1[14] = jj_gen;
         ;
       }
       name = id();
                           comp.extend(name);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case Bullet:
       case Id:
-      case 16:
         ;
         break;
       default:
-        jj_la1[7] = jj_gen;
+        jj_la1[15] = jj_gen;
         break label_4;
       }
     }
@@ -163,22 +241,22 @@ class RuleSetParser implements RuleSetParserConstants {
     label_5:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 16:
-        jj_consume_token(16);
+      case Bullet:
+        jj_consume_token(Bullet);
         break;
       default:
-        jj_la1[8] = jj_gen;
+        jj_la1[16] = jj_gen;
         ;
       }
       name = id();
                           comp.use(name);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case Bullet:
       case Id:
-      case 16:
         ;
         break;
       default:
-        jj_la1[9] = jj_gen;
+        jj_la1[17] = jj_gen;
         break label_5;
       }
     }
@@ -188,22 +266,22 @@ class RuleSetParser implements RuleSetParserConstants {
     label_6:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 16:
-        jj_consume_token(16);
+      case Bullet:
+        jj_consume_token(Bullet);
         break;
       default:
-        jj_la1[10] = jj_gen;
+        jj_la1[18] = jj_gen;
         ;
       }
       filter(filters);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case Not:
+      case Bullet:
       case Id:
-      case 16:
-      case 17:
         ;
         break;
       default:
-        jj_la1[11] = jj_gen;
+        jj_la1[19] = jj_gen;
         break label_6;
       }
     }
@@ -215,13 +293,13 @@ class RuleSetParser implements RuleSetParserConstants {
     case Id:
       filter = spec();
       break;
-    case 17:
-      jj_consume_token(17);
+    case Not:
+      jj_consume_token(Not);
       filter = spec();
                                   filter = filter.not();
       break;
     default:
-      jj_la1[12] = jj_gen;
+      jj_la1[20] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -237,7 +315,7 @@ class RuleSetParser implements RuleSetParserConstants {
 
   final public String id() throws ParseException {
     jj_consume_token(Id);
-                          {if (true) return token.image;}
+                          {if (true) return builder.subst(token.image);}
     throw new Error("Missing return statement in function");
   }
 
@@ -250,13 +328,13 @@ class RuleSetParser implements RuleSetParserConstants {
   public Token jj_nt;
   private int jj_ntk;
   private int jj_gen;
-  final private int[] jj_la1 = new int[13];
+  final private int[] jj_la1 = new int[21];
   static private int[] jj_la1_0;
   static {
       jj_la1_init_0();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x3200,0x3200,0xc00,0xc00,0xcc00,0xcc00,0x10000,0x10100,0x10000,0x10100,0x10000,0x30100,0x20100,};
+      jj_la1_0 = new int[] {0xf00,0xf00,0x20000,0x20000,0x3000,0x20000,0x20000,0x3000,0x20000,0x20000,0xf000,0x20000,0x20000,0xf000,0x40000,0xc0000,0x40000,0xc0000,0x40000,0xd0000,0x90000,};
    }
 
   /** Constructor with InputStream. */
@@ -270,7 +348,7 @@ class RuleSetParser implements RuleSetParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 13; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 21; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -284,7 +362,7 @@ class RuleSetParser implements RuleSetParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 13; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 21; i++) jj_la1[i] = -1;
   }
 
   /** Constructor. */
@@ -294,7 +372,7 @@ class RuleSetParser implements RuleSetParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 13; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 21; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -304,7 +382,7 @@ class RuleSetParser implements RuleSetParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 13; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 21; i++) jj_la1[i] = -1;
   }
 
   /** Constructor with generated Token Manager. */
@@ -313,7 +391,7 @@ class RuleSetParser implements RuleSetParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 13; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 21; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -322,7 +400,7 @@ class RuleSetParser implements RuleSetParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 13; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 21; i++) jj_la1[i] = -1;
   }
 
   private Token jj_consume_token(int kind) throws ParseException {
@@ -373,12 +451,12 @@ class RuleSetParser implements RuleSetParserConstants {
   /** Generate ParseException. */
   public ParseException generateParseException() {
     jj_expentries.clear();
-    boolean[] la1tokens = new boolean[18];
+    boolean[] la1tokens = new boolean[21];
     if (jj_kind >= 0) {
       la1tokens[jj_kind] = true;
       jj_kind = -1;
     }
-    for (int i = 0; i < 13; i++) {
+    for (int i = 0; i < 21; i++) {
       if (jj_la1[i] == jj_gen) {
         for (int j = 0; j < 32; j++) {
           if ((jj_la1_0[i] & (1<<j)) != 0) {
@@ -387,7 +465,7 @@ class RuleSetParser implements RuleSetParserConstants {
         }
       }
     }
-    for (int i = 0; i < 18; i++) {
+    for (int i = 0; i < 21; i++) {
       if (la1tokens[i]) {
         jj_expentry = new int[1];
         jj_expentry[0] = i;
