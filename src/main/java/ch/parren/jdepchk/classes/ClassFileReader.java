@@ -9,14 +9,18 @@ public class ClassFileReader extends AbstractClassReader {
 
 	private final File classFile;
 
-	public ClassFileReader(String rootPath, File classFile) {
-		super(extractNameFrom(rootPath, classFile));
+	public ClassFileReader(String rootPath, String filePath, File classFile) {
+		super(extractNameFrom(rootPath, filePath));
 		this.classFile = classFile;
 	}
 
-	private static String extractNameFrom(String rootPath, File classFile) {
-		final String fileName = classFile.getPath();
-		return fileName.substring(rootPath.length(), fileName.length() - CLASS_EXT_LEN);
+	public ClassFileReader(String className, File classFile) {
+		super(className);
+		this.classFile = classFile;
+	}
+
+	private static String extractNameFrom(String rootPath, String filePath) {
+		return filePath.substring(rootPath.length(), filePath.length() - CLASS_EXT_LEN);
 	}
 
 	@Override protected ClassParser newClassBytesReader() throws IOException {
