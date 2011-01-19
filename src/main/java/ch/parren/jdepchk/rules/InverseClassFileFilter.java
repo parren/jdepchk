@@ -9,7 +9,7 @@ public final class InverseClassFileFilter implements ClassFileFilter {
 	}
 
 	@Override public boolean mightIntersectPackage(String packagePath) {
-		return false;
+		return true;
 	}
 
 	@Override public boolean allowsClassFile(String internalClassName, boolean currentResult) {
