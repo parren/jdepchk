@@ -1,0 +1,44 @@
+# Self-check rules
+
+def $p = ch.parren 
+def $j = $p.jdepchk
+
+lib $default
+	contains:
+		java.lang.**
+		java.util.**
+
+lib java.io.**
+
+comp $p.java.**
+
+comp $j.*
+	uses $p.java java.io
+	allows $j.**
+
+comp $j.rules.*
+	uses $p.java
+
+comp $j.rules.builder.**
+	extends $j.rules
+	uses $p.java
+
+comp $j.rules.parser.**
+	extends $j.rules
+	uses:
+		$j.rules.builder
+		$p.java
+		java.io
+
+comp $j.classes.**
+	uses:
+		$p.java
+		java.io
+
+comp $j.check.**
+	uses:
+		$j.rules
+		$j.classes
+		$p.java
+	allows:
+		java.io.IOException
