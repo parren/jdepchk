@@ -11,33 +11,7 @@ import ch.parren.jdepchk.classes.OutputDirClassSet;
 import ch.parren.jdepchk.rules.RuleSet;
 import ch.parren.jdepchk.rules.builder.RuleSetBuilder;
 
-/**
- * Package and class dependency checker for the JVM. Operates on compiled JVM
- * classes. Key planned features:
- * <ul>
- * <li>Multiple rule sets, loadable from different files.</li>
- * <li>Multiple class sets with different combinations of rule sets.</li>
- * <li>Rule sets are held in memory, but classes are loaded one by one.</li>
- * <li>RegExp-based matching.</li>
- * <li>Syntactic sugar for public/private visibility scopes.</li>
- * <li>Export to graphviz.</li>
- * <li>Support for transient and permanent exceptions.</li>
- * <li>Checking of different visibility levels independently (API vs.
- * internals).</li>
- * </ul>
- */
 public final class AbaChk {
-
-	// Features:
-	// TODO Visibility-scoped rules (public, protected, etc.)
-
-	// To turn this into a real speed demon:
-	// TODO Full dir emulation in .jar scanning?
-	// TODO Bulk file attr scanning on JDK 7
-	// TODO Use full ASM-based reader only if at least one containing scope has visibility-scoped rules
-	// TODO Form a hierarchy of scopes by path prefix to exit matching early
-	// TODO Feed the classfile iterator into a checker queue and use multiple checking workers
-	// TODO See if can avoid conversion from bytes to chars (when doing only prefix matching)
 
 	public static void main(String[] args) throws Exception {
 		final RuleSet rules = makeDemoRules();
