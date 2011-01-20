@@ -31,8 +31,7 @@ public final class RuleSetBuilder {
 	}
 
 	public ScopeBuilder scope(String name) {
-		final ScopeBuilder def = new ScopeBuilder(subst(name));
-		return (ScopeBuilder) define(referenceScope(def.name, def));
+		return (ScopeBuilder) define(new ScopeBuilder(subst(name)));
 	}
 
 	public ComponentBuilder lib(String name) {
