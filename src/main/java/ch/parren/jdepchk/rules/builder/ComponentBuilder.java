@@ -1,5 +1,6 @@
 package ch.parren.jdepchk.rules.builder;
 
+import java.util.Iterator;
 import java.util.Set;
 
 import ch.parren.java.lang.New;
@@ -25,12 +26,12 @@ public class ComponentBuilder extends ScopeBuilder {
 		contains(ruleSet.prefix(name + '.'));
 		return this;
 	}
-	
+
 	@Override public ComponentBuilder contains(FilterBuilder... filters) {
 		super.contains(filters);
 		return this;
 	}
-	
+
 	public ComponentBuilder extend(String componentName) {
 		extend(ruleSet.ref(componentName));
 		return this;
@@ -62,11 +63,17 @@ public class ComponentBuilder extends ScopeBuilder {
 				extend(ee);
 		}
 
-		allows.addAll(contains); // components see themselves
+		if (!used.isEmpty()) {
+			// components see themselves by default
+			final Iterator<FilterBuilder> it = contains.descendingIterator();
+			while (it.hasNext())
+				allows.addFirst(it.next());
+		}
+
 		for (ComponentBuilder u : used)
 			allows.addAll(u.contains);
 	}
-	
+
 	@Override public String toString() {
 		return "component " + name;
 	}

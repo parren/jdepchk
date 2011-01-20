@@ -1,13 +1,14 @@
 package ch.parren.jdepchk.rules.builder;
 
 import java.util.Collection;
+import java.util.LinkedList;
 
 import ch.parren.java.lang.New;
 import ch.parren.jdepchk.rules.CompositeClassFileFilter;
 
 public class ScopeBuilder extends AbstractScopeBuilder {
 
-	protected final Collection<FilterBuilder> allows = New.linkedList();
+	protected final LinkedList<FilterBuilder> allows = New.linkedList();
 
 	ScopeBuilder(String name) {
 		super(name);

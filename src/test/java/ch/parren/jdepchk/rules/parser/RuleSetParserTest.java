@@ -56,11 +56,6 @@ public class RuleSetParserTest {
 
 		final RuleSet set = b.finish();
 		assertEquals("rule set comps.jdep\n" + // 
-				"	scope $default\n" + // 
-				"		.contains: composite; default: false\n" + // 
-				"				prefix: java/\n" + // 
-				"		.allows: composite; default: false\n" + // 
-				"				prefix: java/\n" + // 
 				"	scope api\n" + // 
 				"		.contains: composite; default: false\n" + // 
 				"				pattern: api/[^/]*\n" + // 

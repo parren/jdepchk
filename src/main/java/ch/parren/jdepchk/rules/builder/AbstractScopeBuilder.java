@@ -2,6 +2,7 @@ package ch.parren.jdepchk.rules.builder;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedList;
 
 import ch.parren.java.lang.New;
 import ch.parren.jdepchk.rules.ClassFileFilter;
@@ -12,7 +13,7 @@ import ch.parren.jdepchk.rules.Scope;
 public abstract class AbstractScopeBuilder {
 
 	protected final String name;
-	protected final Collection<FilterBuilder> contains = New.linkedList();
+	protected final LinkedList<FilterBuilder> contains = New.linkedList();
 
 	private Scope scope = null;
 
