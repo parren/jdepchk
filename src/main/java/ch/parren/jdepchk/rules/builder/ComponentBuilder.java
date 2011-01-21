@@ -1,6 +1,8 @@
 package ch.parren.jdepchk.rules.builder;
 
+import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Set;
 
 import ch.parren.java.lang.New;
@@ -49,7 +51,7 @@ public class ComponentBuilder extends ScopeBuilder {
 	void extend(ComponentBuilder comp) {
 		checkNotThis(comp);
 		extended.add(comp);
-		use(comp);
+		used.add(comp);
 	}
 
 	void use(ComponentBuilder comp) {
@@ -67,13 +69,6 @@ public class ComponentBuilder extends ScopeBuilder {
 			return;
 		prepared = true;
 
-		// build transient closure; two-stage process ensures no concurrent modification
-		final Set<ComponentBuilder> closure = New.hashSet();
-		for (ComponentBuilder e : extended)
-			closeOver(this, e, ruleSet, closure);
-		for (ComponentBuilder e : closure)
-			extend(e);
-
 		if (!used.isEmpty()) {
 			// components see themselves by default
 			final Iterator<FilterBuilder> it = contains.descendingIterator();
@@ -81,18 +76,18 @@ public class ComponentBuilder extends ScopeBuilder {
 				allows.addFirst(it.next());
 		}
 
+		final Set<ComponentBuilder> seen = New.hashSet();
+		seen.add(this);
 		for (ComponentBuilder u : used)
-			allows.addAll(u.contains);
+			closeOver(u, seen, allows);
 	}
 
-	private ComponentBuilder closeOver(ComponentBuilder origin, ComponentBuilder comp, RuleSet ruleSet,
-			Set<ComponentBuilder> closure) {
-		if (comp == origin)
-			throw new IllegalStateException("Recursive extensions detected involving " + origin);
-		comp.prepare(ruleSet);
-		for (ComponentBuilder ee : comp.extended)
-			closure.add(closeOver(origin, ee, ruleSet, closure));
-		return comp;
+	private void closeOver(ComponentBuilder comp, Set<ComponentBuilder> seen, Collection<FilterBuilder> allows) {
+		if (!seen.add(comp))
+			return;
+		allows.addAll(comp.contains);
+		for (ComponentBuilder e : comp.extended)
+			closeOver(e, seen, allows);
 	}
 
 	@Override public String toString() {
