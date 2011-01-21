@@ -1,0 +1,85 @@
+# AbaMovie dependency rules
+
+lib: $default
+        contains:
+                java.**
+
+lib: ulc.shared
+        contains:
+                com.ulcjava.base.shared.**
+                ch.abacus.ulc.shared.**
+                ch.abacus.java.**
+
+# FIXME would like to include ulc.shared here
+lib: ulc.client
+        contains:
+                com.ulcjava.base.client.**
+                com.ulcjava.base.shared.**
+                ch.abacus.ulc.client.**
+                ch.abacus.ulc.shared.**
+                ch.abacus.java.**
+                javax.swing.**
+
+lib: ulc.server
+        contains:
+                com.ulcjava.base.server.**
+                com.ulcjava.base.application.**
+                ch.abacus.**
+
+lib: lib.common
+        contains:
+                # from atk_stripped.jar
+                ch.abacus.lib.lang.**
+                ch.abacus.lib.util.**
+                ch.abacus.java.**
+                # from other jars
+                org.apache.commons.**
+
+lib: lib.runtime
+        # FIXME would like to include lib.common here
+        contains:
+                junit.**
+                jxl.**
+                org.yaml.**
+                org.netbeans.jemmy.**
+                ch.abacus.splinter.**
+
+lib: lib.ide
+        # FIXME would like to include lib.common here
+        contains:
+                org.apache.tools.ant.**
+                javax.swing.**
+                org.jdesktop.**
+                jsyntaxpane.**
+
+
+def: $mv = ch.abacus.uitest.movie
+
+comp: $mv.common.all # blanket rule so common.** is limited to common.**
+        contains: $mv.common.**
+        extends: lib.common
+
+comp: $mv.common.*
+        extends: lib.common
+
+comp: $mv.common.data.**
+        uses: $mv.common
+
+comp: $mv.common.scenes.**
+        extends: $mv.common
+        uses: $mv.common.data
+
+comp: $mv.common.movies.**
+        extends: $mv.common
+        uses: $mv.common.data $mv.common.scenes
+
+# Runtime has the downloaded ULC client jars, and the IDE's common environment.
+comp: $mv.runtime.all
+        contains: $mv.runtime.**
+        uses: $mv.common.all lib.runtime lib.common ulc.client
+
+comp: $mv.runtime.*
+        extends: $mv.common
+
+comp: $mv.runtime.data.**
+        extends: $mv.runtime $mv.common.data

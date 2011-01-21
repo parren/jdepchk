@@ -1,4 +1,3 @@
-
 import java.io.File;
 
 import ch.parren.jdepchk.check.Checker;
@@ -58,6 +57,7 @@ public final class AbaChk {
 		b.scope("ch.abacus.ulc.client.**") //
 				.allows(b.glob("ch.abacus.lib.**").not() //
 						, b.glob("ch.abacus.lib.swing.**") //
+						, b.glob("ch.abacus.lib.awt.**") //
 						, b.glob("ch.abacus.lib.net.SocketServer*") //
 				) //
 		;
