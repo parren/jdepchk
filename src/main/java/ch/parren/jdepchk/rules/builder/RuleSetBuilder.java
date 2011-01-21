@@ -14,6 +14,7 @@ import ch.parren.jdepchk.rules.RuleSet;
 public final class RuleSetBuilder {
 
 	private final Collection<String[]> defs = New.linkedList();
+	private final Set<String> defNames = New.hashSet();
 	private final Map<String, AbstractScopeBuilder> scopesByName = New.hashMap();
 	private final Set<AbstractScopeBuilder> scopesInDefinitionOrder = New.linkedHashSet();
 	private final Collection<AbstractScopeBuilder> scopesToCheck = New.linkedList();
@@ -26,6 +27,8 @@ public final class RuleSetBuilder {
 	}
 
 	public RuleSetBuilder define(String name, String value) {
+		if (!defNames.add(name))
+			throw new IllegalArgumentException(name + " is already defined.");
 		defs.add(new String[] { name, value });
 		return this;
 	}

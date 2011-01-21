@@ -33,22 +33,33 @@ public class ComponentBuilder extends ScopeBuilder {
 	}
 
 	public ComponentBuilder extend(String componentName) {
-		extend(ruleSet.ref(componentName));
+		extend(ref(componentName));
 		return this;
 	}
 
 	public ComponentBuilder use(String componentName) {
-		use(ruleSet.ref(componentName));
+		use(ref(componentName));
 		return this;
 	}
 
+	private ComponentBuilder ref(String componentName) {
+		return ruleSet.ref(componentName);
+	}
+
 	void extend(ComponentBuilder comp) {
+		checkNotThis(comp);
 		extended.add(comp);
 		use(comp);
 	}
 
 	void use(ComponentBuilder comp) {
+		checkNotThis(comp);
 		used.add(comp);
+	}
+
+	private void checkNotThis(ComponentBuilder comp) {
+		if (comp == this)
+			throw new IllegalArgumentException(comp + " refers to itself.");
 	}
 
 	@Override protected void prepare(RuleSet ruleSet) {
@@ -56,12 +67,12 @@ public class ComponentBuilder extends ScopeBuilder {
 			return;
 		prepared = true;
 
-		// build transient closure
-		for (ComponentBuilder e : extended) {
-			e.prepare(ruleSet);
-			for (ComponentBuilder ee : e.extended)
-				extend(ee);
-		}
+		// build transient closure; two-stage process ensures no concurrent modification
+		final Set<ComponentBuilder> closure = New.hashSet();
+		for (ComponentBuilder e : extended)
+			closeOver(this, e, ruleSet, closure);
+		for (ComponentBuilder e : closure)
+			extend(e);
 
 		if (!used.isEmpty()) {
 			// components see themselves by default
@@ -72,6 +83,16 @@ public class ComponentBuilder extends ScopeBuilder {
 
 		for (ComponentBuilder u : used)
 			allows.addAll(u.contains);
+	}
+
+	private ComponentBuilder closeOver(ComponentBuilder origin, ComponentBuilder comp, RuleSet ruleSet,
+			Set<ComponentBuilder> closure) {
+		if (comp == origin)
+			throw new IllegalStateException("Recursive extensions detected involving " + origin);
+		comp.prepare(ruleSet);
+		for (ComponentBuilder ee : comp.extended)
+			closure.add(closeOver(origin, ee, ruleSet, closure));
+		return comp;
 	}
 
 	@Override public String toString() {
