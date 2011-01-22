@@ -19,7 +19,7 @@ public class StreamClassFileReader extends AbstractClassReader {
 		return fileName.substring(rootPath.length(), fileName.length() - CLASS_EXT_LEN);
 	}
 
-	@Override protected ClassParser newClassBytesReader() throws IOException {
+	@Override protected ClassParser newClassParser() throws IOException {
 		return new ClassParser(classFile);
 	}
 

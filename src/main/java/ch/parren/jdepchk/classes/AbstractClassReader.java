@@ -3,8 +3,6 @@ package ch.parren.jdepchk.classes;
 import java.io.IOException;
 import java.util.Set;
 
-import ch.parren.java.lang.New;
-
 abstract class AbstractClassReader implements ClassReader {
 
 	private final String name;
@@ -21,12 +19,12 @@ abstract class AbstractClassReader implements ClassReader {
 	@Override public Iterable<String> referencedClassNames() throws IOException {
 		if (null != refdNames)
 			return refdNames;
-		final Set<String> result = New.hashSet();
+		final Set<String> result;
 
-		final ClassParser bytes = newClassBytesReader();
+		final ClassParser bytes = newClassParser();
 		try {
-			assert name.equals(bytes.getClassName());
-			add(bytes.getRefdClasses(), result);
+			// TODO use visibility
+			result = bytes.referencedClasses().keySet();
 		} finally {
 			bytes.close();
 		}
@@ -35,22 +33,10 @@ abstract class AbstractClassReader implements ClassReader {
 		return result;
 	}
 
-	abstract protected ClassParser newClassBytesReader() throws IOException;
-
-	private void add(String name, Set<String> result) {
-		if (null != name && !this.name.equals(name))
-			result.add(name);
-	}
-
-	private void add(String[] names, Set<String> result) {
-		if (null == names)
-			return;
-		final int n = names.length;
-		for (int i = 0; i < n; i++)
-			add(names[i], result);
-	}
+	abstract protected ClassParser newClassParser() throws IOException;
 
 	@Override public String toString() {
 		return this.name;
 	}
+
 }

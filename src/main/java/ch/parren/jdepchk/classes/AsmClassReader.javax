@@ -18,7 +18,7 @@ import org.objectweb.asm.Type;
 
 import ch.parren.java.lang.New;
 
-final class AsmClassFileReader implements ClassFile {
+final class AsmClassReader implements ch.parren.jdepchk.classes.ClassReader {
 
 	private static final int CLASS_EXT_LEN = ".class".length();
 
@@ -27,7 +27,7 @@ final class AsmClassFileReader implements ClassFile {
 	private InputStream classFileStream;
 	private ClassReader classFileReader;
 
-	public AsmClassFileReader(File classFile) {
+	public AsmClassReader(File classFile) {
 		final String fileName = classFile.getName();
 		this.name = fileName.substring(0, fileName.length() - CLASS_EXT_LEN);
 		this.classFile = classFile;

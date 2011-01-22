@@ -17,7 +17,7 @@ public class ClassJarEntryReader extends AbstractClassReader {
 		this.entry = entry;
 	}
 
-	@Override protected ClassParser newClassBytesReader() throws IOException {
+	@Override protected ClassParser newClassParser() throws IOException {
 		stream = file.getInputStream(entry);
 		return new ClassParser((int) entry.getSize(), stream);
 	}

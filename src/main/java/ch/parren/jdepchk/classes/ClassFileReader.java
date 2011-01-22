@@ -23,7 +23,7 @@ public class ClassFileReader extends AbstractClassReader {
 		return filePath.substring(rootPath.length(), filePath.length() - CLASS_EXT_LEN);
 	}
 
-	@Override protected ClassParser newClassBytesReader() throws IOException {
+	@Override protected ClassParser newClassParser() throws IOException {
 		return new ClassParser(classFile);
 	}
 

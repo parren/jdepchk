@@ -5,7 +5,17 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
+import java.util.Map;
 
+import ch.parren.java.lang.New;
+
+// FIXME drop lazy reading as we nearly always access everything
+
+/**
+ * JVM class file format parser based on ASM's ClassReader class, but tuned for
+ * speed with JDepChk's requirements.
+ */
 public final class ClassParser implements Closeable {
 
 	private static final int UTF8 = 1;
@@ -20,55 +30,31 @@ public final class ClassParser implements Closeable {
 	private static final int IMETH = 11;
 	private static final int NAME_TYPE = 12;
 
+	private static final int ACC_PUBLIC = 0x0001;
+	private static final int ACC_PRIVATE = 0x0002;
+	private static final int ACC_PROTECTED = 0x0004;
+	private static final int ACC_MASK = ACC_PUBLIC | ACC_PRIVATE | ACC_PROTECTED;
+
 	public static long nFilesRead = 0;
 	public static long nBytesAvail = 0;
 	public static long nBytesRead = 0;
 	public static long nBytesUsed = 0;
-	private int highMark = 0;
 
-	/**
-	 * The class to be parsed. <i>The content of this array must not be
-	 * modified.
-	 */
-	public final byte[] bytes;
-
-	/**
-	 * The start index of each constant pool item in {@link #bytes b}, plus one.
-	 * The one byte offset skips the constant pool item tag that indicates its
-	 * type.
-	 */
-	private final int[] items;
-
-	/**
-	 * The String objects corresponding to the CONSTANT_Utf8 items. This cache
-	 * avoids multiple parsing of a given CONSTANT_Utf8 constant pool item,
-	 * which GREATLY improves performances (by a factor 2 to 3). This caching
-	 * strategy could be extended to all constant pool items, but its benefit
-	 * would not be so great for these items (because they are much less
-	 * expensive to parse than CONSTANT_Utf8 items).
-	 */
-	private final String[] strings;
-
-	/**
-	 * Maximum length of the strings contained in the constant pool of the
-	 * class.
-	 */
-	private final int maxStringLength;
-
-	/**
-	 * Start index of the class header information (access, name...) in
-	 * {@link #bytes b}.
-	 */
-	public final int header;
-
-	/** Indexes to the pool items of type CLASS. */
-	private final int[] classItems;
-	private final int nClassItems;
-
-
-	private int red = 0;
 	private InputStream stream;
 	private boolean shouldClose = false;
+	private byte[] bytes;
+	private int accessed = 0;
+	private int read = 0;
+
+	// caches
+	private int[] items;
+	private String[] strings;
+	private char[] strBuf;
+
+	// information
+	private String ownName;
+	private Visibility visibility;
+	private Map<String, Visibility> refdClasses = New.hashMap();
 
 	public ClassParser(int size, InputStream stream) throws IOException {
 		this(size, stream, false);
@@ -78,30 +64,46 @@ public final class ClassParser implements Closeable {
 		this((int) file.length(), new FileInputStream(file), true);
 	}
 
+	public Map<String, Visibility> referencedClasses() {
+		return Collections.unmodifiableMap(refdClasses);
+	}
+
+	public Visibility visibility() {
+		return visibility;
+	}
+
 	private ClassParser(int streamSize, InputStream stream, boolean shouldClose) throws IOException {
 		this.bytes = new byte[streamSize];
-		this.red = 0;
 		this.stream = stream;
 		this.shouldClose = shouldClose;
-		// parses the constant pool
-		int n = readUnsignedShort(8);
+
+		// Parse the constant pool.
+		final int n = readUnsignedShort(8);
 		items = new int[n];
 		strings = new String[n];
-		classItems = new int[n];
-		int nCls = 0;
-		int max = 0;
-		int index = 10;
+		final int[] nameTypes = new int[n], classes = new int[n], memberRefs = new int[n];
+		int nNameTypes = 0, nClasses = 0, nMemberRefs = 0;
+		int maxStringLength = 0;
+		int at = 10;
+		readTo(n * 3); // minimum pool size
 		for (int i = 1; i < n; ++i) {
-			items[i] = index + 1;
+			final int itemAt = at + 1;
+			items[i] = itemAt;
 			int size;
-			readTo(index);
-			switch (bytes[index]) {
+			readTo(at);
+			switch (bytes[at]) {
 			case FIELD:
 			case METH:
 			case IMETH:
+				memberRefs[nMemberRefs++] = itemAt;
+				size = 5;
+				break;
 			case INT:
 			case FLOAT:
+				size = 5;
+				break;
 			case NAME_TYPE:
+				nameTypes[nNameTypes++] = itemAt;
 				size = 5;
 				break;
 			case LONG:
@@ -110,13 +112,12 @@ public final class ClassParser implements Closeable {
 				++i;
 				break;
 			case UTF8:
-				size = 3 + readUnsignedShort(index + 1);
-				if (size > max) {
-					max = size;
-				}
+				size = 3 + readUnsignedShort(itemAt);
+				if (size > maxStringLength)
+					maxStringLength = size;
 				break;
 			case CLASS:
-				classItems[nCls++] = index + 1;
+				classes[nClasses++] = itemAt;
 				size = 3;
 				break;
 			// case STR:
@@ -124,69 +125,104 @@ public final class ClassParser implements Closeable {
 				size = 3;
 				break;
 			}
-			index += size;
+			at += size;
 		}
-		maxStringLength = max;
-		nClassItems = nCls;
-		// the class header information starts just after the constant pool
-		header = index;
-		highMark = header;
-	}
+		strBuf = new char[maxStringLength];
 
-	/**
-	 * Returns the internal name of the class.
-	 * 
-	 * @return the internal class name
-	 */
-	public String getClassName() throws IOException {
-		return readClass(header + 2, new char[maxStringLength]);
-	}
+		// Parse access flags and class name
+		visibility = flagsToVis(readUnsignedShort(at));
+		ownName = readUTF8Item(readUnsignedShort(items[readUnsignedShort(at + 2)]));
 
-	/**
-	 * Returns the internal of name of the super class.
-	 * 
-	 * @return the internal name of super class, or <tt>null</tt> for
-	 *         {@link Object} class.
-	 */
-	public String getSuperName() throws IOException {
-		int n = items[readUnsignedShort(header + 4)];
-		return n == 0 ? null : readUTF8(n, new char[maxStringLength]);
-	}
+		// Parse extends and implements
+		addClassItemRef(readUnsignedShort(at + 4), ACC_PUBLIC);
+		final int nIntf = readUnsignedShort(at + 6);
+		at += 8;
+		for (int i = 0; i < nIntf; i++) {
+			addClassItemRef(readUnsignedShort(at), ACC_PUBLIC);
+			at += 2;
+		}
 
-	/**
-	 * Returns the internal names of the class's interfaces.
-	 * 
-	 * @return the array of internal names for all implemented interfaces or
-	 *         <tt>null</tt>.
-	 */
-	public String[] getInterfaces() throws IOException {
-		int index = header + 6;
-		int n = readUnsignedShort(index);
-		String[] interfaces = new String[n];
-		if (n > 0) {
-			char[] buf = new char[maxStringLength];
-			for (int i = 0; i < n; ++i) {
-				index += 2;
-				interfaces[i] = readClass(index, buf);
+		// Parse members (fields, then methods).
+		for (int k = 0; k < 2; k++) {
+			final int nMembers = readUnsignedShort(at);
+			at += 2;
+			for (int i = 0; i < nMembers; i++) {
+				final int flags = readUnsignedShort(at);
+				addDescriptorRef(readUnsignedShort(at + 4), flags & ACC_MASK);
+				final int nAttrs = readUnsignedShort(at + 6);
+				at += 8;
+				for (int j = 0; j < nAttrs; j++) {
+					final int attrLen = readInt(at + 2);
+					at += 6 + attrLen;
+				}
 			}
 		}
-		return interfaces;
+
+		// Add remaining, internal refs.
+		for (int i = 0; i < nMemberRefs; i++) {
+			final String className = addClassItemRef(readUnsignedShort(memberRefs[i]), ACC_PRIVATE);
+			final int nameTypeAt = items[readUnsignedShort(memberRefs[i] + 2)];
+			addMemberRef(className, //
+					readUTF8Item(readUnsignedShort(nameTypeAt)), // member name
+					readUTF8Item(readUnsignedShort(nameTypeAt + 2)) // member descriptor
+			);
+		}
+		for (int i = 0; i < nClasses; i++)
+			addClassNameRef(readUnsignedShort(classes[i]), ACC_PRIVATE);
+		for (int i = 0; i < nNameTypes; i++)
+			addDescriptorRef(readUnsignedShort(nameTypes[i] + 2), ACC_PRIVATE);
+
 	}
 
-	/**
-	 * Returns the names of all the classes referenced by the constant pool. May
-	 * contain nulls.
-	 */
-	public String[] getRefdClasses() throws IOException {
-		final String[] result = new String[nClassItems];
-		final char[] buf = new char[maxStringLength];
-		int n = 0;
-		for (int i = 0; i < nClassItems; i++) {
-			final String name = toClassName(readUTF8(classItems[i], buf));
-			if (null != name)
-				result[n++] = name;
+	private Visibility flagsToVis(int flags) {
+		switch (flags & ACC_MASK) {
+		case ACC_PRIVATE:
+			return Visibility.PRIV;
+		case 0:
+			return Visibility.DEF;
+		case ACC_PROTECTED:
+			return Visibility.PROT;
+		default:
+			return Visibility.PUBL;
 		}
-		return result;
+	}
+
+	private String addClassRef(String name, int access) {
+		if (null == name || ownName.equals(name))
+			return null;
+		final Visibility found = refdClasses.get(name);
+		final Visibility have = flagsToVis(access);
+		if (null == found || have.compareTo(found) > 0)
+			refdClasses.put(name, have);
+		return name;
+	}
+
+	private String addClassNameRef(int nameItem, int access) throws IOException {
+		return addClassRef(toClassName(readUTF8Item(nameItem)), access);
+	}
+
+	private String addClassItemRef(int classItem, int access) throws IOException {
+		return addClassNameRef(readUnsignedShort(items[classItem]), access);
+	}
+
+	private void addDescriptorRef(int descriptorStringIndex, int access) throws IOException {
+		if (0 == descriptorStringIndex)
+			return;
+		final String d = readUTF8Item(descriptorStringIndex);
+		int i = 0, n = d.length();
+		while (i < n) {
+			if (d.charAt(i++) == 'L') {
+				int i0 = i;
+				while (d.charAt(i++) != ';') {}
+				addClassRef(d.substring(i0, i - 1), access);
+			}
+		}
+	}
+
+	private void addMemberRef(String className, String memberName, String memberDescriptor) {
+		if (null == className)
+			return;
+		// TODO
 	}
 
 	private String toClassName(String name) {
@@ -198,96 +234,28 @@ public final class ClassParser implements Closeable {
 		return name;
 	}
 
-	/**
-	 * Reads a byte value in {@link #bytes b}.
-	 * 
-	 * @param index the start index of the value to be read in {@link #bytes b}.
-	 * @return the read value.
-	 */
-	public int readByte(final int index) throws IOException {
-		readTo(index);
-		return bytes[index] & 0xFF;
-	}
-
-	/**
-	 * Reads an unsigned short value in {@link #bytes b}.
-	 * 
-	 * @param index the start index of the value to be read in {@link #bytes b}.
-	 * @return the read value. .
-	 */
-	public int readUnsignedShort(final int index) throws IOException {
+	private int readUnsignedShort(final int index) throws IOException {
 		readTo(index + 1);
 		byte[] b = this.bytes;
 		return ((b[index] & 0xFF) << 8) | (b[index + 1] & 0xFF);
 	}
 
-	/**
-	 * Reads a signed short value in {@link #bytes b}.
-	 * 
-	 * @param index the start index of the value to be read in {@link #bytes b}.
-	 * @return the read value.
-	 */
-	public short readShort(final int index) throws IOException {
-		readTo(index + 1);
-		byte[] b = this.bytes;
-		return (short) (((b[index] & 0xFF) << 8) | (b[index + 1] & 0xFF));
-	}
-
-	/**
-	 * Reads a signed int value in {@link #bytes b}.
-	 * 
-	 * @param index the start index of the value to be read in {@link #bytes b}.
-	 * @return the read value.
-	 */
-	public int readInt(final int index) throws IOException {
+	private int readInt(final int index) throws IOException {
 		readTo(index + 3);
 		byte[] b = this.bytes;
 		return ((b[index] & 0xFF) << 24) | ((b[index + 1] & 0xFF) << 16) | ((b[index + 2] & 0xFF) << 8)
 				| (b[index + 3] & 0xFF);
 	}
 
-	/**
-	 * Reads a signed long value in {@link #bytes b}.
-	 * 
-	 * @param index the start index of the value to be read in {@link #bytes b}.
-	 * @return the read value.
-	 */
-	public long readLong(final int index) throws IOException {
-		readTo(index + 7);
-		long l1 = readInt(index);
-		long l0 = readInt(index + 4) & 0xFFFFFFFFL;
-		return (l1 << 32) | l0;
-	}
-
-	/**
-	 * Reads an UTF8 string constant pool item in {@link #bytes b}.
-	 * 
-	 * @param index the start index of an unsigned short value in {@link #bytes
-	 *            b}, whose value is the index of an UTF8 constant pool item.
-	 * @param buf buffer to be used to read the item. This buffer must be
-	 *            sufficiently large. It is not automatically resized.
-	 * @return the String corresponding to the specified UTF8 item.
-	 */
-	public String readUTF8(int index, final char[] buf) throws IOException {
-		int item = readUnsignedShort(index);
+	private String readUTF8Item(int item) throws IOException {
 		String s = strings[item];
-		if (s != null) {
+		if (s != null)
 			return s;
-		}
-		index = items[item];
-		return strings[item] = readUTF8(index + 2, readUnsignedShort(index), buf);
+		int index = items[item];
+		return strings[item] = readUTF8At(index + 2, readUnsignedShort(index), this.strBuf);
 	}
 
-	/**
-	 * Reads UTF8 string in {@link #bytes b}.
-	 * 
-	 * @param index start offset of the UTF8 string to be read.
-	 * @param utfLen length of the UTF8 string to be read.
-	 * @param buf buffer to be used to read the string. This buffer must be
-	 *            sufficiently large. It is not automatically resized.
-	 * @return the String corresponding to the specified UTF8 string.
-	 */
-	private String readUTF8(int index, final int utfLen, final char[] buf) throws IOException {
+	private String readUTF8At(int index, final int utfLen, final char[] buf) throws IOException {
 		int endIndex = index + utfLen;
 		readTo(endIndex);
 		byte[] b = this.bytes;
@@ -324,36 +292,22 @@ public final class ClassParser implements Closeable {
 		return new String(buf, 0, strLen);
 	}
 
-	/**
-	 * Reads a class constant pool item in {@link #bytes b}.
-	 * 
-	 * @param index the start index of an unsigned short value in {@link #bytes
-	 *            b}, whose value is the index of a class constant pool item.
-	 * @param buf buffer to be used to read the item. This buffer must be
-	 *            sufficiently large. It is not automatically resized.
-	 * @return the String corresponding to the specified class item.
-	 */
-	public String readClass(final int index, final char[] buf) throws IOException {
-		// computes the start index of the CONSTANT_Class item in b
-		// and reads the CONSTANT_Utf8 item designated by
-		// the first two bytes of this CONSTANT_Class item
-		return readUTF8(items[readUnsignedShort(index)], buf);
-	}
-
-	private static final int CHUNK_SIZE = 8 * 1024;
+	private static final int CHUNK_SIZE = 64 * 1024;
 
 	private void readTo(int index) throws IOException {
-		if (index > highMark)
-			highMark = index;
-		while (index >= red) {
-			final int want = index + 1 - red;
+		if (index > accessed)
+			accessed = index;
+		while (index >= read) {
+			final int want = index + 1 - read;
 			final int chunk = (want + CHUNK_SIZE - 1) / CHUNK_SIZE * CHUNK_SIZE;
-			final int remain = bytes.length - red;
+			final int remain = bytes.length - read;
+			if (remain <= 0)
+				throw new IllegalArgumentException();
 			final int len = remain < chunk ? remain : chunk;
-			final int redNow = stream.read(this.bytes, this.red, len);
+			final int redNow = stream.read(this.bytes, this.read, len);
 			if (redNow < 0)
 				throw new IOException();
-			red += redNow;
+			read += redNow;
 		}
 	}
 
@@ -365,8 +319,8 @@ public final class ClassParser implements Closeable {
 		stream = null;
 		nFilesRead++;
 		nBytesAvail += bytes.length;
-		nBytesRead += red;
-		nBytesUsed += highMark + 1;
+		nBytesRead += read;
+		nBytesUsed += accessed + 1;
 	}
 
 }
