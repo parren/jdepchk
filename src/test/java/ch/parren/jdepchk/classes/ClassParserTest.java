@@ -26,8 +26,10 @@ public class ClassParserTest {
 			assertEquals("" + //
 					"java/io/PrintStream priv\n" + //
 					"java/lang/Exception priv\n" + //
-					"java/lang/IllegalArgumentException priv\n" + // // FIXME publ
+					"java/lang/IllegalArgumentException publ\n" + //
 					"java/lang/System priv\n" + //
+					"java/util/ArrayList priv\n" + //
+					"java/util/Set prot\n" + //
 					"test/Base publ\n" + //
 					"test/Const publ\n" + //
 //					"test/ConstAttr publ\n" + // FIXME
@@ -35,6 +37,9 @@ public class ClassParserTest {
 					"test/Field priv\n" + //
 //					"test/FieldAttr priv\n" + // FIXME
 					"test/FieldRef priv\n" + // 
+					"test/GenericLower publ\n" + //
+					"test/GenericLowerMtd prot\n" + //
+					"test/GenericUpper prot\n" + //
 					"test/IntfA publ\n" + //
 					"test/IntfB publ\n" + //
 					"test/MethodRef priv\n" + //

@@ -134,11 +134,11 @@ public final class ClassParser implements Closeable {
 		ownName = readUTF8Item(readUnsignedShort(items[readUnsignedShort(at + 2)]));
 
 		// Parse extends and implements
-		addClassItemRef(readUnsignedShort(at + 4), ACC_PUBLIC);
+		addClassItemRef(readUnsignedShort(at + 4), Visibility.PUBL);
 		final int nIntf = readUnsignedShort(at + 6);
 		at += 8;
 		for (int i = 0; i < nIntf; i++) {
-			addClassItemRef(readUnsignedShort(at), ACC_PUBLIC);
+			addClassItemRef(readUnsignedShort(at), Visibility.PUBL);
 			at += 2;
 		}
 
@@ -147,20 +147,18 @@ public final class ClassParser implements Closeable {
 			final int nMembers = readUnsignedShort(at);
 			at += 2;
 			for (int i = 0; i < nMembers; i++) {
-				final int flags = readUnsignedShort(at);
-				addDescriptorRef(readUnsignedShort(at + 4), flags & ACC_MASK);
-				final int nAttrs = readUnsignedShort(at + 6);
-				at += 8;
-				for (int j = 0; j < nAttrs; j++) {
-					final int attrLen = readInt(at + 2);
-					at += 6 + attrLen;
-				}
+				final Visibility vis = flagsToVis(readUnsignedShort(at) & ACC_MASK);
+				addDescriptorRef(readUnsignedShort(at + 4), vis);
+				at = parseAttrs(at + 6, vis);
 			}
 		}
 
+		// Parse class attributes.
+		at = parseAttrs(at, Visibility.PUBL);
+
 		// Add remaining, internal refs.
 		for (int i = 0; i < nMemberRefs; i++) {
-			final String className = addClassItemRef(readUnsignedShort(memberRefs[i]), ACC_PRIVATE);
+			final String className = addClassItemRef(readUnsignedShort(memberRefs[i]), Visibility.PRIV);
 			final int nameTypeAt = items[readUnsignedShort(memberRefs[i] + 2)];
 			addMemberRef(className, //
 					readUTF8Item(readUnsignedShort(nameTypeAt)), // member name
@@ -168,10 +166,41 @@ public final class ClassParser implements Closeable {
 			);
 		}
 		for (int i = 0; i < nClasses; i++)
-			addClassNameRef(readUnsignedShort(classes[i]), ACC_PRIVATE);
+			addClassNameRef(readUnsignedShort(classes[i]), Visibility.PRIV);
 		for (int i = 0; i < nNameTypes; i++)
-			addDescriptorRef(readUnsignedShort(nameTypes[i] + 2), ACC_PRIVATE);
+			addDescriptorRef(readUnsignedShort(nameTypes[i] + 2), Visibility.PRIV);
 
+	}
+
+	private int parseAttrs(int at, Visibility vis) throws IOException {
+		final int nAttrs = readUnsignedShort(at);
+		at += 2;
+		for (int i = 0; i < nAttrs; i++) {
+			final String name = readUTF8Item(readUnsignedShort(at));
+			final int attrLen = readInt(at + 2);
+			at += 6;
+			final int atEnd = at + attrLen;
+			if ("Exceptions".equals(name)) {
+				final int nExc = readUnsignedShort(at);
+				at += 2;
+				for (int k = 0; k < nExc; k++) {
+					addClassItemRef(readUnsignedShort(at), vis);
+					at += 2;
+				}
+			} else if ("Signature".equals(name)) {
+				addSignatureRef(readUnsignedShort(at), vis);
+			} else if ("RuntimeVisibleAnnotations".equals(name)) {
+				parseAnns(at, vis);
+			} else if ("RuntimeInvisibleAnnotations".equals(name)) {
+				parseAnns(at, Visibility.PRIV);
+			}
+			at = atEnd;
+		}
+		return at;
+	}
+
+	private void parseAnns(int at, Visibility vis) throws IOException {
+		// TODO annotations
 	}
 
 	private Visibility flagsToVis(int flags) {
@@ -187,25 +216,24 @@ public final class ClassParser implements Closeable {
 		}
 	}
 
-	private String addClassRef(String name, int access) {
+	private String addClassRef(String name, Visibility vis) {
 		if (null == name || ownName.equals(name))
 			return null;
 		final Visibility found = refdClasses.get(name);
-		final Visibility have = flagsToVis(access);
-		if (null == found || have.compareTo(found) > 0)
-			refdClasses.put(name, have);
+		if (null == found || vis.compareTo(found) > 0)
+			refdClasses.put(name, vis);
 		return name;
 	}
 
-	private String addClassNameRef(int nameItem, int access) throws IOException {
-		return addClassRef(toClassName(readUTF8Item(nameItem)), access);
+	private String addClassNameRef(int nameItem, Visibility vis) throws IOException {
+		return addClassRef(toClassName(readUTF8Item(nameItem)), vis);
 	}
 
-	private String addClassItemRef(int classItem, int access) throws IOException {
-		return addClassNameRef(readUnsignedShort(items[classItem]), access);
+	private String addClassItemRef(int classItem, Visibility vis) throws IOException {
+		return addClassNameRef(readUnsignedShort(items[classItem]), vis);
 	}
 
-	private void addDescriptorRef(int descriptorStringIndex, int access) throws IOException {
+	private void addDescriptorRef(int descriptorStringIndex, Visibility vis) throws IOException {
 		if (0 == descriptorStringIndex)
 			return;
 		final String d = readUTF8Item(descriptorStringIndex);
@@ -213,16 +241,22 @@ public final class ClassParser implements Closeable {
 		while (i < n) {
 			if (d.charAt(i++) == 'L') {
 				int i0 = i;
-				while (d.charAt(i++) != ';') {}
-				addClassRef(d.substring(i0, i - 1), access);
+				char c;
+				while ((c = d.charAt(i++)) != ';' && c != '<') {} // the '<' is for parsing generics
+				addClassRef(d.substring(i0, i - 1), vis);
 			}
 		}
+	}
+
+	private void addSignatureRef(int signatureStringIndex, Visibility vis) throws IOException {
+		// A signature, when we only want to extract class refs, parses just like a descriptor.
+		addDescriptorRef(signatureStringIndex, vis);
 	}
 
 	private void addMemberRef(String className, String memberName, String memberDescriptor) {
 		if (null == className)
 			return;
-		// TODO
+		// TODO member
 	}
 
 	private String toClassName(String name) {

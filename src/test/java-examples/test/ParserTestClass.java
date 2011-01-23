@@ -1,6 +1,10 @@
 package test;
 
-@ClassAttr public abstract class ParserTestClass extends Base implements IntfA, IntfB {
+import java.util.ArrayList;
+import java.util.Set;
+
+@SuppressWarnings({ "unused", "null" })//
+@ClassAttr public abstract class ParserTestClass<E extends GenericLower> extends Base implements IntfA, IntfB {
 
 	@ConstAttr public static final Const CONST = null;
 
@@ -20,6 +24,11 @@ package test;
 		@CodeAttr MethodRef ref = null; // @CodeAttr will not be flagged
 		if (ref.bar()) {}
 		System.out.println(); // refs java/io/PrintStream
+		if (new ArrayList<GenericArg>() != null) {} // GenericArg will not be flagged
 	}
+
+	protected <K extends GenericLowerMtd> void gen() {}
+
+	protected Set<? super GenericUpper> map = null;
 
 }
