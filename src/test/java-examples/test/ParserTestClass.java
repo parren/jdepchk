@@ -1,6 +1,7 @@
 package test;
 
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Set;
 
 @SuppressWarnings({ "unused", "null" })//
@@ -29,6 +30,7 @@ import java.util.Set;
 
 	protected <K extends GenericLowerMtd> void gen() {}
 
-	protected Set<? super GenericUpper> map = null;
-
+	protected Set<? super GenericUpper1> set = null;
+	private Map<Set<? super GenericUpper2>, Set<? extends GenericLower2>> map =null;
+	
 }

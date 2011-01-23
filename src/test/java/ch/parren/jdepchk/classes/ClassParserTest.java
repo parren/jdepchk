@@ -29,6 +29,7 @@ public class ClassParserTest {
 					"java/lang/IllegalArgumentException publ\n" + //
 					"java/lang/System priv\n" + //
 					"java/util/ArrayList priv\n" + //
+					"java/util/Map priv\n" + //
 					"java/util/Set prot\n" + //
 					"test/Base publ\n" + //
 					"test/Const publ\n" + //
@@ -38,8 +39,10 @@ public class ClassParserTest {
 //					"test/FieldAttr priv\n" + // FIXME
 					"test/FieldRef priv\n" + // 
 					"test/GenericLower publ\n" + //
+					"test/GenericLower2 priv\n" + //
 					"test/GenericLowerMtd prot\n" + //
-					"test/GenericUpper prot\n" + //
+					"test/GenericUpper1 prot\n" + //
+					"test/GenericUpper2 priv\n" + //
 					"test/IntfA publ\n" + //
 					"test/IntfB publ\n" + //
 					"test/MethodRef priv\n" + //
