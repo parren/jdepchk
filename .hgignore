@@ -1,4 +1,6 @@
 ^temp/
 ^.settings/
-^build/classes/
+^build/
+^doc/
+^build.properties$
 

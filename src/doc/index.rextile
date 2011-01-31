@@ -1,0 +1,52 @@
+
+h1. JDepChk - Java Class File Dependency Checker
+
+
+*FIXME:* Add tweets.
+
+
+JDepChk is a dependency checker for Java virtual machine (JVM) class files. As such, it can be used for any code that runs on the JVM. Highlights:
+
+	* Specify "components and dependencies":comps.htm using high-level rules.
+	* *Transitive dependencies* (if B extends A, users of B inherit A).
+	* *Regular expression matchers* and include/exclude lists.
+	* Rules to forbid access to *specific members*.
+	* Different rules for *public and private* parts of classes.
+	* Multiple rule sets loadable from different files.
+	* *Very fast.* Based on a stripped-down version of "ASM's":-asm class reader.
+	* Processes class files one by one (unlike some other such tools).
+
+
+h2. License
+
+JDepChk is open source under a "BSD-style license":LICENSE.html.
+
+
+h2. Download
+
+<% ver = '0.1.0' %>
+
+"jdepchk-<%=ver%>-bin.zip":http://jdepchk.googlecode.com/files/jdepchk-<%=ver%>-bin.zip : Binary release. Needs at least "Java 6":http://www.java.com/en/download/index.jsp to run.
+
+"jdepchk-<%=ver%>-src.zip":http://jdepchk.googlecode.com/files/jdepchk-<%=ver%>-src.zip : Source code for JDepChk, including tests and examples. External libraries and build tools are not included in the download. For the required libraries, download the respective binary release of JDepChk first. In order to run the Ant build script, you need "Ant":http://ant.apache.org/. If you want to run the tests, you need "JUnit":http://www.junit.org/ and "Rextile":-rex.
+
+"Release History":history.htm
+
+
+h2. Contributing
+
+JDepChk is maintained on "Google Code Hosting":http://jdepchk.googlecode.com/ for the
+
+	* "wiki":http://code.google.com/p/jdepchk/w/list,
+	* "issue tracker":http://code.google.com/p/jdepchk/issues/list,
+	* "discussion group":http://groups.google.com/group/jdepchk, and
+	* "source code repositories":http://code.google.com/p/jdepchk/source/list managed by "Mercurial":-hg.
+
+
+h2. Alternatives
+
+JDepChk was directly inspired by "Macker":http://innig.net/macker/.
+
+
+[-asm]http://asm.ow2.org/
+

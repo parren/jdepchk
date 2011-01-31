@@ -1,0 +1,21 @@
+
+h1. Components and Dependencies
+
+Typical Java projects are structured around Java's _packages_. JDepChk directly supports this using shorthand notation for components that map directly to packages. By _component_, I mean a collection of classes that obey the same dependency rules.
+
+For example, @com.example.foo.ui@ might only be allowed to see core Java, Swing, and @com.example.foo.core@. Here are the corresponding rules for JDepChk:
+
+	lib: $default # by default we add the following to all components
+		contains:
+			java.!! # core Java
+	_
+	lib: javax.swing.!!
+	_
+	comp: com.example.foo.core.!!
+	_
+	comp: com.example.foo.ui.!!
+		uses:
+			com.example.foo.core
+			javax.swing
+
+
