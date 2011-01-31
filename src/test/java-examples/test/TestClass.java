@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.Set;
 
 @SuppressWarnings({ "unused", "null" })//
-@ClassAttr public abstract class ParserTestClass<E extends GenericLower> extends Base implements IntfA, IntfB {
+@ClassAttr public abstract class TestClass<E extends GenericLower> extends Base implements IntfA, IntfB {
 
 	@ConstAttr public static final Const CONST = null;
 
@@ -31,6 +31,10 @@ import java.util.Set;
 	protected <K extends GenericLowerMtd> void gen() {}
 
 	protected Set<? super GenericUpper1> set = null;
-	private Map<Set<? super GenericUpper2>, Set<? extends GenericLower2>> map =null;
-	
+	private Map<Set<? super GenericUpper2>, Set<? extends GenericLower2>> map = null;
+
+	public <M> M foo(M bar) {
+		return null;
+	}
+
 }

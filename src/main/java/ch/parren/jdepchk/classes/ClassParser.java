@@ -10,8 +10,6 @@ import java.util.Map;
 
 import ch.parren.java.lang.New;
 
-// FIXME drop lazy reading as we nearly always access everything
-
 /**
  * JVM class file format parser based on ASM's ClassReader class, but tuned for
  * speed with JDepChk's requirements.
@@ -233,17 +231,30 @@ public final class ClassParser implements Closeable {
 		return addClassNameRef(readUnsignedShort(items[classItem]), vis);
 	}
 
+	/**
+	 * Extracts type references from type descriptors and generic signatures.
+	 * For type descriptors, we can simply scan for 'L', which starts a type
+	 * ref. In signatures, an 'L' can also appear inside
+	 */
 	private void addDescriptorRef(int descriptorStringIndex, Visibility vis) throws IOException {
 		if (0 == descriptorStringIndex)
 			return;
 		final String d = readUTF8Item(descriptorStringIndex);
 		int i = 0, n = d.length();
-		while (i < n) {
-			if (d.charAt(i++) == 'L') {
+		char c;
+		outer: while (i < n) {
+			c = d.charAt(i++);
+			switch (c) {
+			case 'L': // type name
 				int i0 = i;
-				char c;
-				while ((c = d.charAt(i++)) != ';' && c != '<') {} // the '<' is for parsing generics
+				while ((c = d.charAt(i++)) != ';' && c != '<') {
+					if (c == ':')
+						continue outer; // the 'L' appeared inside the name of a generic param
+				} // the '<' is for parsing generics
 				addClassRef(d.substring(i0, i - 1), vis);
+				break;
+			case 'T': // generic param name
+				while ((c = d.charAt(i++)) != ';') {}
 			}
 		}
 	}
