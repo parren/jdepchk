@@ -19,6 +19,7 @@ public class ClassParserTest {
 				"java/io/PrintStream priv\n" + //
 				"java/lang/Exception priv\n" + //
 				"java/lang/IllegalArgumentException publ\n" + //
+				"java/lang/Integer priv\n" + //
 				"java/lang/Object publ\n" + //
 				"java/lang/System priv\n" + //
 				"java/util/ArrayList priv\n" + //
@@ -32,7 +33,9 @@ public class ClassParserTest {
 //					"test/FieldAttr priv\n" + // FIXME
 				"test/FieldRef priv\n" + // 
 				"test/GenericLower publ\n" + //
-				"test/GenericLower2 priv\n" + //
+				"test/GenericLower1 publ\n" + //
+				"test/GenericLower2 publ\n" + //
+				"test/GenericLower3 publ\n" + //
 				"test/GenericLowerMtd prot\n" + //
 				"test/GenericUpper1 prot\n" + //
 				"test/GenericUpper2 priv\n" + //
@@ -46,6 +49,8 @@ public class ClassParserTest {
 				"test/Returned priv\n" + //
 				"test/StaticMethodRef priv\n" + //
 				"test/StaticRef priv\n" + //
+				"test/TestClass$Gen priv\n" + //
+				"test/TestClass$Lala priv\n" + //
 				"");
 	}
 

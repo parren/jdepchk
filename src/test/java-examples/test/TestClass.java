@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.Set;
 
 @SuppressWarnings({ "unused", "null" })//
-@ClassAttr public abstract class TestClass<E extends GenericLower> extends Base implements IntfA, IntfB {
+@ClassAttr public abstract class TestClass<E extends GenericLower, F extends GenericLower1 & GenericLower2, G extends GenericLower3> extends Base implements IntfA, IntfB {
 
 	@ConstAttr public static final Const CONST = null;
 
@@ -37,4 +37,11 @@ import java.util.Set;
 		return null;
 	}
 
+	private class Lala<E> {}
+	private Lala<Object> lala;
+		
+	private class Gen<Set> {}
+	private Gen<Set<Integer>> gen;
+	private Gen<Integer>[][] arr;
+	
 }

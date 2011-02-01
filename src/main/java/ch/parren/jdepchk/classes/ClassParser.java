@@ -231,37 +231,122 @@ public final class ClassParser implements Closeable {
 		return addClassNameRef(readUnsignedShort(items[classItem]), vis);
 	}
 
-	/**
-	 * Extracts type references from type descriptors and generic signatures.
-	 * For type descriptors, we can simply scan for 'L', which starts a type
-	 * ref. In signatures, an 'L' can also appear inside
-	 */
 	private void addDescriptorRef(int descriptorStringIndex, Visibility vis) throws IOException {
 		if (0 == descriptorStringIndex)
 			return;
-		final String d = readUTF8Item(descriptorStringIndex);
-		int i = 0, n = d.length();
-		char c;
-		outer: while (i < n) {
-			c = d.charAt(i++);
-			switch (c) {
-			case 'L': // type name
+		addDescriptor(readUTF8Item(descriptorStringIndex), vis);
+	}
+
+	/**
+	 * Extracts type references from type descriptors. We can simply scan for
+	 * 'L', which starts a type ref.
+	 */
+	private void addDescriptor(String desc, Visibility vis) {
+		int i = 0, n = desc.length();
+		while (i < n) {
+			if (desc.charAt(i++) == 'L') {
 				int i0 = i;
-				while ((c = d.charAt(i++)) != ';' && c != '<') {
-					if (c == ':')
-						continue outer; // the 'L' appeared inside the name of a generic param
-				} // the '<' is for parsing generics
-				addClassRef(d.substring(i0, i - 1), vis);
-				break;
-			case 'T': // generic param name
-				while ((c = d.charAt(i++)) != ';') {}
+				while (desc.charAt(i++) != ';') {}
+				addClassRef(desc.substring(i0, i - 1), vis);
 			}
 		}
 	}
 
 	private void addSignatureRef(int signatureStringIndex, Visibility vis) throws IOException {
-		// A signature, when we only want to extract class refs, parses just like a descriptor.
-		addDescriptorRef(signatureStringIndex, vis);
+		if (0 == signatureStringIndex)
+			return;
+		addSignature(readUTF8Item(signatureStringIndex), vis);
+	}
+
+	/**
+	 * Extracts type references from generic type signatures. We need to fairly
+	 * properly parse these.
+	 */
+	private void addSignature(String sig, Visibility vis) {
+		new SigParser(sig, vis).parse();
+	}
+
+	private final class SigParser {
+
+		private final String sig;
+		private final Visibility vis;
+		private final int n;
+		private int at;
+
+		public SigParser(String sig, Visibility vis) {
+			this.sig = sig;
+			this.vis = vis;
+			this.n = sig.length();
+			this.at = 0;
+		}
+
+		public void parse() {
+			char c = next();
+			if (c == '<') {
+				mtdGenParams();
+				c = next();
+			}
+			if (c == '(') {
+				mtdParams();
+				c = next();
+			}
+			type(c);
+		}
+
+		private void mtdGenParams() {
+			char c = next();
+			while (c != '>') {
+				while (next() != ':') {} // skip param name
+				if ((c = next()) != ':')
+					type(c); // super class
+				else
+					at--;
+				while ((c = next()) == ':')
+					type(next()); // super interface
+			}
+		}
+
+		private void mtdParams() {
+			char c;
+			while ((c = next()) != ')')
+				type(c);
+		}
+
+		private void type(char c) {
+			switch (c) {
+			case 'L':
+				typeSig();
+				break;
+			case 'T':
+				while (next() != ';') {}
+				break;
+			case '[':
+				type(next());
+				break;
+			}
+			// all other chars are assumed to be single letter primitives
+		}
+
+		private void typeSig() {
+			final StringBuilder name = new StringBuilder();
+			char c;
+			do {
+				final int start = at;
+				while ((c = next()) != ';' && c != '<' && c != '.') {}
+				name.append(sig, start, at - 1);
+				if (c == '.')
+					name.append('$');
+				else if (c == '<')
+					while ((c = next()) != '>')
+						type(c);
+			} while (c != ';');
+			addClassRef(name.toString(), vis);
+		}
+
+		private char next() {
+			return sig.charAt(at++);
+		}
+
 	}
 
 	private void addMemberRef(String className, String memberName, String memberDescriptor) {
