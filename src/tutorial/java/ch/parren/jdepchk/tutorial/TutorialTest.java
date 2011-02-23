@@ -1,5 +1,24 @@
-jc:ch.parren.jdepchk.tutorial.TutorialTest:---- cite
-__@@__
+package ch.parren.jdepchk.tutorial;
+
+import static org.junit.Assert.*;
+
+import java.io.File;
+import java.io.StringReader;
+import java.util.List;
+
+import org.junit.Test;
+
+import ch.parren.java.lang.New;
+import ch.parren.jdepchk.check.Checker;
+import ch.parren.jdepchk.check.Violation;
+import ch.parren.jdepchk.check.ViolationListener;
+import ch.parren.jdepchk.classes.ClassSet;
+import ch.parren.jdepchk.classes.ClassesDirClassSet;
+import ch.parren.jdepchk.rules.RuleSet;
+import ch.parren.jdepchk.rules.builder.RuleSetBuilder;
+import ch.parren.jdepchk.rules.parser.RuleSetLoader;
+
+// ---- cite
 /**
  * JDepChk is a dependency checker for the Java virtual machine (JVM) class
  * files. As such, it can be used for any code that runs on the JVM.
@@ -76,7 +95,7 @@ public class TutorialTest {
 		 * <em>components</em>. The classes in components are checked by
 		 * JDepChk, those in libraries are not. But libraries can still be
 		 * referenced.
-		 *
+		 * 
 		 * For example, {@code com.example.foo.ui} might only be allowed to see
 		 * core Java, Swing, and {@code com.example.foo.core}. Here are the
 		 * corresponding definitions for JDepChk:
@@ -116,7 +135,7 @@ public class TutorialTest {
 				 * The UI, however, can see $default, and the core and Swing. We
 				 * specify this with a {@code uses:} clause, in which you
 				 * reference other components by listing their names.
-				 *
+				 * 
 				 * Note: With rules we used {@code allows}, not {@uses}.
 				 * The former directly specifies patterns, the latter refers to
 				 * other components. A component can actually have an
@@ -142,7 +161,7 @@ public class TutorialTest {
 	 * component using said API will also depend on what the API references. To
 	 * avoid having to repeat these dependencies for every user of the API,
 	 * JDepChk supports transient uses. They are written {@code extends:}.
-	 *
+	 * 
 	 * Say we have a component XMLSetup that centralizes the parsing of XML for
 	 * us. So it returns XML DOMs. Clearly, then, the API depends on Java's XML
 	 * support:
@@ -220,82 +239,37 @@ public class TutorialTest {
 		assertEquals("com/example/usesxml/UseXML", violations.get(1).fromClassName);
 		assertEquals("javax/xml/validation/Schema", violations.get(1).toClassName);
 	}
-___@_@___
-text:ch/parren/jdepchk/help.txt
-__@@__
-NAME
-	jdepchk - checks JVM classes for conformance to dependency rules
+	// ---- cite
 
-SYNOPSIS
-	jdepchk [OPTION]...
+	private String[] replaceIn(String[] lines, String what, String with) {
+		final String[] res = new String[lines.length];
+		for (int i = 0; i < lines.length; i++)
+			res[i] = lines[i].replace(what, with);
+		return res;
+	}
 
-DESCRIPTION
-	Scans class files in dirs, .jar files, or dirs with .jar files for dependencies on other
-	classes and verifies the latter against a set of rules.
+	private void check(String[] rulesLines, String classDirName) throws Exception {
+		final RuleSet ruleSet = parse(rulesLines);
+		final ClassSet classSet = new ClassesDirClassSet(new File(classDirName));
+		final Checker checker = new Checker(violationsGatherer, ruleSet);
+		checker.check(classSet);
+	}
 
-	-r, --rules FILENAME
-		Loads rule definitions from the given file. See below for examples of rule definitions.
+	private RuleSet parse(String[] rulesLines) {
+		final StringBuilder text = new StringBuilder();
+		for (String line : rulesLines)
+			text.append(line).append("\n");
+		final RuleSetBuilder builder = new RuleSetBuilder("tutorial");
+		RuleSetLoader.loadInto(new StringReader(text.toString()), builder);
+		return builder.finish();
+	}
 
-	-c, --classes DIRNAME
-		Scans .class files in the given directory and all its subdirectories.
-		You will typically use this for javac's output dirs.
+	private final ViolationListener violationsGatherer = new ViolationListener() {
+		@Override protected boolean report(Violation v) {
+			violations.add(v);
+			return true;
+		}
+	};
+	private final List<Violation> violations = New.arrayList();
 
-	-j, --jars DIRNAME
-		Scans .jar files in the given directory, then scans all the .class files contained within
-		the .jar files found.
-		You will typically use this to verify rules against the final result of builds.
-
-	--show-rules
-		Lists all the low-level rules in effect after parsing the rule files. In particular, this
-		shows how component-based rules are implemented as low-level rules by JDepChk.
-
-	--show-stats
-		Shows information about number of classes inspected, and some other details.
-___@_@___
-text:src/main/rules.jdep
-__@@__
-# Self-check rules
-
-def $p = ch.parren
-def $j = $p.jdepchk
-
-lib $default
-	contains:
-		java.lang.**
-		java.util.**
-
-lib java.io.**
-
-comp $p.java.**
-
-comp $j.*
-	uses $p.java java.io
-	allows $j.**
-
-comp $j.rules.*
-	uses $p.java
-
-comp $j.rules.builder.**
-	extends $j.rules
-	uses $p.java
-
-comp $j.rules.parser.**
-	extends $j.rules
-	uses:
-		$j.rules.builder
-		$p.java
-		java.io
-
-comp $j.classes.**
-	uses:
-		$p.java
-		java.io
-
-comp $j.check.**
-	uses:
-		$j.rules
-		$j.classes
-		$p.java
-	allows:
-		java.io.IOException
-___@_@___
+}

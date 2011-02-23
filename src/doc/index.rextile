@@ -2,19 +2,24 @@
 h1. JDepChk - Java Class File Dependency Checker
 
 
-*FIXME:* Add tweets.
+*FIXME:*
+	* Add tweets.
+	* Fix build.xml for tests, jar, etc.
+	* Add history.rextile
 
 
 JDepChk is a dependency checker for Java virtual machine (JVM) class files. As such, it can be used for any code that runs on the JVM. Highlights:
 
-	* Specify "components and dependencies":comps.htm using high-level rules.
+	* Specify *components and dependencies* using high-level rules.
 	* *Transitive dependencies* (if B extends A, users of B inherit A).
 	* *Regular expression matchers* and include/exclude lists.
-	* Rules to forbid access to *specific members*.
-	* Different rules for *public and private* parts of classes.
+	* TODO: Rules to forbid access to *specific members*.
+	* TODO: Different rules for *public and private* parts of classes.
 	* Multiple rule sets loadable from different files.
 	* *Very fast.* Based on a stripped-down version of "ASM's":-asm class reader.
 	* Processes class files one by one (unlike some other such tools).
+
+See the "tutorial":tut.htm for details.
 
 
 h2. License
@@ -45,8 +50,9 @@ JDepChk is maintained on "Google Code Hosting":http://jdepchk.googlecode.com/ fo
 
 h2. Alternatives
 
-JDepChk was directly inspired by "Macker":http://innig.net/macker/.
+JDepChk was directly inspired by "Macker":-macker.
 
 
 [-asm]http://asm.ow2.org/
+[-macker]http://innig.net/macker/
 

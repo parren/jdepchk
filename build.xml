@@ -12,6 +12,7 @@
 	<property name="lib.dir" location="${basedir}/lib" />
 	<property name="doc.dir" location="${basedir}/doc" />
 	<property name="src.classes.dir" location="${src.dir}/main/java" />
+	<property name="src.tutorial.dir" location="${src.dir}/tutorial/java" />
 	<property name="src.test.dir" location="${src.dir}/test/java" />
 	<property name="src.test-examples.dir" location="${src.dir}/test/java-examples" />
 	<property name="src.doc.dir" location="${src.dir}/doc" />
@@ -82,6 +83,11 @@
 		<javac srcdir="${src.classes.dir}" destdir="${temp.classes.dir}" classpath="${build.classpath}" debug="false" deprecation="on" source="${javac.source}" target="${javac.target}">
 			<include name="ch/parren/**" />
 		</javac>
+		<copy todir="${temp.classes.dir}">
+			<fileset dir="${src.classes.dir}">
+				<include name="**/*.txt" />
+			</fileset>
+		</copy>
 	</target>
 
 	<target name="compile" depends="prepare, compile-main" description="Compiles the source code">
@@ -164,13 +170,19 @@
 	<target name="rextile" depends="prepare">
 		<exec dir="${src.doc.dir}" executable="${rextile.launch}" vmlauncher="false" failonerror="true">
 		</exec>
+		<replace token="°" value="*">
+			<fileset dir="${temp.doc.dir}">
+				<include name="*.htm" />
+			</fileset>
+		</replace>
 	</target>
 
 	<target name="cite" depends="prepare, @cite-init, @cite-no-accept">
 		<jcite srcdir="${temp.doc.dir}" destdir="${doc.dir}" projectpath="${basedir}" tripwirefile="${src.dir}/tripwires.jcite" acceptChanges="${tripups.accept}" diffPath="${temp.dir}/tripups" differ="${jcite.differ}">
 			<sourcepath>
+				<pathelement location="${basedir}" />
 				<pathelement location="${src.classes.dir}" />
-				<pathelement location="${src.classes-excel.dir}" />
+				<pathelement location="${src.tutorial.dir}" />
 				<pathelement location="${src.examples.dir}" />
 				<pathelement location="${src.test.dir}" />
 				<pathelement location="${src.test.dir}/data" />

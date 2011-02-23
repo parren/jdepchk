@@ -5,11 +5,22 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
 
 import ch.parren.jdepchk.rules.RuleSet;
 import ch.parren.jdepchk.rules.builder.RuleSetBuilder;
 
 public final class RuleSetLoader {
+
+	static public void loadInto(Reader reader, RuleSetBuilder builder) {
+		try {
+			final RuleSetParser parser = new RuleSetParser(reader);
+			parser.builder = builder;
+			parser.ruleSet();
+		} catch (ParseException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
 	static public void loadInto(InputStream stream, RuleSetBuilder builder) {
 		try {

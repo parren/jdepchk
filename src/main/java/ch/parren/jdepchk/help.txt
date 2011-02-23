@@ -1,0 +1,28 @@
+NAME
+	jdepchk - checks JVM classes for conformance to dependency rules
+
+SYNOPSIS
+	jdepchk [OPTION]...
+
+DESCRIPTION
+	Scans class files in dirs, .jar files, or dirs with .jar files for dependencies on other
+	classes and verifies the latter against a set of rules.
+
+	-r, --rules FILENAME
+		Loads rule definitions from the given file. See below for examples of rule definitions.
+
+	-c, --classes DIRNAME
+		Scans .class files in the given directory and all its subdirectories.
+		You will typically use this for javac's output dirs.
+
+	-j, --jars DIRNAME
+		Scans .jar files in the given directory, then scans all the .class files contained within
+		the .jar files found.
+		You will typically use this to verify rules against the final result of builds. 
+
+	--show-rules
+		Lists all the low-level rules in effect after parsing the rule files. In particular, this
+		shows how component-based rules are implemented as low-level rules by JDepChk.
+
+	--show-stats
+		Shows information about number of classes inspected, and some other details.

@@ -9,7 +9,7 @@ import org.junit.Test;
 import ch.parren.jdepchk.check.Checker;
 import ch.parren.jdepchk.check.Violation;
 import ch.parren.jdepchk.check.ViolationListener;
-import ch.parren.jdepchk.classes.OutputDirClassSet;
+import ch.parren.jdepchk.classes.ClassesDirClassSet;
 import ch.parren.jdepchk.rules.RuleSet;
 import ch.parren.jdepchk.rules.builder.RuleSetBuilder;
 
@@ -17,7 +17,7 @@ public class JDepChkTest {
 
 	@Test public void allRules() throws Exception {
 		final RuleSet rules = makeDemoRules();
-		final OutputDirClassSet classes = new OutputDirClassSet(new File("temp/classes/test-examples"));
+		final ClassesDirClassSet classes = new ClassesDirClassSet(new File("temp/classes/test-examples"));
 		final StringBuilder violations = new StringBuilder();
 		final ViolationListener listener = new ViolationListener() {
 			@Override protected boolean report(Violation v) {

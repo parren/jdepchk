@@ -9,6 +9,7 @@ PARSER_BEGIN(RuleSetParser)
 package ch.parren.jdepchk.rules.parser;
 
 import java.util.*;
+import java.util.regex.*;
 import ch.parren.jdepchk.rules.builder.*;
 
 @SuppressWarnings("unused")//
@@ -30,24 +31,27 @@ SPECIAL_TOKEN: /* COMMENTS */
 
 TOKEN:
 	{	< Def: "def" >
-	|	< Scope: "scope" >
+	|	< Rule: "rule" >
+	|	< Scope: "scope" > // deprecated
 	|	< Lib: "lib" >
 	|	< Comp: "comp" >
 	|	< Contains: "contains" >
+	|	< AppliesTo: "applies-to" >
 	|	< Allows: "allows" >
 	|	< Extends: "extends" >
 	|	< Uses: "uses" >
 	|	< Not: "!" >
 	|	< Intro: ":" > // optionally separates arguments from names
 	|	< Bullet: "-" > // supports YAMLish multiple elts
-	|	< Id: ( ["a"-"z","A"-"Z","0"-"9", ".", "*", "$"] )+ >
+	|	< Id: ( ["a"-"z","A"-"Z","0"-"9", ".", "*", "$", "-", "_"] )+ >
+	|	< RegExp: "^" ( ~["$"] | "$$" )* "$" >
 	}
 
 void ruleSet():
 	{}
 	{
 		(	def()
-		|	scope()
+		|	rule()
 		|	lib()
 		|	comp()
 		)*	
@@ -64,13 +68,13 @@ void def():
 			{ builder.define(name, value); }
 	}
 
-void scope():
+void rule():
 	{
 		String name;
 		ScopeBuilder scope;
 	}
 	{
-		<Scope> [<Intro>] name=id()
+		(<Rule> | <Scope>) [<Intro>] name=id()
 			{ scope = builder.scope(name); }
 		(	scopeBody(scope) )*
 	}
@@ -78,7 +82,7 @@ void scope():
 void scopeBody(ScopeBuilder scope):
 	{}
 	{
-			<Contains> [<Intro>] filters(scope.containsFilters())
+			(<Contains> | <AppliesTo>) [<Intro>] filters(scope.containsFilters())
 		|	<Allows> [<Intro>] filters(scope.allowsFilters())
 	}	
 
@@ -153,10 +157,13 @@ void filter(Collection<FilterBuilder> filters):
 
 FilterBuilder spec():
 	{
+		String re;
 		String glob;
 	}
 	{
-		glob=id()
+		re=re()
+			{ return builder.pattern(Pattern.compile(re)); }
+	|	glob=id()
 			{ return builder.glob(glob); }
 	}
 
@@ -164,5 +171,12 @@ String id():
 	{}
 	{
 		<Id>
+			{ return builder.subst(token.image); }
+	}
+
+String re():
+	{}
+	{
+		<RegExp>
 			{ return builder.subst(token.image); }
 	}

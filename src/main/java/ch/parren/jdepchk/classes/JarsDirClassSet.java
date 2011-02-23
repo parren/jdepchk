@@ -3,12 +3,12 @@ package ch.parren.jdepchk.classes;
 import java.io.File;
 import java.io.IOException;
 
-public final class JarPathClassSet implements ClassSet {
+public final class JarsDirClassSet implements ClassSet {
 
 	private final boolean recursive;
 	private final File dir;
 
-	public JarPathClassSet(boolean recursive, File dir) {
+	public JarsDirClassSet(boolean recursive, File dir) {
 		this.recursive = recursive;
 		this.dir = dir;
 	}

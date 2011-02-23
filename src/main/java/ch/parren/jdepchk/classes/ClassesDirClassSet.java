@@ -3,12 +3,12 @@ package ch.parren.jdepchk.classes;
 import java.io.File;
 import java.io.IOException;
 
-public final class OutputDirClassSet implements ClassSet {
+public final class ClassesDirClassSet implements ClassSet {
 
 	private final File baseDir;
 	private final String baseDirPath;
 
-	public OutputDirClassSet(File baseDir) {
+	public ClassesDirClassSet(File baseDir) {
 		this.baseDir = baseDir;
 		this.baseDirPath = baseDir.getPath() + File.separator;
 	}

@@ -6,7 +6,7 @@ import ch.parren.jdepchk.check.Violation;
 import ch.parren.jdepchk.check.ViolationListener;
 import ch.parren.jdepchk.classes.ClassParser;
 import ch.parren.jdepchk.classes.ClassSet;
-import ch.parren.jdepchk.classes.OutputDirClassSet;
+import ch.parren.jdepchk.classes.ClassesDirClassSet;
 import ch.parren.jdepchk.rules.RuleSet;
 import ch.parren.jdepchk.rules.parser.RuleSetLoader;
 
@@ -16,7 +16,7 @@ public final class SelfChk {
 		final RuleSet rules = RuleSetLoader.load(new File("src/main/rules.jdep"));
 //		System.out.print(rules.describe());
 		
-		final ClassSet classes = new OutputDirClassSet(new File("temp/classes/main"));
+		final ClassSet classes = new ClassesDirClassSet(new File("temp/classes/main"));
 		final ViolationListener listener = new ViolationListener() {
 			private int nViol = 0;
 			@Override protected boolean report(Violation v) {

@@ -1,0 +1,32 @@
+
+h1. JDepChk Tutorial
+
+<%= toc %>
+
+
+h2. Running JDepChk
+
+JDepChk can be run from the command line as follows:
+
+	$ java -j jdepchk.jar [OPTION]...
+
+Use @--help@ option to list the available options:
+
+	[text:ch/parren/jdepchk/help.txt]
+
+
+h2. Rules
+
+h3. Rule Files
+
+Rules are defined in special rule files. By convention, their extension is .jdep. As a quick example, here are the rules for JDepChk itself:
+
+	[text:src/main/rules.jdep]
+
+h3. Rules Tutorial
+
+The tutorial is contained directly within tutorial tests in the source tree, which I cite here:
+
+	[jc:ch.parren.jdepchk.tutorial.TutorialTest:---- cite]
+
+

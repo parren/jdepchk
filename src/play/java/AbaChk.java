@@ -5,8 +5,8 @@ import ch.parren.jdepchk.check.Violation;
 import ch.parren.jdepchk.check.ViolationListener;
 import ch.parren.jdepchk.classes.ClassParser;
 import ch.parren.jdepchk.classes.ClassSet;
-import ch.parren.jdepchk.classes.JarPathClassSet;
-import ch.parren.jdepchk.classes.OutputDirClassSet;
+import ch.parren.jdepchk.classes.JarsDirClassSet;
+import ch.parren.jdepchk.classes.ClassesDirClassSet;
 import ch.parren.jdepchk.rules.RuleSet;
 import ch.parren.jdepchk.rules.builder.RuleSetBuilder;
 
@@ -16,7 +16,7 @@ public final class AbaChk {
 		final RuleSet rules = makeDemoRules();
 		System.out.println(rules.describe());
 //		final ClassSet classes = new OutputDirClassSet(new File("/home/peo/dev/aba/trunk/abajava/temp/eclipse"));
-		final ClassSet classes = new JarPathClassSet(true, new File("/home/peo/dev/aba/trunk/abajars/jars/aba/"));
+		final ClassSet classes = new JarsDirClassSet(true, new File("/home/peo/dev/aba/trunk/abajars/jars/aba/"));
 		final ViolationListener listener = new ViolationListener() {
 			private int nViol = 0;
 			@Override protected boolean report(Violation v) {

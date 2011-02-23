@@ -9,6 +9,10 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 
+/**
+ * Defines static constructor methods for collections to make use of Java's
+ * limited type inference.
+ */
 public final class New {
 
 	public static <K, V> HashMap<K, V> hashMap() {

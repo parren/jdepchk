@@ -19,27 +19,33 @@ public interface RuleSetParserConstants {
   /** RegularExpression Id. */
   int Def = 8;
   /** RegularExpression Id. */
-  int Scope = 9;
+  int Rule = 9;
   /** RegularExpression Id. */
-  int Lib = 10;
+  int Scope = 10;
   /** RegularExpression Id. */
-  int Comp = 11;
+  int Lib = 11;
   /** RegularExpression Id. */
-  int Contains = 12;
+  int Comp = 12;
   /** RegularExpression Id. */
-  int Allows = 13;
+  int Contains = 13;
   /** RegularExpression Id. */
-  int Extends = 14;
+  int AppliesTo = 14;
   /** RegularExpression Id. */
-  int Uses = 15;
+  int Allows = 15;
   /** RegularExpression Id. */
-  int Not = 16;
+  int Extends = 16;
   /** RegularExpression Id. */
-  int Intro = 17;
+  int Uses = 17;
   /** RegularExpression Id. */
-  int Bullet = 18;
+  int Not = 18;
   /** RegularExpression Id. */
-  int Id = 19;
+  int Intro = 19;
+  /** RegularExpression Id. */
+  int Bullet = 20;
+  /** RegularExpression Id. */
+  int Id = 21;
+  /** RegularExpression Id. */
+  int RegExp = 22;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -55,10 +61,12 @@ public interface RuleSetParserConstants {
     "<SINGLE_LINE_COMMENT>",
     "<MULTI_LINE_COMMENT>",
     "\"def\"",
+    "\"rule\"",
     "\"scope\"",
     "\"lib\"",
     "\"comp\"",
     "\"contains\"",
+    "\"applies-to\"",
     "\"allows\"",
     "\"extends\"",
     "\"uses\"",
@@ -66,6 +74,7 @@ public interface RuleSetParserConstants {
     "\":\"",
     "\"-\"",
     "<Id>",
+    "<RegExp>",
     "\"=\"",
   };
 

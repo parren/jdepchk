@@ -1,6 +1,10 @@
 package ch.parren.jdepchk;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.util.Arrays;
 import java.util.Collection;
 
 import ch.parren.java.lang.New;
@@ -9,8 +13,8 @@ import ch.parren.jdepchk.check.Violation;
 import ch.parren.jdepchk.check.ViolationListener;
 import ch.parren.jdepchk.classes.ClassParser;
 import ch.parren.jdepchk.classes.ClassSet;
-import ch.parren.jdepchk.classes.JarPathClassSet;
-import ch.parren.jdepchk.classes.OutputDirClassSet;
+import ch.parren.jdepchk.classes.JarsDirClassSet;
+import ch.parren.jdepchk.classes.ClassesDirClassSet;
 import ch.parren.jdepchk.rules.RuleSet;
 import ch.parren.jdepchk.rules.parser.RuleSetLoader;
 
@@ -54,15 +58,21 @@ public final class JDepChk {
 			if ("--rules".equals(arg) || "-r".equals(arg))
 				ruleSets.add(RuleSetLoader.load(new File(args[i++])));
 			else if ("--classes".equals(arg) || "-c".equals(arg))
-				classSets.add(new OutputDirClassSet(new File(args[i++])));
+				classSets.add(new ClassesDirClassSet(new File(args[i++])));
 			else if ("--jars".equals(arg) || "-j".equals(arg))
-				classSets.add(new JarPathClassSet(true, new File(args[i++])));
+				classSets.add(new JarsDirClassSet(true, new File(args[i++])));
 			else if ("--show-rules".equals(arg))
 				showRules = true;
 			else if ("--show-stats".equals(arg))
 				showStats = true;
-			else
-				throw new IllegalArgumentException("Invalid command line argument: " + arg);
+			else if ("--help".equals(arg) || "-h".equals(arg)) {
+				showHelp();
+				return;
+			} else {
+				System.out.println("ERROR: Invalid command line argument: " + arg);
+				System.out.println("Use --help to see help.");
+				System.exit(2);
+			}
 		}
 
 		if (showRules) {
@@ -71,20 +81,7 @@ public final class JDepChk {
 			System.out.println();
 		}
 
-		final ViolationListener listener = new ViolationListener() {
-			private int nViol = 0;
-			@Override protected boolean report(Violation v) {
-				System.out.println(v.fromClassName + " > " + v.toClassName //
-						+ " in " + v.scope.name() //
-						+ " from " + v.ruleSet.name());
-				nViol++;
-				return true;
-			}
-			@Override public String toString() {
-				return nViol + " violations.";
-			}
-		};
-
+		final PrintingListener listener = new PrintingListener();
 		final Checker checker = new Checker(listener, ruleSets);
 		final long before = System.currentTimeMillis();
 		for (ClassSet classSet : classSets)
@@ -101,6 +98,41 @@ public final class JDepChk {
 			System.out.println(ClassParser.nFilesRead + " class files read.");
 			System.out.println(ClassParser.nBytesRead + " class bytes read.");
 			System.out.println(ClassParser.nBytesUsed + " class bytes accessed.");
+		}
+
+		if (listener.hasViolations())
+			System.exit(1);
+	}
+
+	private static final class PrintingListener extends ViolationListener {
+		private int nViol = 0;
+		@Override protected boolean report(Violation v) {
+			System.out.println(v.fromClassName + " > " + v.toClassName //
+					+ " in " + v.scope.name() //
+					+ " from " + v.ruleSet.name());
+			nViol++;
+			return true;
+		}
+		@Override public String toString() {
+			return nViol + " violations.";
+		}
+		public boolean hasViolations() {
+			return nViol > 0;
+		}
+	}
+
+	private static void showHelp() throws IOException {
+		final Reader r = new InputStreamReader(JDepChk.class.getResourceAsStream("help.txt"), "UTF-8");
+		try {
+			final char[] buf = new char[1024];
+			int red;
+			while ((red = r.read(buf)) > 0)
+				if (red < buf.length)
+					System.out.print(Arrays.copyOf(buf, red));
+				else
+					System.out.print(buf);
+		} finally {
+			r.close();
 		}
 	}
 
