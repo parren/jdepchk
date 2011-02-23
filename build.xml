@@ -9,10 +9,9 @@
 	<property name="name" value="jdepchk" />
 
 	<property name="src.dir" location="${basedir}/src" />
-	<property name="lib.dir" location="${basedir}/lib" />
 	<property name="doc.dir" location="${basedir}/doc" />
 	<property name="src.classes.dir" location="${src.dir}/main/java" />
-	<property name="src.tutorial.dir" location="${src.dir}/tutorial/java" />
+	<property name="src.tut.dir" location="${src.dir}/tutorial/java" />
 	<property name="src.test.dir" location="${src.dir}/test/java" />
 	<property name="src.test-examples.dir" location="${src.dir}/test/java-examples" />
 	<property name="src.doc.dir" location="${src.dir}/doc" />
@@ -21,6 +20,7 @@
 
 	<property name="temp.dir" location="${basedir}/temp" />
 	<property name="temp.classes.dir" location="${temp.dir}/classes/main" />
+	<property name="temp.tut.dir" location="${temp.dir}/classes/tutorial" />
 	<property name="temp.test.dir" location="${temp.dir}/classes/test" />
 	<property name="temp.test-examples.dir" location="${temp.dir}/classes/test-examples" />
 	<property name="temp.doc.dir" location="${temp.dir}/doc" />
@@ -47,12 +47,12 @@
 		<mkdir dir="${build.dir}" />
 		<mkdir dir="${temp.dir}" />
 		<mkdir dir="${temp.classes.dir}" />
+		<mkdir dir="${temp.tut.dir}" />
 		<mkdir dir="${temp.test.dir}" />
 		<mkdir dir="${temp.test-examples.dir}" />
 		<mkdir dir="${temp.doc.dir}" />
 
 		<path id="build.classpath">
-			<fileset dir="${lib.dir}" includes="**/*.jar" />
 		</path>
 		<property name="build.classpath" refid="build.classpath" />
 	</target>
@@ -61,7 +61,6 @@
 
 		<path id="run.classpath">
 			<fileset dir="${build.dir}" includes="*.jar" />
-			<fileset dir="${lib.dir}" includes="**/*.jar" />
 		</path>
 		<property name="run.classpath" refid="run.classpath" />
 
@@ -94,19 +93,11 @@
 	</target>
 
 	<!-- ================================================================= -->
-	<!-- build:                                                            -->
-	<!-- The default target                                                -->
-	<!-- ================================================================= -->
-
-	<target name="build" depends="jar,compile-tests" description="Builds an executable target (default)">
-	</target>
-
-	<!-- ================================================================= -->
 	<!-- jar:                                                              -->
 	<!-- Creates jar file                                                  -->
 	<!-- ================================================================= -->
 
-	<target name="jar-main" depends="compile" description="Creates the main jar file">
+	<target name="jar-main" depends="compile-main" description="Creates the main jar file">
 		<jar manifest="${jar.manifest}" jarfile="${jar.file}" compress="false">
 			<fileset dir="${temp.classes.dir}" />
 		</jar>
@@ -116,17 +107,11 @@
 	</target>
 
 	<!-- ================================================================= -->
-	<!-- run:                                                              -->
-	<!-- Runs the darn thing                                               -->
+	<!-- build:                                                            -->
+	<!-- The default target                                                -->
 	<!-- ================================================================= -->
 
-	<target name="run" depends="prepare-run, build" description="Runs the darn thing">
-
-		<java classname="${run.mainclass}" fork="yes">
-			<arg line="${run.args}" />
-			<classpath refid="run.classpath" />
-		</java>
-
+	<target name="build" depends="jar" description="Builds an executable target (default)">
 	</target>
 
 	<!-- ================================================================= -->
@@ -182,10 +167,7 @@
 			<sourcepath>
 				<pathelement location="${basedir}" />
 				<pathelement location="${src.classes.dir}" />
-				<pathelement location="${src.tutorial.dir}" />
-				<pathelement location="${src.examples.dir}" />
-				<pathelement location="${src.test.dir}" />
-				<pathelement location="${src.test.dir}/data" />
+				<pathelement location="${src.tut.dir}" />
 			</sourcepath>
 			<include name="**/*.htm*" />
 		</jcite>
@@ -202,41 +184,35 @@
 	<!-- ================================================================= -->
 
 	<target name="compile-tests" depends="prepare-run, jar">
-
 		<mkdir dir="${temp.test.dir}" />
-
 		<javac srcdir="${src.test.dir}" destdir="${temp.test.dir}" classpath="${test.classpath}" debug="true" deprecation="on" source="${javac.source}" target="${javac.target}">
-			<include name="ch/arrenbrecht/jcite/**" />
 		</javac>
+		<copy todir="${temp.test.dir}">
+			<fileset dir="${src.test.dir}">
+				<include name="**/*.jdep" />
+			</fileset>
+		</copy>
 	</target>
 
 	<target name="compile-test-examples" depends="prepare-run">
-
 		<mkdir dir="${temp.test-examples.dir}" />
-
 		<javac srcdir="${src.test-examples.dir}" destdir="${temp.test-examples.dir}" source="${javac.source}" target="${javac.target}">
-			<include name="**" />
 		</javac>
 	</target>
 
 	<target name="test" depends="prepare-run, compile-tests, compile-test-examples" description="Runs JUnit test suites">
-
 		<taskdef name="junit" classname="org.apache.tools.ant.taskdefs.optional.junit.JUnitTask" classpath="${test.classpath}" />
-
 		<junit printsummary="yes" showoutput="no" haltonerror="yes" haltonfailure="yes" fork="yes" dir="${basedir}">
-
 			<formatter type="plain" usefile="no" />
 			<classpath refid="test.classpath" />
-
 			<batchtest>
-				<fileset dir="${src.test.dir}">
-					<include name="**/*Test.java" />
-					<exclude name="**/Abstract*.java" />
+				<fileset dir="${temp.test.dir}">
+					<include name="**/*Test.class" />
+					<exclude name="**/Abstract*.class" />
+					<exclude name="**/*$*.class" />
 				</fileset>
 			</batchtest>
-
 		</junit>
-
 	</target>
 
 	<!-- ================================================================= -->
@@ -264,17 +240,7 @@
 	<!-- Package distribution version                                      -->
 	<!-- ================================================================= -->
 
-	<target name="check-jre1.5" description="Checks that ANT is running on JRE 1.5.">
-		<condition property="is.jre15">
-			<and>
-				<equals arg1="Sun Microsystems Inc." arg2="${java.vendor}" />
-				<contains substring="1.5.0" string="${java.runtime.version}" />
-			</and>
-		</condition>
-		<fail message="Distributions must be built with Sun JDK 1.5.0. Aborting." unless="is.jre15" />
-	</target>
-
-	<target name="dist" depends="check-jre1.5, clean,doc,test" description="Builds distribution">
+	<target name="dist" depends="clean,doc,test" description="Builds distribution">
 		<property name="dist.name" value="${name}-${dist.version}" />
 		<property name="dist.file" value="${dist.dir}/${dist.name}" />
 
@@ -287,9 +253,7 @@
 		<copy todir="${dist.staging.dir}">
 			<fileset dir="${basedir}">
 				<include name="bin/*" />
-				<include name="lib/*" />
-				<exclude name="lib/jxl.*" />
-				<include name="build/jcite.jar" />
+				<include name="build/jdepchk.jar" />
 				<include name="*.html" />
 				<include name="doc/**" />
 				<exclude name="**/.DS_Store" />
@@ -305,27 +269,6 @@
 		<tar basedir="${dist.tmp.dir}" destfile="${dist.file}-bin.tar.gz" compression="gzip" longfile="gnu" />
 		<zip basedir="${dist.tmp.dir}" destfile="${dist.file}-bin.zip" filesonly="no" />
 
-		<!-- binary excel -->
-		<delete dir="${dist.tmp.dir}" />
-		<mkdir dir="${dist.staging.dir}" />
-		<copy todir="${dist.staging.dir}">
-			<fileset dir="${basedir}">
-				<include name="lib/jxl.*" />
-				<include name="build/jcite-excel.jar" />
-				<include name="*.html" />
-				<exclude name="**/.DS_Store" />
-			</fileset>
-		</copy>
-		<copy todir="${dist.staging.dir}" overwrite="yes">
-			<filterset>
-				<filter token="dist.version" value="${dist.version}" />
-				<filter token="dist.version.long" value="${dist.version.long}" />
-			</filterset>
-			<fileset dir="${basedir}" includes="README.html" />
-		</copy>
-		<tar basedir="${dist.tmp.dir}" destfile="${dist.file}-excel-bin.tar.gz" compression="gzip" longfile="gnu" />
-		<zip basedir="${dist.tmp.dir}" destfile="${dist.file}-excel-bin.zip" filesonly="no" />
-
 		<!-- source -->
 		<delete dir="${dist.tmp.dir}" />
 		<mkdir dir="${dist.staging.dir}" />
@@ -333,7 +276,6 @@
 			<fileset dir="${basedir}">
 				<include name="*.html" />
 				<include name="bin/*" />
-				<include name="lib/**" />
 				<include name="src/**" />
 				<include name="build.xml" />
 				<include name="build.default.properties" />

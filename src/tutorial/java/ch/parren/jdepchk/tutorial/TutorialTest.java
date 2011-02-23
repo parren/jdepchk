@@ -18,13 +18,13 @@ import ch.parren.jdepchk.rules.RuleSet;
 import ch.parren.jdepchk.rules.builder.RuleSetBuilder;
 import ch.parren.jdepchk.rules.parser.RuleSetLoader;
 
-// ---- cite
 /**
  * JDepChk is a dependency checker for the Java virtual machine (JVM) class
  * files. As such, it can be used for any code that runs on the JVM.
  */
 public class TutorialTest {
 
+	// ---- cite
 	/**
 	 * The most basic use of JDepChk is via low-level <em>rules</em>. I'll go
 	 * into more detail about them later, but here they are in a nutshell.

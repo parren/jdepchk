@@ -1,12 +1,46 @@
 
 h1. JDepChk - Java Class File Dependency Checker
 
+<notextile>
+<div class="feed">
 
-*FIXME:*
-	* Add tweets.
-	* Fix build.xml for tests, jar, etc.
-	* Add history.rextile
+<script src="http://widgets.twimg.com/j/2/widget.js"></script>
+<script>
+new TWTR.Widget({
+  version: 2,
+  type: 'search',
+  search: 'jdepchk',
+  interval: 6000,
+  title: '',
+  subject: '',
+  width: 'auto',
+  height: 300,
+  theme: {
+    shell: {
+      background: '#fef6e4',
+      color: '#8b0000'
+    },
+    tweets: {
+      background: '#fef6e4',
+      color: '#444444',
+      links: '#8b0000'
+    }
+  },
+  features: {
+    scrollbar: true,
+    loop: false,
+    live: true,
+    hashtags: true,
+    timestamp: true,
+    avatars: true,
+    toptweets: true,
+    behavior: 'all'
+  }
+}).render().start();
+</script>
 
+</div>
+</notextile>
 
 JDepChk is a dependency checker for Java virtual machine (JVM) class files. As such, it can be used for any code that runs on the JVM. Highlights:
 
@@ -33,7 +67,7 @@ h2. Download
 
 "jdepchk-<%=ver%>-bin.zip":http://jdepchk.googlecode.com/files/jdepchk-<%=ver%>-bin.zip : Binary release. Needs at least "Java 6":http://www.java.com/en/download/index.jsp to run.
 
-"jdepchk-<%=ver%>-src.zip":http://jdepchk.googlecode.com/files/jdepchk-<%=ver%>-src.zip : Source code for JDepChk, including tests and examples. External libraries and build tools are not included in the download. For the required libraries, download the respective binary release of JDepChk first. In order to run the Ant build script, you need "Ant":http://ant.apache.org/. If you want to run the tests, you need "JUnit":http://www.junit.org/ and "Rextile":-rex.
+"jdepchk-<%=ver%>-src.zip":http://jdepchk.googlecode.com/files/jdepchk-<%=ver%>-src.zip : Source code for JDepChk, including tests and examples. External libraries and build tools are not included in the download. For the required libraries, download the respective binary release of JDepChk first. In order to run the Ant build script, you need "Ant":http://ant.apache.org/. If you want to run the tests, you need "JUnit":http://www.junit.org/.
 
 "Release History":history.htm
 

@@ -1,12 +1,6 @@
 jc:ch.parren.jdepchk.tutorial.TutorialTest:---- cite
 __@@__
 /**
- * JDepChk is a dependency checker for the Java virtual machine (JVM) class
- * files. As such, it can be used for any code that runs on the JVM.
- */
-public class TutorialTest {
-
-	/**
 	 * The most basic use of JDepChk is via low-level <em>rules</em>. I'll go
 	 * into more detail about them later, but here they are in a nutshell.
 	 */

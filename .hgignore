@@ -2,5 +2,6 @@
 ^.settings/
 ^build/
 ^doc/
+^dist/
 ^build.properties$
 
