@@ -20,9 +20,46 @@ DESCRIPTION
 		the .jar files found.
 		You will typically use this to verify rules against the final result of builds. 
 
+	-f, --config FILENAME
+		Reads configuration of class dirs and rule files from the given file. The format of
+		the file is identical to the one used by EDepChk, the Eclipse plugin for JDepChk
+		(see below for details).
+
 	--show-rules
 		Lists all the low-level rules in effect after parsing the rule files. In particular, this
 		shows how component-based rules are implemented as low-level rules by JDepChk.
 
 	--show-stats
 		Shows information about number of classes inspected, and some other details.
+
+CONFIG FILES
+	Configuration files list class dirs and rule files to apply to them. Class dirs start on
+	the first column, rule files are indented below them. For example:
+
+		temp/classes/main/
+		temp/classes/generated/
+			src/common.jdep
+			src/main.jdep
+		temp/classes/tests/
+			src/common.jdep
+			src/tests.jdep
+
+RULE FILES
+	Rules files contain rule definitions. Please refer to the documentation in index.html
+	for details. A couple of quick examples:
+
+		def $abbrev = com.example.some.long.base.package
+		lib $default contains java.lang.** java.util.**
+		lib java.io.**
+		lib javax.xml.** contains org.w3c.**
+		lib javax.swing.** contains java.awt.**
+		comp $abbrev.core.**
+			uses: // colons after keywords are optional
+				- java.io // YAML-style dashes are optional
+				- java.xml
+		comp $abbrev.ui.**
+			extends $abbrev.core
+			uses javax.swing
+			allows:
+				java.io.IOException
+				! java.lang.StringBuffer // use StringBuilder instead

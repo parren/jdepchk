@@ -1,6 +1,8 @@
 package ch.parren.jdepchk;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -13,8 +15,8 @@ import ch.parren.jdepchk.check.Violation;
 import ch.parren.jdepchk.check.ViolationListener;
 import ch.parren.jdepchk.classes.ClassParser;
 import ch.parren.jdepchk.classes.ClassSet;
-import ch.parren.jdepchk.classes.JarsDirClassSet;
 import ch.parren.jdepchk.classes.ClassesDirClassSet;
+import ch.parren.jdepchk.classes.JarsDirClassSet;
 import ch.parren.jdepchk.rules.RuleSet;
 import ch.parren.jdepchk.rules.parser.RuleSetLoader;
 
@@ -47,61 +49,120 @@ public final class JDepChk {
 	// TODO See if can avoid conversion from bytes to chars (when doing only prefix matching)
 
 	public static void main(String[] args) throws Exception {
-		final Collection<RuleSet> ruleSets = New.linkedList();
-		final Collection<ClassSet> classSets = New.linkedList();
+		final Collection<Config> cfgs = New.arrayList();
 		boolean showRules = false;
 		boolean showStats = false;
 
-		int i = 0;
-		while (i < args.length) {
-			final String arg = args[i++];
-			if ("--rules".equals(arg) || "-r".equals(arg))
-				ruleSets.add(RuleSetLoader.load(new File(args[i++])));
-			else if ("--classes".equals(arg) || "-c".equals(arg))
-				classSets.add(new ClassesDirClassSet(new File(args[i++])));
-			else if ("--jars".equals(arg) || "-j".equals(arg))
-				classSets.add(new JarsDirClassSet(true, new File(args[i++])));
-			else if ("--show-rules".equals(arg))
-				showRules = true;
-			else if ("--show-stats".equals(arg))
-				showStats = true;
-			else if ("--help".equals(arg) || "-h".equals(arg)) {
-				showHelp();
-				return;
-			} else {
-				System.out.println("ERROR: Invalid command line argument: " + arg);
-				System.out.println("Use --help to see help.");
-				System.exit(2);
+		{
+			final Config cfg = new Config();
+			int i = 0;
+			while (i < args.length) {
+				final String arg = args[i++];
+				if ("--config".equals(arg) || "-f".equals(arg))
+					parseConfig(new File(args[i++]), cfgs);
+				else if ("--rules".equals(arg) || "-r".equals(arg))
+					cfg.ruleSets.add(RuleSetLoader.load(new File(args[i++])));
+				else if ("--classes".equals(arg) || "-c".equals(arg))
+					cfg.classSets.add(new ClassesDirClassSet(new File(args[i++])));
+				else if ("--jars".equals(arg) || "-j".equals(arg))
+					cfg.classSets.add(new JarsDirClassSet(true, new File(args[i++])));
+				else if ("--show-rules".equals(arg))
+					showRules = true;
+				else if ("--show-stats".equals(arg))
+					showStats = true;
+				else if ("--help".equals(arg) || "-h".equals(arg)) {
+					showHelp();
+					return;
+				} else {
+					System.out.println("ERROR: Invalid command line argument: " + arg);
+					System.out.println("Use --help to see help.");
+					System.exit(2);
+				}
 			}
+
+			if (!cfg.classSets.isEmpty())
+				cfgs.add(cfg);
 		}
 
-		if (showRules) {
-			for (RuleSet ruleSet : ruleSets)
-				System.out.println(ruleSet.describe());
+		for (Config cfg : cfgs) {
+			if (showRules)
+				for (RuleSet ruleSet : cfg.ruleSets)
+					System.out.println(ruleSet.describe());
 			System.out.println();
 		}
 
-		final PrintingListener listener = new PrintingListener();
-		final Checker checker = new Checker(listener, ruleSets);
-		final long before = System.currentTimeMillis();
-		for (ClassSet classSet : classSets)
-			checker.check(classSet);
-		final long after = System.currentTimeMillis();
-
-		System.out.println(listener);
+		long taken = 0;
+		int contains = 0;
+		int sees = 0;
+		boolean hadViolations = false;
+		for (Config cfg : cfgs) {
+			final PrintingListener listener = new PrintingListener();
+			final Checker checker = new Checker(listener, cfg.ruleSets);
+			final long before = System.currentTimeMillis();
+			for (ClassSet classSet : cfg.classSets)
+				checker.check(classSet);
+			final long after = System.currentTimeMillis();
+			taken += after - before;
+			contains += checker.nContains;
+			sees += checker.nSees;
+			hadViolations |= listener.hasViolations();
+			System.out.println(listener);
+		}
 
 		if (showStats) {
 			System.out.println();
-			System.out.println((after - before) + " ms taken.");
-			System.out.println(checker.nContains + " containment checks.");
-			System.out.println(checker.nSees + " usage checks.");
+			System.out.println(taken + " ms taken.");
+			System.out.println(contains + " containment checks.");
+			System.out.println(sees + " usage checks.");
 			System.out.println(ClassParser.nFilesRead + " class files read.");
 			System.out.println(ClassParser.nBytesRead + " class bytes read.");
 			System.out.println(ClassParser.nBytesUsed + " class bytes accessed.");
 		}
 
-		if (listener.hasViolations())
+		if (hadViolations)
 			System.exit(1);
+	}
+
+	private static final class Config {
+		final Collection<RuleSet> ruleSets = New.linkedList();
+		final Collection<ClassSet> classSets = New.linkedList();
+	}
+
+	private static void parseConfig(File configFile, Collection<Config> configs) throws IOException {
+		final BufferedReader cfgReader = new BufferedReader(new InputStreamReader(new FileInputStream(configFile)));
+		try {
+			String line;
+			boolean pathStartsNewScope = true;
+			Config scope = null;
+			while (null != (line = cfgReader.readLine())) {
+				final int posOfComment = line.indexOf('#');
+				if (posOfComment >= 0)
+					line = line.substring(0, posOfComment);
+				final String trimmed = line.trim();
+				if (trimmed.isEmpty())
+					continue;
+				if (trimmed.startsWith("max-errors:"))
+					continue;
+				final boolean isRulesFile = Character.isWhitespace(line.charAt(0));
+				if (isRulesFile) {
+					if (null == scope) {
+						scope = new Config();
+						configs.add(scope);
+					}
+					scope.ruleSets.add(RuleSetLoader.load(new File(trimmed)));
+				} else if (null == scope || pathStartsNewScope) {
+					// null check keeps compiler happy
+					scope = new Config();
+					configs.add(scope);
+					scope.classSets.add(new ClassesDirClassSet(new File(trimmed)));
+				} else {
+					scope.classSets.add(new ClassesDirClassSet(new File(trimmed)));
+				}
+				pathStartsNewScope = isRulesFile;
+			}
+		} finally {
+			cfgReader.close();
+		}
 	}
 
 	private static final class PrintingListener extends ViolationListener {
