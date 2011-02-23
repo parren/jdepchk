@@ -92,17 +92,4 @@ public class RuleSetParserTest {
 				"", set.describe());
 	}
 
-	@Test public void movie() throws Exception {
-		final RuleSetBuilder b = new RuleSetBuilder("movie.jdep");
-
-		final InputStream is = getClass().getResourceAsStream("data/movie.jdep");
-		try {
-			RuleSetLoader.loadInto(is, b);
-		} finally {
-			is.close();
-		}
-
-		final RuleSet set = b.finish();
-	}
-
 }

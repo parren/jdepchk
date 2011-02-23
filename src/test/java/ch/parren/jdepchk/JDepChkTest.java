@@ -27,7 +27,11 @@ public class JDepChkTest {
 		};
 		final Checker checker = new Checker(listener, rules);
 		checker.check(classes);
-		assertEquals("user/MyUser > api/impl/MyImpl\n", violations.toString());
+		assertEquals("" + //
+				"user/MyUser > api/impl/MyImpl\n" + //
+				"api/BadRefByIntf > api/impl/MyImpl\n" + //
+				"api/BadRefByClass > api/impl/MyImpl\n" //
+		, violations.toString());
 	}
 
 	private RuleSet makeDemoRules() {
