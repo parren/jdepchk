@@ -304,13 +304,11 @@ public final class ClassParser implements Closeable {
 
 		private final String sig;
 		private final Visibility vis;
-		private final int n;
 		private int at;
 
 		public SigParser(String sig, Visibility vis) {
 			this.sig = sig;
 			this.vis = vis;
-			this.n = sig.length();
 			this.at = 0;
 		}
 
