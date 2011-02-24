@@ -8,17 +8,17 @@ public final class InverseClassFileFilter implements ClassFileFilter {
 		this.base = base;
 	}
 
-	@Override public boolean mightIntersectPackage(String packagePath) {
+	/* @Override */public boolean mightIntersectPackage(String packagePath) {
 		return true;
 	}
 
-	@Override public boolean allowsClassFile(String internalClassName, boolean currentResult) {
+	/* @Override */public boolean allowsClassFile(String internalClassName, boolean currentResult) {
 		if (base.allowsClassFile(internalClassName, false))
 			return false;
 		return currentResult;
 	}
 
-	@Override public void describe(StringBuilder to, String indent) {
+	/* @Override */public void describe(StringBuilder to, String indent) {
 		to.append("not ");
 		base.describe(to, indent);
 	}

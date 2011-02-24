@@ -473,7 +473,7 @@ public final class ClassParser implements Closeable {
 		}
 	}
 
-	@Override public void close() throws IOException {
+	/* @Override */public void close() throws IOException {
 		if (null == stream)
 			return;
 		if (shouldClose)

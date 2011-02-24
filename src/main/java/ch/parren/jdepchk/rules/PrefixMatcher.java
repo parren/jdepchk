@@ -10,7 +10,7 @@ public final class PrefixMatcher implements ClassFileFilter {
 		this.packagePath = prefix.endsWith("/") ? prefix.substring(0, prefix.length() - 1) : null;
 	}
 
-	@Override public boolean mightIntersectPackage(String packagePath) {
+	/* @Override */public boolean mightIntersectPackage(String packagePath) {
 		if (null == this.packagePath)
 			return true;
 		if (this.packagePath.startsWith(packagePath))
@@ -20,13 +20,13 @@ public final class PrefixMatcher implements ClassFileFilter {
 		return false;
 	}
 
-	@Override public boolean allowsClassFile(String internalClassName, boolean currentResult) {
+	/* @Override */public boolean allowsClassFile(String internalClassName, boolean currentResult) {
 		if (internalClassName.startsWith(prefix))
 			return true;
 		return currentResult;
 	}
 
-	@Override public void describe(StringBuilder to, String indent) {
+	/* @Override */public void describe(StringBuilder to, String indent) {
 		to.append("prefix: ").append(prefix);
 	}
 	

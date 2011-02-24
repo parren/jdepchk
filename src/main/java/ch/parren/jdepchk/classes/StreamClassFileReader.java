@@ -23,6 +23,6 @@ public class StreamClassFileReader extends AbstractClassReader {
 		return new ClassParser(classFile);
 	}
 
-	@Override public void close() throws IOException {}
+	/* @Override */public void close() throws IOException {}
 
 }

@@ -12,11 +12,11 @@ abstract class AbstractClassReader implements ClassReader {
 		this.name = compiledClassName;
 	}
 
-	@Override public String compiledClassName() {
+	/* @Override */public String compiledClassName() {
 		return name;
 	}
 
-	@Override public Iterable<String> referencedClassNames() throws IOException {
+	/* @Override */public Iterable<String> referencedClassNames() throws IOException {
 		if (null != refdNames)
 			return refdNames;
 		final Set<String> result;

@@ -13,7 +13,7 @@ public final class ClassesDirClassSet implements ClassSet {
 		this.baseDirPath = baseDir.getPath() + File.separator;
 	}
 
-	@Override public void accept(Visitor visitor) throws IOException {
+	/* @Override */public void accept(Visitor visitor) throws IOException {
 		accept(visitor, this.baseDir, "");
 	}
 

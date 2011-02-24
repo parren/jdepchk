@@ -16,14 +16,14 @@ public final class CompositeClassFileFilter implements ClassFileFilter {
 		this.mixedAllowDeny = mixed;
 	}
 
-	@Override public boolean mightIntersectPackage(String packagePath) {
+	/* @Override */public boolean mightIntersectPackage(String packagePath) {
 		for (ClassFileFilter f : filters)
 			if (f.mightIntersectPackage(packagePath))
 				return true;
 		return false;
 	}
 
-	@Override public boolean allowsClassFile(String internalClassName, boolean currentResult) {
+	/* @Override */public boolean allowsClassFile(String internalClassName, boolean currentResult) {
 		boolean result = currentResult;
 		for (ClassFileFilter f : filters) {
 			result = f.allowsClassFile(internalClassName, result);
@@ -41,7 +41,7 @@ public final class CompositeClassFileFilter implements ClassFileFilter {
 		return filters.isEmpty();
 	}
 
-	@Override public void describe(StringBuilder to, String indent) {
+	/* @Override */public void describe(StringBuilder to, String indent) {
 		to.append("composite; default: ").append(defaultValue);
 		final String sub = indent + '\t';
 		for (ClassFileFilter f : filters) {

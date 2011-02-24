@@ -16,18 +16,18 @@ public final class JarFileClassSet extends AbstractClassFilesSet<JarFile> {
 		this.file = jarFile;
 	}
 
-	@Override public void accept(Visitor visitor) throws IOException {
+	/* @Override */public void accept(Visitor visitor) throws IOException {
 		final JarFile jarFile = new JarFile(file);
 		try {
 			final Enumeration<JarEntry> entries = jarFile.entries();
 			accept(visitor, jarFile, new Iterator<String>() {
-				@Override public boolean hasNext() {
+				/* @Override */public boolean hasNext() {
 					return entries.hasMoreElements();
 				}
-				@Override public String next() {
+				/* @Override */public String next() {
 					return (currentEntry = entries.nextElement()).getName();
 				}
-				@Override public void remove() {
+				/* @Override */public void remove() {
 					throw new UnsupportedOperationException();
 				}
 			});

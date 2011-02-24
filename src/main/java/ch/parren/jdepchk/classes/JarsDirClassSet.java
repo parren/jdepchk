@@ -13,7 +13,7 @@ public final class JarsDirClassSet implements ClassSet {
 		this.dir = dir;
 	}
 
-	@Override public void accept(Visitor visitor) throws IOException {
+	/* @Override */public void accept(Visitor visitor) throws IOException {
 		accept(visitor, dir);
 	}
 

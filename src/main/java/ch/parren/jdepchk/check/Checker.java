@@ -38,7 +38,7 @@ public final class Checker {
 
 		classes.accept(new ClassSet.Visitor() {
 
-			@Override public boolean visitPackage(String packagePath) {
+			/* @Override */public boolean visitPackage(String packagePath) {
 				final Collection<Scope> scopeSet = scopeSetStack.peekLast();
 				final Collection<Scope> newScopeSet = New.linkedList();
 				for (Scope scope : scopeSet)
@@ -50,11 +50,11 @@ public final class Checker {
 				return true;
 			}
 
-			@Override public void visitPackageEnd() throws IOException {
+			/* @Override */public void visitPackageEnd() throws IOException {
 				scopeSetStack.removeLast();
 			}
 
-			@Override public void visitClassFile(ClassReader classFile) throws IOException {
+			/* @Override */public void visitClassFile(ClassReader classFile) throws IOException {
 				final Collection<Scope> scopeSet = scopeSetStack.peekLast();
 				for (Scope scope : scopeSet) {
 					final String name = classFile.compiledClassName();
