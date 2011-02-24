@@ -12,16 +12,26 @@ import ch.parren.jdepchk.rules.builder.RuleSetBuilder;
 
 public final class RuleSetLoader {
 
-	static public void loadInto(Reader reader, RuleSetBuilder builder) throws ParseException {
+	static public void loadInto(Reader reader, RuleSetBuilder builder) throws StreamParseException {
 		final RuleSetParser parser = new RuleSetParser(reader);
 		parser.builder = builder;
-		parser.ruleSet();
+		try {
+			parser.ruleSet();
+		} catch (ParseException pe) {
+			final SimpleCharStream scs = parser.jj_input_stream;
+			throw new StreamParseException(pe, scs.tokenBegin, scs.bufpos);
+		}
 	}
 
-	static public void loadInto(InputStream stream, RuleSetBuilder builder) throws ParseException {
+	static public void loadInto(InputStream stream, RuleSetBuilder builder) throws StreamParseException {
 		final RuleSetParser parser = new RuleSetParser(new BufferedInputStream(stream));
 		parser.builder = builder;
-		parser.ruleSet();
+		try {
+			parser.ruleSet();
+		} catch (ParseException pe) {
+			final SimpleCharStream scs = parser.jj_input_stream;
+			throw new StreamParseException(pe, scs.tokenBegin, scs.bufpos);
+		}
 	}
 
 	static public RuleSet load(File file) throws IOException, FileParseException {
@@ -29,7 +39,7 @@ public final class RuleSetLoader {
 		final InputStream stream = new FileInputStream(file);
 		try {
 			loadInto(stream, builder);
-		} catch (ParseException pe) {
+		} catch (StreamParseException pe) {
 			throw new FileParseException(file, pe);
 		} finally {
 			stream.close();

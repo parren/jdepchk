@@ -1,6 +1,6 @@
 package ch.parren.jdepchk.tutorial;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.StringReader;
@@ -16,8 +16,8 @@ import ch.parren.jdepchk.classes.ClassSet;
 import ch.parren.jdepchk.classes.ClassesDirClassSet;
 import ch.parren.jdepchk.rules.RuleSet;
 import ch.parren.jdepchk.rules.builder.RuleSetBuilder;
-import ch.parren.jdepchk.rules.parser.ParseException;
 import ch.parren.jdepchk.rules.parser.RuleSetLoader;
+import ch.parren.jdepchk.rules.parser.StreamParseException;
 
 /**
  * JDepChk is a dependency checker for the Java virtual machine (JVM) class
@@ -263,7 +263,7 @@ public class TutorialTest {
 		final RuleSetBuilder builder = new RuleSetBuilder("tutorial");
 		try {
 			RuleSetLoader.loadInto(new StringReader(text.toString()), builder);
-		} catch (ParseException e) {
+		} catch (StreamParseException e) {
 			throw new RuntimeException( e );
 		}
 		return builder.finish();
