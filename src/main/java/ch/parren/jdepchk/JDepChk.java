@@ -7,7 +7,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.util.Arrays;
 import java.util.Collection;
 
 import ch.parren.java.lang.New;
@@ -147,7 +146,7 @@ public final class JDepChk {
 				if (posOfComment >= 0)
 					line = line.substring(0, posOfComment);
 				final String trimmed = line.trim();
-				if (trimmed.isEmpty())
+				if (0 == trimmed.length())
 					continue;
 				if (trimmed.startsWith("max-errors:"))
 					continue;
@@ -231,9 +230,11 @@ public final class JDepChk {
 			final char[] buf = new char[1024];
 			int red;
 			while ((red = r.read(buf)) > 0)
-				if (red < buf.length)
-					System.out.print(Arrays.copyOf(buf, red));
-				else
+				if (red < buf.length) {
+					final char[] part = new char[red];
+					System.arraycopy(buf, 0, part, 0, red);
+					System.out.print(part);
+				} else
 					System.out.print(buf);
 		} finally {
 			r.close();

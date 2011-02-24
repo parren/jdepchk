@@ -27,7 +27,7 @@ public final class ClassesDirClassSet implements ClassSet {
 			else if (name.endsWith(".class"))
 				accept(visitor, file);
 			else if (file.isDirectory())
-				accept(visitor, file, packagePath.isEmpty() ? name : packagePath + "/" + name);
+				accept(visitor, file, 0 == packagePath.length() ? name : packagePath + "/" + name);
 		}
 		visitor.visitPackageEnd();
 	}

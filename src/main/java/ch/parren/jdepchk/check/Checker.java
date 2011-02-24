@@ -2,7 +2,7 @@ package ch.parren.jdepchk.check;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Deque;
+import java.util.Stack;
 
 import ch.parren.java.lang.New;
 import ch.parren.jdepchk.classes.ClassReader;
@@ -28,7 +28,7 @@ public final class Checker {
 	}
 
 	public void check(ClassSet classes) throws IOException {
-		final Deque<Collection<Scope>> scopeSetStack = New.arrayDeque();
+		final Stack<Collection<Scope>> scopeSetStack = New.stack();
 
 		final Collection<Scope> initalScopeSet = New.linkedList();
 		for (RuleSet ruleSet : ruleSets)
@@ -39,23 +39,23 @@ public final class Checker {
 		classes.accept(new ClassSet.Visitor() {
 
 			/* @Override */public boolean visitPackage(String packagePath) {
-				final Collection<Scope> scopeSet = scopeSetStack.peekLast();
+				final Collection<Scope> scopeSet = scopeSetStack.peek();
 				final Collection<Scope> newScopeSet = New.linkedList();
 				for (Scope scope : scopeSet)
 					if (scope.mightIntersectPackage(packagePath))
 						newScopeSet.add(scope);
 				if (newScopeSet.isEmpty())
 					return false;
-				scopeSetStack.addLast(newScopeSet);
+				scopeSetStack.push(newScopeSet);
 				return true;
 			}
 
 			/* @Override */public void visitPackageEnd() throws IOException {
-				scopeSetStack.removeLast();
+				scopeSetStack.pop();
 			}
 
 			/* @Override */public void visitClassFile(ClassReader classFile) throws IOException {
-				final Collection<Scope> scopeSet = scopeSetStack.peekLast();
+				final Collection<Scope> scopeSet = scopeSetStack.peek();
 				for (Scope scope : scopeSet) {
 					final String name = classFile.compiledClassName();
 					nContains++;

@@ -1,8 +1,8 @@
 package ch.parren.jdepchk.rules.builder;
 
 import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 import ch.parren.java.lang.New;
@@ -12,8 +12,9 @@ public class ComponentBuilder extends ScopeBuilder {
 
 	public static final String DEFAULT_NAME = "$default";
 
-	private final Set<ComponentBuilder> extended = New.hashSet();
-	private final Set<ComponentBuilder> used = New.hashSet();
+	// We want to preserve insertion order on these for finalizing the rules in a stable way.
+	private final Set<ComponentBuilder> extended = New.linkedHashSet();
+	private final Set<ComponentBuilder> used = New.linkedHashSet();
 
 	private final RuleSetBuilder ruleSet;
 
@@ -71,9 +72,10 @@ public class ComponentBuilder extends ScopeBuilder {
 
 		if (!used.isEmpty()) {
 			// components see themselves by default
-			final Iterator<FilterBuilder> it = contains.descendingIterator();
-			while (it.hasNext())
-				allows.addFirst(it.next());
+			final List<FilterBuilder> rev = New.arrayList(contains);
+			Collections.reverse(rev);
+			for (FilterBuilder it : rev)
+				allows.addFirst(it);
 		}
 
 		final Set<ComponentBuilder> seen = New.hashSet();

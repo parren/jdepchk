@@ -1,13 +1,12 @@
 package ch.parren.java.lang;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
+import java.util.Stack;
 
 /**
  * Defines static constructor methods for collections to make use of Java's
@@ -51,12 +50,8 @@ public final class New {
 		return new ArrayList<E>(size);
 	}
 
-	public static <E> Deque<E> linkedDeque() {
-		return new LinkedList<E>();
-	}
-
-	public static <E> Deque<E> arrayDeque() {
-		return new ArrayDeque<E>();
+	public static <E> Stack<E> stack() {
+		return new Stack<E>();
 	}
 
 }
