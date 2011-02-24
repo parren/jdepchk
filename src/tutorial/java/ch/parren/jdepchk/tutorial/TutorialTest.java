@@ -16,6 +16,7 @@ import ch.parren.jdepchk.classes.ClassSet;
 import ch.parren.jdepchk.classes.ClassesDirClassSet;
 import ch.parren.jdepchk.rules.RuleSet;
 import ch.parren.jdepchk.rules.builder.RuleSetBuilder;
+import ch.parren.jdepchk.rules.parser.ParseException;
 import ch.parren.jdepchk.rules.parser.RuleSetLoader;
 
 /**
@@ -260,7 +261,11 @@ public class TutorialTest {
 		for (String line : rulesLines)
 			text.append(line).append("\n");
 		final RuleSetBuilder builder = new RuleSetBuilder("tutorial");
-		RuleSetLoader.loadInto(new StringReader(text.toString()), builder);
+		try {
+			RuleSetLoader.loadInto(new StringReader(text.toString()), builder);
+		} catch (ParseException e) {
+			throw new RuntimeException( e );
+		}
 		return builder.finish();
 	}
 

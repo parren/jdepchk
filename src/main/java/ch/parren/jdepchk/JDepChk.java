@@ -3,6 +3,8 @@ package ch.parren.jdepchk;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -18,6 +20,7 @@ import ch.parren.jdepchk.classes.ClassSet;
 import ch.parren.jdepchk.classes.ClassesDirClassSet;
 import ch.parren.jdepchk.classes.JarsDirClassSet;
 import ch.parren.jdepchk.rules.RuleSet;
+import ch.parren.jdepchk.rules.parser.FileParseException;
 import ch.parren.jdepchk.rules.parser.RuleSetLoader;
 
 /**
@@ -49,78 +52,84 @@ public final class JDepChk {
 	// TODO See if can avoid conversion from bytes to chars (when doing only prefix matching)
 
 	public static void main(String[] args) throws Exception {
-		final Collection<Config> cfgs = New.arrayList();
-		boolean showRules = false;
-		boolean showStats = false;
+		try {
+			final Collection<Config> cfgs = New.arrayList();
+			boolean showRules = false;
+			boolean showStats = false;
 
-		{
-			final Config cfg = new Config();
-			int i = 0;
-			while (i < args.length) {
-				final String arg = args[i++];
-				if ("--config".equals(arg) || "-f".equals(arg))
-					parseConfig(new File(args[i++]), cfgs);
-				else if ("--rules".equals(arg) || "-r".equals(arg))
-					cfg.ruleSets.add(RuleSetLoader.load(new File(args[i++])));
-				else if ("--classes".equals(arg) || "-c".equals(arg))
-					cfg.classSets.add(new ClassesDirClassSet(new File(args[i++])));
-				else if ("--jars".equals(arg) || "-j".equals(arg))
-					cfg.classSets.add(new JarsDirClassSet(true, new File(args[i++])));
-				else if ("--show-rules".equals(arg))
-					showRules = true;
-				else if ("--show-stats".equals(arg))
-					showStats = true;
-				else if ("--help".equals(arg) || "-h".equals(arg)) {
-					showHelp();
-					return;
-				} else {
-					System.out.println("ERROR: Invalid command line argument: " + arg);
-					System.out.println("Use --help to see help.");
-					System.exit(2);
+			{
+				final Config cfg = new Config();
+				int i = 0;
+				while (i < args.length) {
+					final String arg = args[i++];
+					if ("--config".equals(arg) || "-f".equals(arg))
+						parseConfig(new File(args[i++]), cfgs);
+					else if ("--rules".equals(arg) || "-r".equals(arg))
+						cfg.ruleSets.add(parseRulesIn(new File(args[i++])));
+					else if ("--classes".equals(arg) || "-c".equals(arg))
+						cfg.classSets.add(new ClassesDirClassSet(new File(args[i++])));
+					else if ("--jars".equals(arg) || "-j".equals(arg))
+						cfg.classSets.add(new JarsDirClassSet(true, new File(args[i++])));
+					else if ("--show-rules".equals(arg))
+						showRules = true;
+					else if ("--show-stats".equals(arg))
+						showStats = true;
+					else if ("--help".equals(arg) || "-h".equals(arg)) {
+						showHelp();
+						return;
+					} else {
+						System.out.println("ERROR: Invalid command line argument: " + arg);
+						System.out.println("Use --help to see help.");
+						System.exit(2);
+					}
 				}
+
+				if (!cfg.classSets.isEmpty())
+					cfgs.add(cfg);
 			}
 
-			if (!cfg.classSets.isEmpty())
-				cfgs.add(cfg);
-		}
+			for (Config cfg : cfgs) {
+				if (showRules)
+					for (RuleSet ruleSet : cfg.ruleSets)
+						System.out.println(ruleSet.describe());
+				System.out.println();
+			}
 
-		for (Config cfg : cfgs) {
-			if (showRules)
-				for (RuleSet ruleSet : cfg.ruleSets)
-					System.out.println(ruleSet.describe());
-			System.out.println();
-		}
+			long taken = 0;
+			int contains = 0;
+			int sees = 0;
+			boolean hadViolations = false;
+			for (Config cfg : cfgs) {
+				final PrintingListener listener = new PrintingListener();
+				final Checker checker = new Checker(listener, cfg.ruleSets);
+				final long before = System.currentTimeMillis();
+				for (ClassSet classSet : cfg.classSets)
+					checker.check(classSet);
+				final long after = System.currentTimeMillis();
+				taken += after - before;
+				contains += checker.nContains;
+				sees += checker.nSees;
+				hadViolations |= listener.hasViolations();
+				System.out.println(listener);
+			}
 
-		long taken = 0;
-		int contains = 0;
-		int sees = 0;
-		boolean hadViolations = false;
-		for (Config cfg : cfgs) {
-			final PrintingListener listener = new PrintingListener();
-			final Checker checker = new Checker(listener, cfg.ruleSets);
-			final long before = System.currentTimeMillis();
-			for (ClassSet classSet : cfg.classSets)
-				checker.check(classSet);
-			final long after = System.currentTimeMillis();
-			taken += after - before;
-			contains += checker.nContains;
-			sees += checker.nSees;
-			hadViolations |= listener.hasViolations();
-			System.out.println(listener);
-		}
+			if (showStats) {
+				System.out.println();
+				System.out.println(taken + " ms taken.");
+				System.out.println(contains + " containment checks.");
+				System.out.println(sees + " usage checks.");
+				System.out.println(ClassParser.nFilesRead + " class files read.");
+				System.out.println(ClassParser.nBytesRead + " class bytes read.");
+				System.out.println(ClassParser.nBytesUsed + " class bytes accessed.");
+			}
 
-		if (showStats) {
-			System.out.println();
-			System.out.println(taken + " ms taken.");
-			System.out.println(contains + " containment checks.");
-			System.out.println(sees + " usage checks.");
-			System.out.println(ClassParser.nFilesRead + " class files read.");
-			System.out.println(ClassParser.nBytesRead + " class bytes read.");
-			System.out.println(ClassParser.nBytesUsed + " class bytes accessed.");
-		}
+			if (hadViolations)
+				System.exit(1);
 
-		if (hadViolations)
-			System.exit(1);
+		} catch (ErrorReport report) {
+			System.err.println(report.getMessage());
+			System.exit(2);
+		}
 	}
 
 	private static final class Config {
@@ -128,7 +137,7 @@ public final class JDepChk {
 		final Collection<ClassSet> classSets = New.linkedList();
 	}
 
-	private static void parseConfig(File configFile, Collection<Config> configs) throws IOException {
+	private static void parseConfig(File configFile, Collection<Config> configs) throws IOException, ErrorReport {
 		final BufferedReader cfgReader = new BufferedReader(new InputStreamReader(new FileInputStream(configFile)));
 		try {
 			String line;
@@ -149,7 +158,7 @@ public final class JDepChk {
 						scope = new Config();
 						configs.add(scope);
 					}
-					scope.ruleSets.add(RuleSetLoader.load(new File(trimmed)));
+					scope.ruleSets.add(parseRulesIn(new File(trimmed)));
 				} else if (null == scope || pathStartsNewScope) {
 					// null check keeps compiler happy
 					scope = new Config();
@@ -162,6 +171,41 @@ public final class JDepChk {
 			}
 		} finally {
 			cfgReader.close();
+		}
+	}
+
+	private static final RuleSet parseRulesIn(File file) throws IOException, ErrorReport {
+		try {
+			return RuleSetLoader.load(file);
+		} catch (FileParseException fpe) {
+			throw new ErrorReport("Error parsing file " + fpe.file + "\n" //
+					+ fpe.cause.getMessage() + "\n" //
+					+ "in the following fragment:\n" //
+					+ "\n" //
+					+ highlightLine(file, fpe.cause.currentToken.next.beginLine) //
+			);
+		}
+	}
+
+	private static String highlightLine(File file, int lineNumber) throws IOException {
+		final BufferedReader reader = new BufferedReader(new FileReader(file));
+		try {
+			int atLine = 1;
+			while (atLine < lineNumber - 1) {
+				reader.readLine();
+				atLine++;
+			}
+			final StringBuilder lines = new StringBuilder();
+			while (atLine < lineNumber + 1) {
+				final String line = reader.readLine();
+				if (null == line)
+					break;
+				lines.append(line).append("\n");
+				atLine++;
+			}
+			return lines.toString();
+		} finally {
+			reader.close();
 		}
 	}
 
@@ -194,6 +238,12 @@ public final class JDepChk {
 					System.out.print(buf);
 		} finally {
 			r.close();
+		}
+	}
+
+	private static final class ErrorReport extends Throwable {
+		public ErrorReport(String message) {
+			super(message);
 		}
 	}
 

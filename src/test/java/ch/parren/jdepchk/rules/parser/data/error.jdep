@@ -1,0 +1,5 @@
+# Errors
+
+rule: some-rule
+	bad
+	contains java.**

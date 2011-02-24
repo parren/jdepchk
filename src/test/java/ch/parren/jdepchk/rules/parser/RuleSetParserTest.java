@@ -92,4 +92,14 @@ public class RuleSetParserTest {
 				"", set.describe());
 	}
 
+	@Test public void errors() throws Exception {
+		final RuleSetBuilder b = new RuleSetBuilder("error.jdep");
+		final InputStream is = getClass().getResourceAsStream("data/error.jdep");
+		try {
+			RuleSetLoader.loadInto(is, b);
+		} finally {
+			is.close();
+		}
+	}
+	
 }
