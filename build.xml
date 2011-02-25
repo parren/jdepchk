@@ -213,7 +213,6 @@
 			</filterset>
 			<fileset dir="${basedir}" includes="README.html" />
 		</copy>
-		<tar basedir="${dist.tmp.dir}" destfile="${dist.file}-bin.tar.gz" compression="gzip" longfile="gnu" />
 		<zip basedir="${dist.tmp.dir}" destfile="${dist.file}-bin.zip" filesonly="no" />
 
 		<!-- source -->
@@ -240,7 +239,6 @@
 			</filterset>
 			<fileset dir="${basedir}" includes="README.html" />
 		</copy>
-		<tar basedir="${dist.tmp.dir}" destfile="${dist.file}-src.tar.gz" compression="gzip" longfile="gnu" />
 		<zip basedir="${dist.tmp.dir}" destfile="${dist.file}-src.zip" filesonly="no" />
 
 		<delete dir="${dist.tmp.dir}" />
