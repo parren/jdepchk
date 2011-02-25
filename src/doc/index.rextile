@@ -63,7 +63,7 @@ JDepChk is open source under a "BSD-style license":LICENSE.html.
 
 h2. Download
 
-<% ver = '0.1.0' %>
+<% ver = '0.2.0' %>
 
 "jdepchk-<%=ver%>-bin.zip":http://jdepchk.googlecode.com/files/jdepchk-<%=ver%>-bin.zip : Binary release. Needs at least "Java 6":http://www.java.com/en/download/index.jsp to run.
 

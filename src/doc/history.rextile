@@ -2,6 +2,15 @@
 h1. JDepChk Version History
 
 
+h2. JDepChk 0.2.0
+
+h3. Better
+
+	* Compiles and runs on JDK 1.5.0.
+	* Can process single .jar files.
+	* Warnings if command line targets don't exist.
+
+
 h2. JDepChk 0.1.0
 
 Initial alpha release.
