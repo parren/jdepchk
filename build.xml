@@ -115,13 +115,17 @@
 
 	<target name="compile-tests" depends="prepare-run, jar">
 		<mkdir dir="${temp.test.dir}" />
-		<javac srcdir="${src.test.dir}" destdir="${temp.test.dir}" classpath="${test.classpath}" debug="true" deprecation="on" source="${javac.source}" target="${javac.target}" includeantruntime="false">
+		
+		<javac srcdir="${src.test.dir}" destdir="${temp.test.dir}" classpath="${test.classpath}" debug="true" deprecation="on" source="${javac.source}" target="${javac.target}" includeantruntime="true">
 		</javac>
 		<copy todir="${temp.test.dir}">
 			<fileset dir="${src.test.dir}">
 				<include name="**/*.jdep" />
 			</fileset>
 		</copy>
+
+		<javac srcdir="${src.tut.dir}" destdir="${temp.tut.dir}" classpath="${test.classpath}" debug="true" deprecation="on" source="${javac.source}" target="${javac.target}" includeantruntime="true">
+		</javac>
 	</target>
 
 	<target name="compile-test-examples" depends="prepare-run">
@@ -137,6 +141,11 @@
 			<classpath refid="test.classpath" />
 			<batchtest>
 				<fileset dir="${temp.test.dir}">
+					<include name="**/*Test.class" />
+					<exclude name="**/Abstract*.class" />
+					<exclude name="**/*$*.class" />
+				</fileset>
+				<fileset dir="${temp.tut.dir}">
 					<include name="**/*Test.class" />
 					<exclude name="**/Abstract*.class" />
 					<exclude name="**/*$*.class" />
