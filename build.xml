@@ -79,7 +79,7 @@
 	<!-- ================================================================= -->
 
 	<target name="compile-main" depends="prepare" description="Compiles the source code">
-		<javac srcdir="${src.classes.dir}" destdir="${temp.classes.dir}" classpath="${build.classpath}" debug="false" deprecation="on" source="${javac.source}" target="${javac.target}">
+		<javac srcdir="${src.classes.dir}" destdir="${temp.classes.dir}" classpath="${build.classpath}" debug="false" deprecation="on" source="${javac.source}" target="${javac.target}" includeantruntime="false">
 			<include name="ch/parren/**" />
 		</javac>
 		<copy todir="${temp.classes.dir}">
@@ -185,7 +185,7 @@
 
 	<target name="compile-tests" depends="prepare-run, jar">
 		<mkdir dir="${temp.test.dir}" />
-		<javac srcdir="${src.test.dir}" destdir="${temp.test.dir}" classpath="${test.classpath}" debug="true" deprecation="on" source="${javac.source}" target="${javac.target}">
+		<javac srcdir="${src.test.dir}" destdir="${temp.test.dir}" classpath="${test.classpath}" debug="true" deprecation="on" source="${javac.source}" target="${javac.target}" includeantruntime="false">
 		</javac>
 		<copy todir="${temp.test.dir}">
 			<fileset dir="${src.test.dir}">
@@ -196,7 +196,7 @@
 
 	<target name="compile-test-examples" depends="prepare-run">
 		<mkdir dir="${temp.test-examples.dir}" />
-		<javac srcdir="${src.test-examples.dir}" destdir="${temp.test-examples.dir}" source="${javac.source}" target="${javac.target}">
+		<javac srcdir="${src.test-examples.dir}" destdir="${temp.test-examples.dir}" source="${javac.source}" target="${javac.target}" includeantruntime="false">
 		</javac>
 	</target>
 
