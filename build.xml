@@ -240,7 +240,17 @@
 	<!-- Package distribution version                                      -->
 	<!-- ================================================================= -->
 
-	<target name="dist" depends="clean,doc,test" description="Builds distribution">
+	<target name="check-jre1.5" description="Checks that ANT is running on JRE 1.5.">
+		<condition property="is.jre15">
+			<and>
+				<equals arg1="Sun Microsystems Inc." arg2="${java.vendor}" />
+				<contains substring="1.5.0" string="${java.runtime.version}" />
+			</and>
+		</condition>
+		<fail message="Distributions must be built with Sun JDK 1.5.0, not ${java.runtime.name} ${java.runtime.version}. Aborting." unless="is.jre15" />
+	</target>
+
+	<target name="dist" depends="check-jre1.5, clean,doc,test" description="Builds distribution">
 		<property name="dist.name" value="${name}-${dist.version}" />
 		<property name="dist.file" value="${dist.dir}/${dist.name}" />
 
