@@ -15,9 +15,13 @@ DESCRIPTION
 		Scans .class files in the given directory and all its subdirectories.
 		You will typically use this for javac's output dirs.
 
-	-j, --jars DIRNAME
+	-j, --jar, --jars DIRNAME
 		Scans .jar files in the given directory, then scans all the .class files contained within
 		the .jar files found.
+		You will typically use this to verify rules against the final result of builds. 
+
+	-j, --jar, --jars FILENAME
+		Scans all the .class files contained within the .jar given file.
 		You will typically use this to verify rules against the final result of builds. 
 
 	-f, --config FILENAME

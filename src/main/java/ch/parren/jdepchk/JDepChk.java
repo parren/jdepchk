@@ -16,6 +16,7 @@ import ch.parren.jdepchk.check.ViolationListener;
 import ch.parren.jdepchk.classes.ClassParser;
 import ch.parren.jdepchk.classes.ClassSet;
 import ch.parren.jdepchk.classes.ClassesDirClassSet;
+import ch.parren.jdepchk.classes.JarFileClassSet;
 import ch.parren.jdepchk.classes.JarsDirClassSet;
 import ch.parren.jdepchk.rules.RuleSet;
 import ch.parren.jdepchk.rules.parser.FileParseException;
@@ -60,19 +61,29 @@ public final class JDepChk {
 				int i = 0;
 				while (i < args.length) {
 					final String arg = args[i++];
-					if ("--config".equals(arg) || "-f".equals(arg))
+					if ("--config".equals(arg) || "-f".equals(arg)) {
 						parseConfig(new File(args[i++]), cfgs);
-					else if ("--rules".equals(arg) || "-r".equals(arg))
+					} else if ("--rules".equals(arg) || "-r".equals(arg)) {
 						cfg.ruleSets.add(parseRulesIn(new File(args[i++])));
-					else if ("--classes".equals(arg) || "-c".equals(arg))
-						cfg.classSets.add(new ClassesDirClassSet(new File(args[i++])));
-					else if ("--jars".equals(arg) || "-j".equals(arg))
-						cfg.classSets.add(new JarsDirClassSet(true, new File(args[i++])));
-					else if ("--show-rules".equals(arg))
+					} else if ("--classes".equals(arg) || "-c".equals(arg)) {
+						final File f = new File(args[i++]);
+						if (f.isDirectory())
+							cfg.classSets.add(new ClassesDirClassSet(f));
+						else
+							System.err.println("WARNING: Ignoring --classes " + f);
+					} else if ("--jars".equals(arg) || "--jar".equals(arg) || "-j".equals(arg)) {
+						final File f = new File(args[i++]);
+						if (f.isDirectory())
+							cfg.classSets.add(new JarsDirClassSet(true, f));
+						else if (f.isFile())
+							cfg.classSets.add(new JarFileClassSet(f));
+						else
+							System.err.println("WARNING: Ignoring --jar(s) " + f);
+					} else if ("--show-rules".equals(arg)) {
 						showRules = true;
-					else if ("--show-stats".equals(arg))
+					} else if ("--show-stats".equals(arg)) {
 						showStats = true;
-					else if ("--help".equals(arg) || "-h".equals(arg)) {
+					} else if ("--help".equals(arg) || "-h".equals(arg)) {
 						showHelp();
 						return;
 					} else {
@@ -87,10 +98,11 @@ public final class JDepChk {
 			}
 
 			for (Config cfg : cfgs) {
-				if (showRules)
+				if (showRules) {
 					for (RuleSet ruleSet : cfg.ruleSets)
 						System.out.println(ruleSet.describe());
-				System.out.println();
+					System.out.println();
+				}
 			}
 
 			long taken = 0;
@@ -234,8 +246,9 @@ public final class JDepChk {
 					final char[] part = new char[red];
 					System.arraycopy(buf, 0, part, 0, red);
 					System.out.print(part);
-				} else
+				} else {
 					System.out.print(buf);
+				}
 		} finally {
 			r.close();
 		}
