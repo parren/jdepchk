@@ -9,12 +9,10 @@
 	<property name="name" value="jdepchk" />
 
 	<property name="src.dir" location="${basedir}/src" />
-	<property name="doc.dir" location="${basedir}/doc" />
 	<property name="src.classes.dir" location="${src.dir}/main/java" />
 	<property name="src.tut.dir" location="${src.dir}/tutorial/java" />
 	<property name="src.test.dir" location="${src.dir}/test/java" />
 	<property name="src.test-examples.dir" location="${src.dir}/test/java-examples" />
-	<property name="src.doc.dir" location="${src.dir}/doc" />
 
 	<!-- Targets -->
 
@@ -23,16 +21,12 @@
 	<property name="temp.tut.dir" location="${temp.dir}/classes/tutorial" />
 	<property name="temp.test.dir" location="${temp.dir}/classes/test" />
 	<property name="temp.test-examples.dir" location="${temp.dir}/classes/test-examples" />
-	<property name="temp.doc.dir" location="${temp.dir}/doc" />
 
 	<property name="build.dir" location="${basedir}/build" />
 	<property name="dist.dir" location="${basedir}/dist" />
 
 	<property name="jar.file" location="${build.dir}/${name}.jar" />
 	<property name="jar.manifest" location="${src.classes.dir}/manifest.mf" />
-
-	<property name="javadoc.dir" location="${doc.dir}/javadoc" />
-	<property name="javadoc.packages" value="ch.arrenbrecht.jcite.*" />
 
 	<property name="run.mainclass" value="ch.parren.jdepchk.JDepChk" />
 	<property name="run.args" value="" />
@@ -50,7 +44,6 @@
 		<mkdir dir="${temp.tut.dir}" />
 		<mkdir dir="${temp.test.dir}" />
 		<mkdir dir="${temp.test-examples.dir}" />
-		<mkdir dir="${temp.doc.dir}" />
 
 		<path id="build.classpath">
 		</path>
@@ -66,6 +59,7 @@
 
 		<path id="test.classpath">
 			<pathelement location="${temp.test.dir}" />
+			<pathelement location="${temp.tut.dir}" />
 			<path refid="run.classpath" />
 		</path>
 		<property name="test.classpath" refid="test.classpath" />
@@ -112,70 +106,6 @@
 	<!-- ================================================================= -->
 
 	<target name="build" depends="jar" description="Builds an executable target (default)">
-	</target>
-
-	<!-- ================================================================= -->
-	<!-- doc:                                                              -->
-	<!-- Generates documentation                                           -->
-	<!-- ================================================================= -->
-
-	<target name="doc" description="Builds documentation" depends="prepare-doc, rextile, cite">
-	</target>
-
-	<target name="@cite-init">
-		<path id="jcite.classpath">
-			<fileset dir="${jcite.build.dir}" includes="*.jar" />
-			<fileset dir="${jcite.lib.dir}" includes="*.jar" />
-		</path>
-		<property name="jcite.classpath" refid="jcite.classpath" />
-		<taskdef name="jcite" classname="ch.arrenbrecht.jcite.JCiteTask" classpathref="jcite.classpath" />
-	</target>
-
-	<target name="prepare-doc" depends="prepare">
-		<delete dir="${doc.dir}" />
-		<mkdir dir="${doc.dir}" />
-		<copy todir="${doc.dir}">
-			<fileset dir="${src.doc.dir}">
-				<include name="**/*.gif" />
-				<include name="**/*.jpeg" />
-				<include name="**/*.jpg" />
-				<include name="**/*.png" />
-				<include name="**/*.pdf" />
-				<include name="**/*.svg" />
-				<include name="**/*.css" />
-			</fileset>
-		</copy>
-		<copy todir="${temp.doc.dir}">
-			<fileset dir="${src.doc.dir}">
-				<include name="**/*.html" />
-			</fileset>
-		</copy>
-	</target>
-
-	<target name="rextile" depends="prepare">
-		<exec dir="${src.doc.dir}" executable="${rextile.launch}" vmlauncher="false" failonerror="true">
-		</exec>
-		<replace token="°" value="*">
-			<fileset dir="${temp.doc.dir}">
-				<include name="*.htm" />
-			</fileset>
-		</replace>
-	</target>
-
-	<target name="cite" depends="prepare, @cite-init, @cite-no-accept">
-		<jcite srcdir="${temp.doc.dir}" destdir="${doc.dir}" projectpath="${basedir}" tripwirefile="${src.dir}/tripwires.jcite" acceptChanges="${tripups.accept}" diffPath="${temp.dir}/tripups" differ="${jcite.differ}">
-			<sourcepath>
-				<pathelement location="${basedir}" />
-				<pathelement location="${src.classes.dir}" />
-				<pathelement location="${src.tut.dir}" />
-			</sourcepath>
-			<include name="**/*.htm*" />
-		</jcite>
-	</target>
-
-	<target name="@cite-no-accept" unless="tripups.accept" />
-	<target name="cite-accept" description="Combined with 'cite', causes tripwire changes to be accepted.">
-		<property name="tripups.accept" value="true" />
 	</target>
 
 	<!-- ================================================================= -->
@@ -231,7 +161,6 @@
 	<!-- ================================================================= -->
 
 	<target name="clobber" depends="clean" description="Removes all build files">
-		<delete dir="${doc.dir}" />
 		<delete dir="${dist.dir}" />
 	</target>
 
@@ -250,7 +179,7 @@
 		<fail message="Distributions must be built with Sun JDK 1.5.0, not ${java.runtime.name} ${java.runtime.version}. Aborting." unless="is.jre15" />
 	</target>
 
-	<target name="dist" depends="check-jre1.5, clean,doc,test" description="Builds distribution">
+	<target name="dist" depends="check-jre1.5, clean,test" description="Builds distribution">
 		<property name="dist.name" value="${name}-${dist.version}" />
 		<property name="dist.file" value="${dist.dir}/${dist.name}" />
 
@@ -262,10 +191,9 @@
 		<mkdir dir="${dist.staging.dir}" />
 		<copy todir="${dist.staging.dir}">
 			<fileset dir="${basedir}">
-				<include name="bin/*" />
+				<include name="README" />
+				<include name="LICENSE" />
 				<include name="build/jdepchk.jar" />
-				<include name="*.html" />
-				<include name="doc/**" />
 				<exclude name="**/.DS_Store" />
 			</fileset>
 		</copy>
@@ -284,8 +212,8 @@
 		<mkdir dir="${dist.staging.dir}" />
 		<copy todir="${dist.staging.dir}">
 			<fileset dir="${basedir}">
-				<include name="*.html" />
-				<include name="bin/*" />
+				<include name="README" />
+				<include name="LICENSE" />
 				<include name="src/**" />
 				<include name="build.xml" />
 				<include name="build.default.properties" />
@@ -307,14 +235,6 @@
 		<zip basedir="${dist.tmp.dir}" destfile="${dist.file}-src.zip" filesonly="no" />
 
 		<delete dir="${dist.tmp.dir}" />
-	</target>
-
-	<target name="tools">
-		<mkdir dir="${dist.dir}" />
-		<property name="tools.name" value="${name}-${tools.version}-tools.zip" />
-		<property name="tools.file" value="${dist.dir}/${tools.name}" />
-		<echo>Bundling ${tools.name}</echo>
-		<zip basedir="${basedir}/tools" destfile="${tools.file}" filesonly="no" />
 	</target>
 
 </project>

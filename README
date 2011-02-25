@@ -1,0 +1,17 @@
+JDepChk – Java Class File Dependency Checker
+
+JDepChk is a dependency checker for Java virtual machine (JVM) class files. As
+such, it can be used for any code that runs on the JVM. You run it from the
+command line as follows:
+
+	$ java -j jdepchk.jar [OPTION]...
+
+Use --help to list the available options and for quick examples of rule
+definitions.
+
+For details, please refer to http://jdepchk.googlecode.com/.
+
+JDepChk is open source under a BSD-style license. See the accompanying LICENSE
+file for details.
+
+Copyright © 2011 by Peter Arrenbrecht. All rights reserved.
