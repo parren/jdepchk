@@ -16,7 +16,7 @@ abstract class AbstractClassReader implements ClassReader {
 		return name;
 	}
 
-	/* @Override */public Iterable<String> referencedClassNames() throws IOException {
+	/* @Override */public Iterable<String> referencedElementNames() throws IOException {
 		if (null != refdNames)
 			return refdNames;
 		final Set<String> result;
@@ -24,7 +24,7 @@ abstract class AbstractClassReader implements ClassReader {
 		final ClassParser bytes = newClassParser();
 		try {
 			// TODO use visibility
-			result = bytes.referencedClasses().keySet();
+			result = bytes.referencedElementNames().keySet();
 		} finally {
 			bytes.close();
 		}

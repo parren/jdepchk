@@ -1,6 +1,6 @@
 package ch.parren.jdepchk.tutorial;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.StringReader;
@@ -196,9 +196,9 @@ public class TutorialTest {
 		check(replaceIn(rulesLines, "extends", "uses"), "temp/classes/tutorial");
 		assertEquals(2, violations.size());
 		assertEquals("com/example/usesxml/UseXML", violations.get(0).fromClassName);
-		assertEquals("org/w3c/dom/Node", violations.get(0).toClassName);
+		assertEquals("javax/xml/validation/Schema", violations.get(0).toClassName);
 		assertEquals("com/example/usesxml/UseXML", violations.get(1).fromClassName);
-		assertEquals("javax/xml/validation/Schema", violations.get(1).toClassName);
+		assertEquals("org/w3c/dom/Node", violations.get(1).toClassName);
 	}
 
 	/**
@@ -232,15 +232,59 @@ public class TutorialTest {
 				"  uses: $e.xml", //
 		};
 
-		/** This works, meaning it does catch the expected errors (we did not extend but only use here): */
+		/**
+		 * This works, meaning it does catch the expected errors (we did not
+		 * extend but only use here):
+		 */
 		check(rulesLines, "temp/classes/tutorial");
 		assertEquals(2, violations.size());
 		assertEquals("com/example/usesxml/UseXML", violations.get(0).fromClassName);
-		assertEquals("org/w3c/dom/Node", violations.get(0).toClassName);
+		assertEquals("javax/xml/validation/Schema", violations.get(0).toClassName);
 		assertEquals("com/example/usesxml/UseXML", violations.get(1).fromClassName);
-		assertEquals("javax/xml/validation/Schema", violations.get(1).toClassName);
+		assertEquals("org/w3c/dom/Node", violations.get(1).toClassName);
 	}
 	// ---- cite
+
+	/**
+	 * Sometimes you want to forbid access to only particulars members of types,
+	 * not the entire types as such. JDepChk supports this via special rules.
+	 * For example, we want to forbid access to {@link String#getBytes()} to
+	 * avoid problems with differing platform charsets. Currently, JDepChk only
+	 * supports this via full-blown regexp patterns against the internal
+	 * representation of a member:
+	 */
+	@Test public void memberAccessViaRegExps() throws Exception {
+
+		final String[] rulesLines = { "", //
+				"lib: $default", //
+				"  contains:", //
+				"    java.**", //
+
+				/**
+				 * Deny access to String.getBytes() here. A regexp pattern is
+				 * introduced by ^ and ends with a $. The internal
+				 * representation of "byte[] java.lang.String.getBytes()" is
+				 * "java/lang/String#getBytes#()[B", so we match against that,
+				 * ignoring the trailing return type spec:
+				 */
+				"    ! ^java/lang/String#getBytes#[(][)].*$", //
+
+				/**
+				 * The above is clearly rather unreadable. I would prefer to be
+				 * able to write something like
+				 * {@code !java.lang.String::getBytes()>*}. However, since I
+				 * don't expect a lot of folks to be using this, I'm not
+				 * bothering right now.
+				 */
+
+				"comp: com.example.members.**", //
+		};
+
+		check(rulesLines, "temp/classes/tutorial");
+		assertEquals(1, violations.size());
+		assertEquals("com/example/members/UsesBytes", violations.get(0).fromClassName);
+		assertEquals("java/lang/String", violations.get(0).toClassName);
+	}
 
 	private String[] replaceIn(String[] lines, String what, String with) {
 		final String[] res = new String[lines.length];
@@ -264,7 +308,7 @@ public class TutorialTest {
 		try {
 			RuleSetLoader.loadInto(new StringReader(text.toString()), builder);
 		} catch (StreamParseException e) {
-			throw new RuntimeException( e );
+			throw new RuntimeException(e);
 		}
 		return builder.finish();
 	}

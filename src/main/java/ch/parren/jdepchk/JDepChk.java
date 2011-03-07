@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Collection;
+import java.util.Set;
 
 import ch.parren.java.lang.New;
 import ch.parren.jdepchk.check.Checker;
@@ -221,9 +222,24 @@ public final class JDepChk {
 
 	private static final class PrintingListener extends ViolationListener {
 		private int nViol = 0;
+		private String lastFrom = null;
+		private Set<String> seenTos;
 		@Override protected boolean report(Violation v) {
-			System.out.println(v.fromClassName + " > " + v.toClassName //
-					+ " in " + v.scope.name() //
+			
+			// Avoid showing multiple refs to the same class.
+			if (!v.fromClassName.equals(lastFrom)) {
+				lastFrom = v.fromClassName;
+				seenTos = New.hashSet();
+			}
+			if (seenTos.contains(v.toClassName))
+				return true;
+			if (null == v.toElementName)
+				seenTos.add(v.toClassName);
+
+			System.out.print(v.fromClassName + " > " + v.toClassName);
+			if (null != v.toElementName)
+				System.out.print("#" + v.toElementName + "#" + v.toElementDesc);
+			System.out.println(" in " + v.scope.name() //
 					+ " from " + v.ruleSet.name());
 			nViol++;
 			return true;

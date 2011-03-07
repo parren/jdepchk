@@ -60,16 +60,22 @@ public final class Checker {
 					final String name = classFile.compiledClassName();
 					nContains++;
 					if (scope.contains(name)) {
-						// System.out.println(name + " is in " + scope);
-						for (String refd : classFile.referencedClassNames()) {
+						for (String refd : classFile.referencedElementNames()) {
 							nContains++;
 							nSees++;
 							if (!scope.allows(refd))
-								if (!scope.allows(refd)) // FIXME
-									listener.report(new Violation(scope.ruleSet(), scope, name, refd));
+								report(scope, name, refd);
 						}
 					}
 				}
+			}
+
+			protected boolean report(Scope scope, final String name, String refd) {
+				final String[] parts = refd.split("#");
+				final String className = parts[0];
+				final String eltName = (parts.length > 1) ? parts[1] : null;
+				final String eltDesc = (parts.length > 2) ? parts[2] : null;
+				return listener.report(new Violation(scope.ruleSet(), scope, name, className, eltName, eltDesc));
 			}
 
 		});

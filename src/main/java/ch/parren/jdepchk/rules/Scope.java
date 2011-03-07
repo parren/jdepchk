@@ -30,8 +30,8 @@ public final class Scope {
 		return this.contains.allowsClassFile(internalClassName);
 	}
 
-	public boolean allows(String internalClassName) {
-		return this.allows.allowsClassFile(internalClassName);
+	public boolean allows(String internalElementName) {
+		return this.allows.allowsClassFile(internalElementName);
 	}
 
 	@Override public String toString() {

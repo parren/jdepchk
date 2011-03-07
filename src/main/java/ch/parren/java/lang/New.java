@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Stack;
+import java.util.TreeMap;
 
 /**
  * Defines static constructor methods for collections to make use of Java's
@@ -16,6 +17,10 @@ public final class New {
 
 	public static <K, V> HashMap<K, V> hashMap() {
 		return new HashMap<K, V>();
+	}
+
+	public static <K, V> TreeMap<K, V> treeMap() {
+		return new TreeMap<K, V>();
 	}
 
 	public static <E> HashSet<E> hashSet() {

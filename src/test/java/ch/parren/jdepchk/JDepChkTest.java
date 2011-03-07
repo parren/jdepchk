@@ -29,6 +29,7 @@ public class JDepChkTest {
 		checker.check(classes);
 		assertEquals("" + //
 				"user/MyUser > api/impl/MyImpl\n" + //
+				"user/MyUser > api/impl/MyImpl#<init>#()V\n" + // 
 				"api/BadRefByIntf > api/impl/MyImpl\n" + //
 				"api/BadRefByClass > api/impl/MyImpl\n" //
 		, violations.toString());

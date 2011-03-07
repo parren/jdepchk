@@ -17,21 +17,26 @@ public class ClassParserTest {
 	@Test public void testClass() throws Exception {
 		assertParse("TestClass", "" + //
 				"java/io/PrintStream priv\n" + //
+				"java/io/PrintStream#println#()V priv\n" + //
 				"java/lang/Exception priv\n" + //
 				"java/lang/IllegalArgumentException publ\n" + //
 				"java/lang/Integer priv\n" + //
 				"java/lang/Object publ\n" + //
 				"java/lang/System priv\n" + //
+				"java/lang/System#out#Ljava/io/PrintStream; priv\n" + //
 				"java/util/ArrayList priv\n" + //
+				"java/util/ArrayList#<init>#()V priv\n" + //
 				"java/util/Map priv\n" + //
 				"java/util/Set prot\n" + //
 				"test/Base publ\n" + //
+				"test/Base#<init>#()V priv\n" + //
 				"test/Const publ\n" + //
 //					"test/ConstAttr publ\n" + // FIXME
 //					"test/ClassAttr publ\n" + // FIXME
 				"test/Field priv\n" + //
 //					"test/FieldAttr priv\n" + // FIXME
 				"test/FieldRef priv\n" + // 
+				"test/FieldRef#value#I priv\n" + // 
 				"test/GenericLower publ\n" + //
 				"test/GenericLower1 publ\n" + //
 				"test/GenericLower2 publ\n" + //
@@ -42,13 +47,16 @@ public class ClassParserTest {
 				"test/IntfA publ\n" + //
 				"test/IntfB publ\n" + //
 				"test/MethodRef priv\n" + //
+				"test/MethodRef#bar#()Z priv\n" + //
 				"test/Param1 priv\n" + //
 				"test/Param2 priv\n" + //
 //					"test/PrivMtdAttr priv\n" + // FIXME
 //					"test/PublMtdAttr publ\n" + // FIXME
 				"test/Returned priv\n" + //
 				"test/StaticMethodRef priv\n" + //
+				"test/StaticMethodRef#foo#()Z priv\n" + //
 				"test/StaticRef priv\n" + //
+				"test/StaticRef#value#I priv\n" + //
 				"test/TestClass$Gen priv\n" + //
 				"test/TestClass$Lala priv\n" + //
 				"");
@@ -70,7 +78,7 @@ public class ClassParserTest {
 		final ClassParser parser = new ClassParser(new File("temp/classes/test-examples/test/" + className + ".class"));
 		try {
 			assertEquals(Visibility.PUBL, parser.visibility());
-			final Map<String, Visibility> refMap = parser.referencedClasses();
+			final Map<String, Visibility> refMap = parser.referencedElementNames();
 			final List<String> refs = New.arrayList(refMap.size());
 			for (Map.Entry<String, Visibility> e : refMap.entrySet())
 				refs.add(e.getKey() + " " + e.getValue().toString().toLowerCase());

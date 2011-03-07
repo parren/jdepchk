@@ -5,5 +5,5 @@ import java.io.IOException;
 
 public interface ClassReader extends Closeable {
 	String compiledClassName() throws IOException;
-	Iterable<String> referencedClassNames() throws IOException;
+	Iterable<String> referencedElementNames() throws IOException;
 }

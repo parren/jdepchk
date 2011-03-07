@@ -40,7 +40,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
-import java.util.Map;
+import java.util.SortedMap;
 
 import ch.parren.java.lang.New;
 
@@ -86,7 +86,7 @@ public final class ClassParser implements Closeable {
 	// information
 	private String ownName;
 	private Visibility visibility;
-	private Map<String, Visibility> refdClasses = New.hashMap();
+	private SortedMap<String, Visibility> refdElements = New.treeMap(); // want sorting here
 
 	public ClassParser(int size, InputStream stream) throws IOException {
 		this(size, stream, false);
@@ -96,8 +96,8 @@ public final class ClassParser implements Closeable {
 		this((int) file.length(), new FileInputStream(file), true);
 	}
 
-	public Map<String, Visibility> referencedClasses() {
-		return Collections.unmodifiableMap(refdClasses);
+	public SortedMap<String, Visibility> referencedElementNames() {
+		return Collections.unmodifiableSortedMap(refdElements);
 	}
 
 	public Visibility visibility() {
@@ -251,9 +251,9 @@ public final class ClassParser implements Closeable {
 	private String addClassRef(String name, Visibility vis) {
 		if (null == name || ownName.equals(name))
 			return null;
-		final Visibility found = refdClasses.get(name);
+		final Visibility found = refdElements.get(name);
 		if (null == found || vis.compareTo(found) > 0)
-			refdClasses.put(name, vis);
+			refdElements.put(name, vis);
 		return name;
 	}
 
@@ -384,7 +384,7 @@ public final class ClassParser implements Closeable {
 	private void addMemberRef(String className, String memberName, String memberDescriptor) {
 		if (null == className)
 			return;
-		// TODO member
+		refdElements.put(className + "#" + memberName + "#" + memberDescriptor, Visibility.PRIV);
 	}
 
 	private String toClassName(String name) {
