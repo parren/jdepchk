@@ -49,10 +49,7 @@ public final class JDepChk {
 	// To turn this into a real speed demon:
 	// TODO Full dir emulation in .jar scanning?
 	// TODO Bulk file attr scanning on JDK 7
-	// TODO Use full ASM-based reader only if at least one containing scope has visibility-scoped rules
 	// TODO Form a hierarchy of scopes by path prefix to exit matching early
-	// TODO Feed the classfile iterator into a checker queue and use multiple checking workers
-	// TODO See if can avoid conversion from bytes to chars (when doing only prefix matching)
 
 	public static void main(String[] args) throws Exception {
 		try {
