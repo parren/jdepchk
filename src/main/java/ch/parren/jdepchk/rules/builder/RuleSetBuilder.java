@@ -94,7 +94,10 @@ public final class RuleSetBuilder {
 				.replaceAll("[*][*]", "~") //
 				.replaceAll("[*]", "[^/]*") //
 				.replaceAll("~", ".*");
-		return Pattern.compile(regex);
+		if (regex.endsWith(".*"))
+			return Pattern.compile(regex);
+		else
+			return Pattern.compile(regex + "([#].*$|$)"); // allow trailing member info
 	}
 
 	AbstractScopeBuilder referenceScope(String name, AbstractScopeBuilder def) {
