@@ -101,11 +101,35 @@
 	</target>
 
 	<!-- ================================================================= -->
+	<!-- check:                                                            -->
+	<!-- Runs JDepChk on itself                                            -->
+	<!-- ================================================================= -->
+
+	<target name="check" depends="check-classes, check-jar" description="Runs JDepChk on itself">
+	</target>
+
+	<target name="check-classes" depends="compile-main" description="Runs JDepChk on its own compiled classes">
+		<java classpath="${temp.classes.dir}" classname="ch.parren.jdepchk.JDepChk">
+			<arg value="--config" />
+			<arg file="edepchk.conf" />
+		</java>
+	</target>
+
+	<target name="check-jar" depends="jar-main" description="Runs JDepChk on its own jar">
+		<java jar="${jar.file}" fork="true">
+			<arg value="--jar" />
+			<arg file="${jar.file}" />
+			<arg value="--rules" />
+			<arg file="${src.dir}/main/rules.jdep" />
+		</java>
+	</target>
+
+	<!-- ================================================================= -->
 	<!-- build:                                                            -->
 	<!-- The default target                                                -->
 	<!-- ================================================================= -->
 
-	<target name="build" depends="jar" description="Builds an executable target (default)">
+	<target name="build" depends="jar, test, check" description="Builds an executable target (default)">
 	</target>
 
 	<!-- ================================================================= -->
@@ -115,7 +139,7 @@
 
 	<target name="compile-tests" depends="prepare-run, jar">
 		<mkdir dir="${temp.test.dir}" />
-		
+
 		<javac srcdir="${src.test.dir}" destdir="${temp.test.dir}" classpath="${test.classpath}" debug="true" deprecation="on" source="${javac.source}" target="${javac.target}" includeantruntime="true">
 		</javac>
 		<copy todir="${temp.test.dir}">
@@ -188,7 +212,7 @@
 		<fail message="Distributions must be built with Sun JDK 1.5.0, not ${java.runtime.name} ${java.runtime.version}. Aborting." unless="is.jre15" />
 	</target>
 
-	<target name="dist" depends="check-jre1.5, clean,test" description="Builds distribution">
+	<target name="dist" depends="check-jre1.5, clean, build, test, check" description="Builds distribution">
 		<property name="dist.name" value="${name}-${dist.version}" />
 		<property name="dist.file" value="${dist.dir}/${dist.name}" />
 
