@@ -35,7 +35,7 @@ public class RuleSetParserTest {
 				"		.allows: composite; default: true\n" + // 
 				"				not prefix: ch/abacus/lib/\n" + // 
 				"				prefix: ch/abacus/lib/swing/\n" + // 
-				"				pattern: ch/abacus/lib/net/SocketServer[^/]*\n" + // 
+				"				pattern: ch/abacus/lib/net/SocketServer[^/]*([#].*$|$)\n" + // 
 				"	scope ch.abacus.ulc.shared\n" + // 
 				"		.contains: composite; default: false\n" + // 
 				"				prefix: ch/abacus/ulc/shared/\n" + // 
@@ -58,29 +58,29 @@ public class RuleSetParserTest {
 		assertEquals("rule set comps.jdep\n" + // 
 				"	scope api\n" + // 
 				"		.contains: composite; default: false\n" + // 
-				"				pattern: api/[^/]*\n" + // 
+				"				pattern: api/[^/]*([#].*$|$)\n" + // 
 				"		.allows: composite; default: false\n" + // 
-				"				pattern: api/[^/]*\n" + // 
+				"				pattern: api/[^/]*([#].*$|$)\n" + // 
 				"				prefix: java/\n" + // 
 				"	scope api.impl\n" + // 
 				"		.contains: composite; default: false\n" + // 
 				"		.allows: composite; default: false\n" + // 
 				"				prefix: java/\n" + // 
-				"				pattern: api/[^/]*\n" + // 
+				"				pattern: api/[^/]*([#].*$|$)\n" + // 
 				"	scope api.impl.one\n" + // 
 				"		.contains: composite; default: false\n" + // 
 				"				prefix: api/impl/one/\n" + // 
 				"		.allows: composite; default: false\n" + // 
 				"				prefix: api/impl/one/\n" + // 
 				"				prefix: java/\n" + // 
-				"				pattern: api/[^/]*\n" + // 
+				"				pattern: api/[^/]*([#].*$|$)\n" + // 
 				"	scope api.impl.two\n" + // 
 				"		.contains: composite; default: false\n" + // 
 				"				prefix: api/impl/two/\n" + // 
 				"		.allows: composite; default: false\n" + // 
 				"				prefix: api/impl/two/\n" + // 
 				"				prefix: java/\n" + // 
-				"				pattern: api/[^/]*\n" + // 
+				"				pattern: api/[^/]*([#].*$|$)\n" + // 
 				"				prefix: api/impl/one/\n" + // 
 				"	scope user\n" + // 
 				"		.contains: composite; default: false\n" + // 
@@ -88,7 +88,7 @@ public class RuleSetParserTest {
 				"		.allows: composite; default: false\n" + // 
 				"				prefix: user/\n" + // 
 				"				prefix: java/\n" + // 
-				"				pattern: api/[^/]*\n" + // 
+				"				pattern: api/[^/]*([#].*$|$)\n" + // 
 				"", set.describe());
 	}
 
