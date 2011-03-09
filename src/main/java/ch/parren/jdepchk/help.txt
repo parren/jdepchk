@@ -29,6 +29,10 @@ DESCRIPTION
 		the file is identical to the one used by EDepChk, the Eclipse plugin for JDepChk
 		(see below for details).
 
+	--jobs N
+		Runs at most N jobs in parallel. Relevant only if you are scanning multiple class
+		dirs or jar files. Default is the number of available processors.
+
 	--show-rules
 		Lists all the low-level rules in effect after parsing the rule files. In particular, this
 		shows how component-based rules are implemented as low-level rules by JDepChk.

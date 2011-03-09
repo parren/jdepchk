@@ -3,7 +3,7 @@ package ch.parren.jdepchk.classes;
 import java.io.File;
 import java.io.IOException;
 
-public final class JarsDirClassSet implements ClassSet {
+public final class JarsDirClassSet implements ClassSets {
 
 	private final boolean recursive;
 	private final File dir;
@@ -20,7 +20,7 @@ public final class JarsDirClassSet implements ClassSet {
 	private void accept(Visitor visitor, File dir) throws IOException {
 		for (File file : dir.listFiles()) {
 			if (file.getName().endsWith(".jar"))
-				new JarFileClassSet(file).accept(visitor);
+				visitor.visitClassSet(new JarFileClassSet(file));
 			else if (recursive && file.isDirectory() && file.getName().charAt(0) != '.')
 				accept(visitor, file);
 		}

@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Collection;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import ch.parren.java.lang.New;
 import ch.parren.jdepchk.check.Checker;
@@ -16,9 +17,11 @@ import ch.parren.jdepchk.check.Violation;
 import ch.parren.jdepchk.check.ViolationListener;
 import ch.parren.jdepchk.classes.ClassParser;
 import ch.parren.jdepchk.classes.ClassSet;
+import ch.parren.jdepchk.classes.ClassSets;
 import ch.parren.jdepchk.classes.ClassesDirClassSet;
 import ch.parren.jdepchk.classes.JarFileClassSet;
 import ch.parren.jdepchk.classes.JarsDirClassSet;
+import ch.parren.jdepchk.classes.SingleClassSet;
 import ch.parren.jdepchk.rules.RuleSet;
 import ch.parren.jdepchk.rules.parser.FileParseException;
 import ch.parren.jdepchk.rules.parser.RuleSetLoader;
@@ -56,6 +59,7 @@ public final class JDepChk {
 			final Collection<Config> cfgs = New.arrayList();
 			boolean showRules = false;
 			boolean showStats = false;
+			int nMaxJobs = Runtime.getRuntime().availableProcessors();
 
 			{
 				final Config cfg = new Config();
@@ -69,7 +73,7 @@ public final class JDepChk {
 					} else if ("--classes".equals(arg) || "-c".equals(arg)) {
 						final File f = new File(args[i++]);
 						if (f.isDirectory())
-							cfg.classSets.add(new ClassesDirClassSet(f));
+							cfg.classSets.add(new SingleClassSet(new ClassesDirClassSet(f)));
 						else
 							System.err.println("WARNING: Ignoring --classes " + f);
 					} else if ("--jars".equals(arg) || "--jar".equals(arg) || "-j".equals(arg)) {
@@ -77,9 +81,11 @@ public final class JDepChk {
 						if (f.isDirectory())
 							cfg.classSets.add(new JarsDirClassSet(true, f));
 						else if (f.isFile())
-							cfg.classSets.add(new JarFileClassSet(f));
+							cfg.classSets.add(new SingleClassSet(new JarFileClassSet(f)));
 						else
 							System.err.println("WARNING: Ignoring --jar(s) " + f);
+					} else if ("--jobs".equals(arg)) {
+						nMaxJobs = Integer.parseInt(args[i++]);
 					} else if ("--show-rules".equals(arg)) {
 						showRules = true;
 					} else if ("--show-stats".equals(arg)) {
@@ -110,16 +116,64 @@ public final class JDepChk {
 			int contains = 0;
 			int sees = 0;
 			boolean hadViolations = false;
-			for (Config cfg : cfgs) {
+			for (final Config cfg : cfgs) {
 				final PrintingListener listener = new PrintingListener();
-				final Checker checker = new Checker(new MemberFilteringViolationListener(listener), cfg.ruleSets);
 				final long before = System.currentTimeMillis();
-				for (ClassSet classSet : cfg.classSets)
-					checker.check(classSet);
+
+				if (1 >= nMaxJobs) {
+					final Checker checker = new Checker(new MemberFilteringViolationListener(listener), cfg.ruleSets);
+					for (ClassSets classSets : cfg.classSets) {
+						classSets.accept(new ClassSets.Visitor() {
+							public void visitClassSet(ClassSet classSet) throws IOException {
+								checker.check(classSet);
+							}
+						});
+					}
+					contains += checker.nContains;
+					sees += checker.nSees;
+				} else {
+					final ConcurrentLinkedQueue<ClassSet> sets = new ConcurrentLinkedQueue<ClassSet>();
+					for (ClassSets classSets : cfg.classSets) {
+						classSets.accept(new ClassSets.Visitor() {
+							public void visitClassSet(ClassSet classSet) throws IOException {
+								sets.add(classSet);
+							}
+						});
+					}
+					final int nJobs = Math.min(nMaxJobs, sets.size());
+					final Checker[] checkers = new Checker[nJobs];
+					final Thread[] jobs = new Thread[nJobs];
+					for (int i = 0; i < nJobs; i++) {
+						final int iJob = i;
+						jobs[iJob] = new Thread() {
+							@Override public void run() {
+								final Checker checker = new Checker(new MemberFilteringViolationListener(listener),
+										cfg.ruleSets);
+								checkers[iJob] = checker;
+								while (true) {
+									final ClassSet set = sets.poll();
+									if (null == set)
+										break;
+									try {
+										checker.check(set);
+									} catch (IOException e) {
+										e.printStackTrace();
+										throw new RuntimeException(e);
+									}
+								}
+							}
+						};
+						jobs[iJob].start();
+					}
+					for (int i = 0; i < nJobs; i++) {
+						jobs[i].join();
+						contains += checkers[i].nContains;
+						sees += checkers[i].nSees;
+					}
+				}
+
 				final long after = System.currentTimeMillis();
 				taken += after - before;
-				contains += checker.nContains;
-				sees += checker.nSees;
 				hadViolations |= listener.hasViolations();
 				System.out.println(listener);
 			}
@@ -145,7 +199,7 @@ public final class JDepChk {
 
 	private static final class Config {
 		final Collection<RuleSet> ruleSets = New.linkedList();
-		final Collection<ClassSet> classSets = New.linkedList();
+		final Collection<ClassSets> classSets = New.linkedList();
 	}
 
 	private static void parseConfig(File configFile, Collection<Config> configs) throws IOException, ErrorReport {
@@ -174,9 +228,9 @@ public final class JDepChk {
 					// null check keeps compiler happy
 					scope = new Config();
 					configs.add(scope);
-					scope.classSets.add(new ClassesDirClassSet(new File(trimmed)));
+					scope.classSets.add(new SingleClassSet(new ClassesDirClassSet(new File(trimmed))));
 				} else {
-					scope.classSets.add(new ClassesDirClassSet(new File(trimmed)));
+					scope.classSets.add(new SingleClassSet(new ClassesDirClassSet(new File(trimmed))));
 				}
 				pathStartsNewScope = isRulesFile;
 			}
@@ -222,7 +276,7 @@ public final class JDepChk {
 
 	private static final class PrintingListener extends ViolationListener {
 		private int nViol = 0;
-		@Override protected boolean report(Violation v) {
+		@Override protected synchronized boolean report(Violation v) {
 			System.out.print(v.fromClassName + " > " + v.toClassName);
 			if (null != v.toElementName)
 				System.out.print("#" + v.toElementName + "#" + v.toElementDesc);
