@@ -190,7 +190,7 @@ public final class ClassParser implements Closeable {
 
 		// Add remaining, internal refs.
 		for (int i = 0; i < nMemberRefs; i++) {
-			final String className = addClassItemRef(readUnsignedShort(memberRefs[i]), Visibility.PRIV);
+			final String className = readClassItemRef(readUnsignedShort(memberRefs[i]));
 			final int nameTypeAt = items[readUnsignedShort(memberRefs[i] + 2)];
 			addMemberRef(className, //
 					readUTF8Item(readUnsignedShort(nameTypeAt)), // member name
@@ -263,6 +263,11 @@ public final class ClassParser implements Closeable {
 
 	private String addClassItemRef(int classItem, Visibility vis) throws IOException {
 		return addClassNameRef(readUnsignedShort(items[classItem]), vis);
+	}
+
+	protected String readClassItemRef(int classItem) throws IOException {
+		final int nameItem = readUnsignedShort(items[classItem]);
+		return toClassName(readUTF8Item(nameItem));
 	}
 
 	private void addDescriptorRef(int descriptorStringIndex, Visibility vis) throws IOException {

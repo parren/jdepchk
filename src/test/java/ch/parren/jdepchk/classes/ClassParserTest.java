@@ -57,6 +57,10 @@ public class ClassParserTest {
 				"test/StaticMethodRef#foo#()Z priv\n" + //
 				"test/StaticRef priv\n" + //
 				"test/StaticRef#value#I priv\n" + //
+				"test/TestClass#CONST#Ltest/Const; priv\n" + //
+				"test/TestClass#field#Ltest/Field; priv\n" + //
+				"test/TestClass#map#Ljava/util/Map; priv\n" + //
+				"test/TestClass#set#Ljava/util/Set; priv\n" + //
 				"test/TestClass$Gen priv\n" + //
 				"test/TestClass$Lala priv\n" + //
 				"");

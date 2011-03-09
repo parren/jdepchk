@@ -8,10 +8,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Collection;
-import java.util.Set;
 
 import ch.parren.java.lang.New;
 import ch.parren.jdepchk.check.Checker;
+import ch.parren.jdepchk.check.MemberFilteringViolationListener;
 import ch.parren.jdepchk.check.Violation;
 import ch.parren.jdepchk.check.ViolationListener;
 import ch.parren.jdepchk.classes.ClassParser;
@@ -112,7 +112,7 @@ public final class JDepChk {
 			boolean hadViolations = false;
 			for (Config cfg : cfgs) {
 				final PrintingListener listener = new PrintingListener();
-				final Checker checker = new Checker(listener, cfg.ruleSets);
+				final Checker checker = new Checker(new MemberFilteringViolationListener(listener), cfg.ruleSets);
 				final long before = System.currentTimeMillis();
 				for (ClassSet classSet : cfg.classSets)
 					checker.check(classSet);
@@ -222,20 +222,7 @@ public final class JDepChk {
 
 	private static final class PrintingListener extends ViolationListener {
 		private int nViol = 0;
-		private String lastFrom = null;
-		private Set<String> seenTos;
 		@Override protected boolean report(Violation v) {
-			
-			// Avoid showing multiple refs to the same class.
-			if (!v.fromClassName.equals(lastFrom)) {
-				lastFrom = v.fromClassName;
-				seenTos = New.hashSet();
-			}
-			if (seenTos.contains(v.toClassName))
-				return true;
-			if (null == v.toElementName)
-				seenTos.add(v.toClassName);
-
 			System.out.print(v.fromClassName + " > " + v.toClassName);
 			if (null != v.toElementName)
 				System.out.print("#" + v.toElementName + "#" + v.toElementDesc);
