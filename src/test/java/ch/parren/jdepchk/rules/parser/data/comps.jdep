@@ -18,3 +18,8 @@ comp: api.impl.two.**
 
 comp: user.**
 	uses: api
+
+comp: selfref.**
+	allows:
+		foo.**
+		this

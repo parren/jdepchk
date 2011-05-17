@@ -18,7 +18,7 @@ public class ScopeBuilder extends AbstractScopeBuilder {
 		super.contains(filters);
 		return this;
 	}
-	
+
 	public final ScopeBuilder allows(FilterBuilder... filters) {
 		for (FilterBuilder f : filters)
 			allows.add(f);
@@ -28,11 +28,11 @@ public class ScopeBuilder extends AbstractScopeBuilder {
 	public Collection<FilterBuilder> allowsFilters() {
 		return allows;
 	}
-	
+
 	@Override protected final CompositeClassFileFilter buildAllows() {
 		return buildFilter(allows);
 	}
-	
+
 	@Override public String toString() {
 		return "scope " + name;
 	}

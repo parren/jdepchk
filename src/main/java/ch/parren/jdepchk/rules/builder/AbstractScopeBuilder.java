@@ -59,7 +59,11 @@ public abstract class AbstractScopeBuilder {
 		for (FilterBuilder b : builders) {
 			if (b.defaultValue() != def)
 				mixed = true;
-			filters.add(b.filter);
+			if (FilterBuilder.SELFREF == b)
+				for (FilterBuilder c : contains)
+					filters.add(c.filter);
+			else
+				filters.add(b.filter);
 		}
 		return new CompositeClassFileFilter(filters, def, mixed);
 	}

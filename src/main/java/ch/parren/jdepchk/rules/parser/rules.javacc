@@ -40,6 +40,7 @@ TOKEN:
 	|	< Allows: "allows" >
 	|	< Extends: "extends" >
 	|	< Uses: "uses" >
+	|	< This: "this" >
 	|	< Not: "!" >
 	|	< Intro: ":" > // optionally separates arguments from names
 	|	< Bullet: "-" > // supports YAMLish multiple elts
@@ -161,7 +162,9 @@ FilterBuilder spec():
 		String glob;
 	}
 	{
-		re=re()
+		<This>
+			{ return builder.selfref(); }
+	|	re=re()
 			{ return builder.pattern(Pattern.compile(re)); }
 	|	glob=id()
 			{ return builder.glob(glob); }

@@ -88,7 +88,15 @@ public class RuleSetParserTest {
 				"		.allows: composite; default: false\n" + // 
 				"				prefix: user/\n" + // 
 				"				prefix: java/\n" + // 
-				"				pattern: api/[^/]*([#].*$|$)\n" + // 
+				"				pattern: api/[^/]*([#].*$|$)\n" + //
+				"	scope selfref\n" + //
+				"		.contains: composite; default: false\n" + //
+				"				prefix: selfref/\n" +  //
+				"		.allows: composite; default: false\n" + //
+				"				prefix: selfref/\n" +  //
+				"				prefix: foo/\n" +  //
+				"				prefix: selfref/\n" +  //
+				"				prefix: java/\n" +  //
 				"", set.describe());
 	}
 

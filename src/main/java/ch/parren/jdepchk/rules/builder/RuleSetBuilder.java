@@ -88,6 +88,10 @@ public final class RuleSetBuilder {
 		return new FilterBuilder(filter);
 	}
 
+	public FilterBuilder selfref() {
+		return FilterBuilder.SELFREF;
+	}
+
 	public static Pattern globToPattern(String spec) {
 		final String regex = spec //
 				.replace('.', '/') //

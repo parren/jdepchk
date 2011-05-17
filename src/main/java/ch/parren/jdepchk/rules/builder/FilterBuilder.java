@@ -5,6 +5,8 @@ import ch.parren.jdepchk.rules.InverseClassFileFilter;
 
 public final class FilterBuilder {
 
+	public static final FilterBuilder SELFREF = new FilterBuilder(null);
+	
 	final ClassFileFilter filter;
 
 	public FilterBuilder(ClassFileFilter filter) {

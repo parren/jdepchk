@@ -61,7 +61,7 @@ class RuleSetParser implements RuleSetParserConstants {
       ;
     }
     name = id();
-    jj_consume_token(23);
+    jj_consume_token(24);
     value = id();
                           builder.define(name, value);
   }
@@ -304,6 +304,7 @@ class RuleSetParser implements RuleSetParserConstants {
       }
       filter(filters);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case This:
       case Not:
       case Bullet:
       case Id:
@@ -320,6 +321,7 @@ class RuleSetParser implements RuleSetParserConstants {
   final public void filter(Collection<FilterBuilder> filters) throws ParseException {
                 FilterBuilder filter;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case This:
     case Id:
     case RegExp:
       filter = spec();
@@ -341,6 +343,10 @@ class RuleSetParser implements RuleSetParserConstants {
                 String re;
                 String glob;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case This:
+      jj_consume_token(This);
+                          {if (true) return builder.selfref();}
+      break;
     case RegExp:
       re = re();
                           {if (true) return builder.pattern(Pattern.compile(re));}
@@ -384,7 +390,7 @@ class RuleSetParser implements RuleSetParserConstants {
       jj_la1_init_0();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x1f00,0x1f00,0x80000,0x600,0x80000,0xe000,0x6000,0x80000,0x80000,0xe000,0x80000,0x80000,0x3e000,0x80000,0x80000,0x3e000,0x100000,0x300000,0x100000,0x300000,0x100000,0x740000,0x640000,0x600000,};
+      jj_la1_0 = new int[] {0x1f00,0x1f00,0x100000,0x600,0x100000,0xe000,0x6000,0x100000,0x100000,0xe000,0x100000,0x100000,0x3e000,0x100000,0x100000,0x3e000,0x200000,0x600000,0x200000,0x600000,0x200000,0xec0000,0xcc0000,0xc40000,};
    }
 
   /** Constructor with InputStream. */
@@ -501,7 +507,7 @@ class RuleSetParser implements RuleSetParserConstants {
   /** Generate ParseException. */
   public ParseException generateParseException() {
     jj_expentries.clear();
-    boolean[] la1tokens = new boolean[24];
+    boolean[] la1tokens = new boolean[25];
     if (jj_kind >= 0) {
       la1tokens[jj_kind] = true;
       jj_kind = -1;
@@ -515,7 +521,7 @@ class RuleSetParser implements RuleSetParserConstants {
         }
       }
     }
-    for (int i = 0; i < 24; i++) {
+    for (int i = 0; i < 25; i++) {
       if (la1tokens[i]) {
         jj_expentry = new int[1];
         jj_expentry[0] = i;
