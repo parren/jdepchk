@@ -41,6 +41,12 @@ public class RuleSetParserTest {
 				"				prefix: ch/abacus/ulc/shared/\n" + // 
 				"		.allows: composite; default: true\n" + // 
 				"				not prefix: ch/abacus/lib/\n" + // 
+				"	scope selfref\n" + //
+				"		.contains: composite; default: false\n" + //
+				"				prefix: foo/bar/\n" +  //
+				"		.allows: composite; default: true\n" + //
+				"				not prefix: foo/\n" +  //
+				"				prefix: foo/bar/\n" +  //
 				"", set.describe());
 	}
 
@@ -89,14 +95,6 @@ public class RuleSetParserTest {
 				"				prefix: user/\n" + // 
 				"				prefix: java/\n" + // 
 				"				pattern: api/[^/]*([#].*$|$)\n" + //
-				"	scope selfref\n" + //
-				"		.contains: composite; default: false\n" + //
-				"				prefix: selfref/\n" +  //
-				"		.allows: composite; default: false\n" + //
-				"				prefix: selfref/\n" +  //
-				"				prefix: foo/\n" +  //
-				"				prefix: selfref/\n" +  //
-				"				prefix: java/\n" +  //
 				"", set.describe());
 	}
 

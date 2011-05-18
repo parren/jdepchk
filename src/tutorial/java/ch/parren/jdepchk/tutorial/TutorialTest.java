@@ -47,7 +47,11 @@ public class TutorialTest {
 				"		java.**", // again via a prefix glob
 				"		! java.net.**", // and another, but negated
 				"", //
-				"", //
+				"rule: containment", "	applies-to:", // we confine the base package to see only itself within the package and its subs
+				"		ch.parren.jdepchk.tutorial.examples.*", // specified using a glob that doesn't see subpackages
+				"	allows:", //
+				"		! ch.parren.jdepchk.tutorial.examples.**", // starting with a negated rule allows everything else by default
+				"		xthis", // "this" refers to the "applies-to" or "contains" filter of the current rule
 				"", //
 		};
 
@@ -77,10 +81,11 @@ public class TutorialTest {
 		/**
 		 * The class {@link OnlyCoreJava} should pass, but {@link UsesNet}
 		 * should not. Note how JDepChk identifies classes in the JVM's native
-		 * form.
+		 * form. Also, {@link UsesInner} does not pass the containment check.
 		 */
-		assertEquals(1, violations.size());
-		assertEquals("ch/parren/jdepchk/tutorial/examples/UsesNet", violations.get(0).fromClassName);
+		assertEquals(2, violations.size());
+		assertEquals("ch/parren/jdepchk/tutorial/examples/UsesInner", violations.get(0).fromClassName);
+		assertEquals("ch/parren/jdepchk/tutorial/examples/UsesNet", violations.get(1).fromClassName);
 	}
 
 	/**

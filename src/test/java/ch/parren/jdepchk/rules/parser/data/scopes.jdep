@@ -16,3 +16,9 @@ scope: ch.abacus.ulc.client
 scope: ch.abacus.ulc.shared
 	contains: ch.abacus.ulc.shared.**
 	allows: !ch.abacus.lib.**
+
+scope: selfref
+	contains: foo.bar.**
+	allows:
+		! foo.**
+		this
