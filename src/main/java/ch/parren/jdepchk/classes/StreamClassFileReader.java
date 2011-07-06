@@ -1,7 +1,9 @@
 package ch.parren.jdepchk.classes;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 public class StreamClassFileReader extends AbstractClassReader {
 
@@ -23,6 +25,10 @@ public class StreamClassFileReader extends AbstractClassReader {
 		return new ClassParser(classFile);
 	}
 
+	public InputStream inputStream() throws IOException {
+		return new FileInputStream(classFile);
+	}
+	
 	/* @Override */public void close() throws IOException {}
 
 }

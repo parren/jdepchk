@@ -22,6 +22,10 @@ public class ClassJarEntryReader extends AbstractClassReader {
 		return new ClassParser((int) entry.getSize(), stream);
 	}
 
+	public InputStream inputStream() throws IOException {
+		return file.getInputStream(entry);
+	}
+	
 	/* @Override */public void close() throws IOException {
 		if (null != stream)
 			stream.close();
