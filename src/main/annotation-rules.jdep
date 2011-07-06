@@ -1,0 +1,8 @@
+# Self-check rules
+
+lib $default
+	contains:
+		java.lang.**
+		java.util.**
+
+lib java.io.**
