@@ -24,4 +24,10 @@ public final class PatternMatcher implements ClassFileFilter {
 		to.append("pattern: ").append(pattern);
 	}
 
+	@Override public String toString() {
+		final StringBuilder b = new StringBuilder();
+		describe(b, "");
+		return b.toString();
+	}
+	
 }

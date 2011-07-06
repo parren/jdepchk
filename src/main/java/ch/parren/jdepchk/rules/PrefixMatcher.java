@@ -30,4 +30,10 @@ public final class PrefixMatcher implements ClassFileFilter {
 		to.append("prefix: ").append(prefix);
 	}
 	
+	@Override public String toString() {
+		final StringBuilder b = new StringBuilder();
+		describe(b, "");
+		return b.toString();
+	}
+	
 }

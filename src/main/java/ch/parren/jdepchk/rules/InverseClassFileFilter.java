@@ -23,4 +23,10 @@ public final class InverseClassFileFilter implements ClassFileFilter {
 		base.describe(to, indent);
 	}
 	
+	@Override public String toString() {
+		final StringBuilder b = new StringBuilder();
+		describe(b, "");
+		return b.toString();
+	}
+	
 }

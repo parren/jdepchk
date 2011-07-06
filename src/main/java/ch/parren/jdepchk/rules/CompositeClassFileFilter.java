@@ -50,4 +50,10 @@ public final class CompositeClassFileFilter implements ClassFileFilter {
 		}
 	}
 
+	@Override public String toString() {
+		final StringBuilder b = new StringBuilder();
+		describe(b, "");
+		return b.toString();
+	}
+	
 }
