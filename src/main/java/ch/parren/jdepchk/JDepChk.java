@@ -238,8 +238,16 @@ public final class JDepChk {
 		}
 	}
 
-	private static void parseRulesIn(String fileOrDirPath, Collection<RuleSet> ruleSets) throws IOException,
+	private static void parseRulesIn(String fileOrDirPaths, Collection<RuleSet> ruleSets) throws IOException,
 			ErrorReport {
+		final RuleSetBuilder builder = new RuleSetBuilder(fileOrDirPaths);
+		final String[] parts = fileOrDirPaths.split("[" + File.pathSeparator + "]");
+		for (String part : parts)
+			parseRulesInPart(part, builder);
+		ruleSets.add(builder.finish());
+	}
+
+	private static void parseRulesInPart(String fileOrDirPath, RuleSetBuilder builder) throws IOException, ErrorReport {
 		if (fileOrDirPath.endsWith("/*/")) {
 			final File parentDir = new File(fileOrDirPath.substring(0, fileOrDirPath.length() - "/*/".length()));
 			final FilenameFilter filter = new FilenameFilter() {
@@ -249,18 +257,17 @@ public final class JDepChk {
 			};
 			for (File subDir : parentDir.listFiles(filter))
 				if (subDir.isDirectory())
-					ruleSets.add(parseRulesInDir(subDir));
+					parseRulesInDir(subDir, builder);
 		} else {
 			final File fileOrDir = new File(fileOrDirPath);
 			if (fileOrDir.isDirectory())
-				ruleSets.add(parseRulesInDir(fileOrDir));
+				parseRulesInDir(fileOrDir, builder);
 			else
-				ruleSets.add(parseRulesInFile(fileOrDir));
+				parseRulesInFile(fileOrDir, builder);
 		}
 	}
 
-	private static final RuleSet parseRulesInDir(File dir) throws IOException, ErrorReport {
-		final RuleSetBuilder builder = new RuleSetBuilder(dir.getPath());
+	private static final void parseRulesInDir(File dir, RuleSetBuilder builder) throws IOException, ErrorReport {
 		final FilenameFilter filter = new FilenameFilter() {
 			public boolean accept(File dir, String name) {
 				return !name.startsWith(".");
@@ -278,12 +285,11 @@ public final class JDepChk {
 							+ highlightLine(file, fpe.cause.cause.currentToken.next.beginLine) //
 					);
 				}
-		return builder.finish();
 	}
 
-	private static final RuleSet parseRulesInFile(File file) throws IOException, ErrorReport {
+	private static final void parseRulesInFile(File file, RuleSetBuilder builder) throws IOException, ErrorReport {
 		try {
-			return RuleSetLoader.load(file);
+			RuleSetLoader.loadInto(file, builder);
 		} catch (FileParseException fpe) {
 			throw new ErrorReport("Error parsing file " + fpe.file + "\n" //
 					+ fpe.cause.getMessage() + "\n" //

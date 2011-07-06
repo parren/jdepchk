@@ -9,17 +9,19 @@ DESCRIPTION
     dependencies on other classes and verifies the latter against a set of
     rules.
 
-    -r, --rules FILENAME
-        Loads rule definitions from the given file. See below for examples of
-        rule definitions.
+    -r, --rules FILENAME | DIRNAME | DIRNAME/*/ ...
+        Loads rule definitions from the given file, or from all files in the
+        given dir, except files whose name starts with a period, or from all
+        files in all subdirs of the given dir, except subdirs whose name
+        starts with a period.
 
-    -r, --rules DIRNAME
-        Loads rule definitions from all files in the given dir, except files
-        whose name starts with a period.
+        You can specify multiple such file or dir paths, separated by your
+        platforms path separator (":" on Linux, ";" on Windows). All rules
+        specified with a single --rule argument are parsed into a single
+        rule namespace. Rules from different --rule arguments are parsed
+        into separate namespaces.
 
-    -r, --rules DIRNAME/*/
-        Loads rule definitions from all files in all subdirs of the given dir,
-        except subdirs whose name starts with a period.
+        See below for examples of rule definitions.
 
     -c, --classes DIRNAME
         Scans .class files in the given directory and all its subdirectories.
