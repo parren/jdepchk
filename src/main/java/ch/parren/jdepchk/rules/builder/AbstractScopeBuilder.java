@@ -29,6 +29,11 @@ public abstract class AbstractScopeBuilder {
 		}
 	}
 
+	AbstractScopeBuilder mergeWith(AbstractScopeBuilder other) {
+		this.contains.addAll(other.contains);
+		return this;
+	}
+
 	public AbstractScopeBuilder contains(FilterBuilder... filters) {
 		for (FilterBuilder f : filters)
 			contains.add(f);

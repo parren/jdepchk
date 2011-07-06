@@ -107,7 +107,7 @@ public final class RuleSetBuilder {
 	AbstractScopeBuilder referenceScope(String name, AbstractScopeBuilder def) {
 		final AbstractScopeBuilder found = scopesByName.get(name);
 		if (null != found)
-			return found;
+			return found.mergeWith(def);
 		scopesByName.put(name, def);
 		return def;
 	}
