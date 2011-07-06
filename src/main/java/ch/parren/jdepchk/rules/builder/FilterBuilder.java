@@ -21,4 +21,8 @@ public final class FilterBuilder {
 		return filter instanceof InverseClassFileFilter ? true : false;
 	}
 
+	@Override public String toString() {
+		return filter.toString();
+	}
+	
 }
