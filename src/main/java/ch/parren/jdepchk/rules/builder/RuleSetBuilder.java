@@ -17,7 +17,6 @@ public final class RuleSetBuilder {
 	private final Set<String> defNames = New.hashSet();
 	private final Map<String, AbstractScopeBuilder> scopesByName = New.hashMap();
 	private final Set<AbstractScopeBuilder> scopesInDefinitionOrder = New.linkedHashSet();
-	private final Collection<AbstractScopeBuilder> scopesToCheck = New.linkedList();
 	private final String name;
 	private final ComponentBuilder defaultLib;
 
@@ -121,8 +120,6 @@ public final class RuleSetBuilder {
 			defd.prepare(ruleSet);
 		for (AbstractScopeBuilder defd : scopesInDefinitionOrder)
 			defd.finish(ruleSet);
-		for (AbstractScopeBuilder defd : scopesToCheck)
-			defd.checkIn(ruleSet);
 		return ruleSet;
 	}
 
