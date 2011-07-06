@@ -1,17 +1,13 @@
 package ch.parren.jdepchk.tutorial;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.StringReader;
-import java.util.List;
 
 import org.junit.Test;
 
-import ch.parren.java.lang.New;
 import ch.parren.jdepchk.check.Checker;
-import ch.parren.jdepchk.check.Violation;
-import ch.parren.jdepchk.check.ViolationListener;
 import ch.parren.jdepchk.classes.ClassSet;
 import ch.parren.jdepchk.classes.ClassesDirClassSet;
 import ch.parren.jdepchk.rules.RuleSet;
@@ -23,7 +19,7 @@ import ch.parren.jdepchk.rules.parser.StreamParseException;
  * JDepChk is a dependency checker for the Java virtual machine (JVM) class
  * files. As such, it can be used for any code that runs on the JVM.
  */
-public class TutorialTest {
+public class TutorialTest extends AbstractTutorialTest {
 
 	// ---- cite
 	/**
@@ -291,21 +287,14 @@ public class TutorialTest {
 		assertEquals("java/lang/String", violations.get(0).toClassName);
 	}
 
-	private String[] replaceIn(String[] lines, String what, String with) {
-		final String[] res = new String[lines.length];
-		for (int i = 0; i < lines.length; i++)
-			res[i] = lines[i].replace(what, with);
-		return res;
-	}
-
-	private void check(String[] rulesLines, String classDirName) throws Exception {
+	private final void check(String[] rulesLines, String classDirName) throws Exception {
 		final RuleSet ruleSet = parse(rulesLines);
 		final ClassSet classSet = new ClassesDirClassSet(new File(classDirName));
 		final Checker checker = new Checker(violationsGatherer, ruleSet);
 		checker.check(classSet);
 	}
 
-	private RuleSet parse(String[] rulesLines) {
+	private final RuleSet parse(String[] rulesLines) {
 		final StringBuilder text = new StringBuilder();
 		for (String line : rulesLines)
 			text.append(line).append("\n");
@@ -317,13 +306,5 @@ public class TutorialTest {
 		}
 		return builder.finish();
 	}
-
-	private final ViolationListener violationsGatherer = new ViolationListener() {
-		@Override protected boolean report(Violation v) {
-			violations.add(v);
-			return true;
-		}
-	};
-	private final List<Violation> violations = New.arrayList();
 
 }
