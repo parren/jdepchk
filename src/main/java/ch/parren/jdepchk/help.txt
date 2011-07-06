@@ -13,6 +13,14 @@ DESCRIPTION
         Loads rule definitions from the given file. See below for examples of
         rule definitions.
 
+    -r, --rules DIRNAME
+        Loads rule definitions from all files in the given dir, except files
+        whose name starts with a period.
+
+    -r, --rules DIRNAME/*/
+        Loads rule definitions from all files in all subdirs of the given dir,
+        except subdirs whose name starts with a period.
+
     -c, --classes DIRNAME
         Scans .class files in the given directory and all its subdirectories.
         You will typically use this for javac's output dirs.

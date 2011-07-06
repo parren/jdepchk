@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -23,6 +24,7 @@ import ch.parren.jdepchk.classes.JarFileClassSet;
 import ch.parren.jdepchk.classes.JarsDirClassSet;
 import ch.parren.jdepchk.classes.SingleClassSet;
 import ch.parren.jdepchk.rules.RuleSet;
+import ch.parren.jdepchk.rules.builder.RuleSetBuilder;
 import ch.parren.jdepchk.rules.parser.FileParseException;
 import ch.parren.jdepchk.rules.parser.RuleSetLoader;
 
@@ -66,7 +68,7 @@ public final class JDepChk {
 					if ("--config".equals(arg) || "-f".equals(arg)) {
 						parseConfig(new File(args[i++]), cfgs);
 					} else if ("--rules".equals(arg) || "-r".equals(arg)) {
-						cfg.ruleSets.add(parseRulesIn(new File(args[i++])));
+						parseRulesIn(args[i++], cfg.ruleSets);
 					} else if ("--classes".equals(arg) || "-c".equals(arg)) {
 						final File f = new File(args[i++]);
 						if (f.isDirectory())
@@ -220,7 +222,7 @@ public final class JDepChk {
 						scope = new Config();
 						configs.add(scope);
 					}
-					scope.ruleSets.add(parseRulesIn(new File(trimmed)));
+					parseRulesIn(trimmed, scope.ruleSets);
 				} else if (null == scope || pathStartsNewScope) {
 					// null check keeps compiler happy
 					scope = new Config();
@@ -236,7 +238,50 @@ public final class JDepChk {
 		}
 	}
 
-	private static final RuleSet parseRulesIn(File file) throws IOException, ErrorReport {
+	private static void parseRulesIn(String fileOrDirPath, Collection<RuleSet> ruleSets) throws IOException,
+			ErrorReport {
+		if (fileOrDirPath.endsWith("/*/")) {
+			final File parentDir = new File(fileOrDirPath.substring(0, fileOrDirPath.length() - "/*/".length()));
+			final FilenameFilter filter = new FilenameFilter() {
+				public boolean accept(File dir, String name) {
+					return !name.startsWith(".");
+				}
+			};
+			for (File subDir : parentDir.listFiles(filter))
+				if (subDir.isDirectory())
+					ruleSets.add(parseRulesInDir(subDir));
+		} else {
+			final File fileOrDir = new File(fileOrDirPath);
+			if (fileOrDir.isDirectory())
+				ruleSets.add(parseRulesInDir(fileOrDir));
+			else
+				ruleSets.add(parseRulesInFile(fileOrDir));
+		}
+	}
+
+	private static final RuleSet parseRulesInDir(File dir) throws IOException, ErrorReport {
+		final RuleSetBuilder builder = new RuleSetBuilder(dir.getPath());
+		final FilenameFilter filter = new FilenameFilter() {
+			public boolean accept(File dir, String name) {
+				return !name.startsWith(".");
+			}
+		};
+		for (File file : dir.listFiles(filter))
+			if (file.isFile())
+				try {
+					RuleSetLoader.loadInto(file, builder);
+				} catch (FileParseException fpe) {
+					throw new ErrorReport("Error parsing file " + fpe.file + "\n" //
+							+ fpe.cause.getMessage() + "\n" //
+							+ "in the following fragment:\n" //
+							+ "\n" //
+							+ highlightLine(file, fpe.cause.cause.currentToken.next.beginLine) //
+					);
+				}
+		return builder.finish();
+	}
+
+	private static final RuleSet parseRulesInFile(File file) throws IOException, ErrorReport {
 		try {
 			return RuleSetLoader.load(file);
 		} catch (FileParseException fpe) {
