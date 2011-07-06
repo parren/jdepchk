@@ -58,7 +58,7 @@ public final class JDepChk {
 			final Collection<Config> cfgs = New.arrayList();
 			boolean showRules = false;
 			boolean showStats = false;
-			int nMaxJobs = Runtime.getRuntime().availableProcessors();
+			int nMaxJobs = Runtime.getRuntime().availableProcessors() * 2;
 
 			{
 				final Config cfg = new Config();

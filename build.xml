@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="jcite" default="build" basedir=".">
+<project name="jdepchk" default="build" basedir=".">
 	<description>Builds, tests, and runs the project JDepChk.</description>
 
 	<property file="build.properties" />

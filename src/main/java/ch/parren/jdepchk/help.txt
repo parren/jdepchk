@@ -44,8 +44,8 @@ DESCRIPTION
 
     --jobs N
         Runs at most N jobs in parallel. Relevant only if you are scanning
-        multiple class dirs or jar files. Default is the number of available
-        processors.
+        multiple class dirs or jar files. Default is double the number of
+        available processors.
 
     --show-rules
         Lists all the low-level rules in effect after parsing the rule files.
