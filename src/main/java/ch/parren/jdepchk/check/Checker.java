@@ -12,6 +12,8 @@ import ch.parren.jdepchk.rules.Scope;
 
 public final class Checker {
 
+	public static boolean debugOutput = false;
+
 	private final ViolationListener listener;
 	private final Iterable<RuleSet> ruleSets;
 
@@ -63,6 +65,8 @@ public final class Checker {
 						for (String refd : classFile.referencedElementNames()) {
 							nContains++;
 							nSees++;
+							if (debugOutput)
+								System.out.println(refd);
 							if (!scope.allows(refd))
 								report(scope, name, refd);
 						}

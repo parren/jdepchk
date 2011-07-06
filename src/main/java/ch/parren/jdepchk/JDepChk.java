@@ -89,6 +89,8 @@ public final class JDepChk {
 						showRules = true;
 					} else if ("--show-stats".equals(arg)) {
 						showStats = true;
+					} else if ("--debug".equals(arg)) {
+						Checker.debugOutput = true;
 					} else if ("--help".equals(arg) || "-h".equals(arg)) {
 						showHelp();
 						return;
