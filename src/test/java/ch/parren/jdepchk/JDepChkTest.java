@@ -42,7 +42,6 @@ public class JDepChkTest {
 				.contains(b.glob("java.**")) //
 		;
 		b.comp("api.*") //
-				.use("api.impl") //
 		;
 		b.comp("api.impl.**") //
 				.extend("api") //

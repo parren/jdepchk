@@ -68,9 +68,12 @@ public class RuleSetParserTest {
 				"		.allows: composite; default: false\n" + // 
 				"				pattern: api/[^/]*([#].*$|$)\n" + // 
 				"				prefix: java/\n" + // 
+				"				prefix: api/impl/\n" + // 
 				"	scope api.impl\n" + // 
 				"		.contains: composite; default: false\n" + // 
+				"				prefix: api/impl/\n" + // 
 				"		.allows: composite; default: false\n" + // 
+				"				prefix: api/impl/\n" + // 
 				"				prefix: java/\n" + // 
 				"				pattern: api/[^/]*([#].*$|$)\n" + // 
 				"	scope api.impl.one\n" + // 
