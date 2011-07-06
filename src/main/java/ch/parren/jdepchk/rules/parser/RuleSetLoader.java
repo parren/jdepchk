@@ -3,6 +3,7 @@ package ch.parren.jdepchk.rules.parser;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -34,8 +35,8 @@ public final class RuleSetLoader {
 		}
 	}
 
-	static public RuleSet load(File file) throws IOException, FileParseException {
-		final RuleSetBuilder builder = new RuleSetBuilder(file.getPath());
+	static public void loadInto(File file, final RuleSetBuilder builder) throws FileNotFoundException,
+			FileParseException, IOException {
 		final InputStream stream = new FileInputStream(file);
 		try {
 			loadInto(stream, builder);
@@ -44,6 +45,11 @@ public final class RuleSetLoader {
 		} finally {
 			stream.close();
 		}
+	}
+
+	static public RuleSet load(File file) throws IOException, FileParseException {
+		final RuleSetBuilder builder = new RuleSetBuilder(file.getPath());
+		loadInto(file, builder);
 		return builder.finish();
 	}
 
