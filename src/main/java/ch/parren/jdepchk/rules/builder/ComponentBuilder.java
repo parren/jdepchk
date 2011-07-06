@@ -52,7 +52,8 @@ public class ComponentBuilder extends ScopeBuilder {
 	void extend(ComponentBuilder comp) {
 		checkNotThis(comp);
 		extended.add(comp);
-		used.add(comp);
+		if (!used.isEmpty()) // already checked
+			used.add(comp);
 	}
 
 	void use(ComponentBuilder comp) {
