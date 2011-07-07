@@ -2,13 +2,13 @@ package ch.parren.jdepchk;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Collection;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import ch.parren.java.lang.New;
@@ -23,6 +23,7 @@ import ch.parren.jdepchk.classes.ClassesDirClassSet;
 import ch.parren.jdepchk.classes.JarFileClassSet;
 import ch.parren.jdepchk.classes.JarsDirClassSet;
 import ch.parren.jdepchk.classes.SingleClassSet;
+import ch.parren.jdepchk.config.ConfigParser;
 import ch.parren.jdepchk.rules.RuleSet;
 import ch.parren.jdepchk.rules.builder.RuleSetBuilder;
 import ch.parren.jdepchk.rules.parser.FileParseException;
@@ -203,53 +204,55 @@ public final class JDepChk {
 		final Collection<ClassSets> classSets = New.linkedList();
 	}
 
-	private static void parseConfig(File configFile, Collection<Config> configs) throws IOException, ErrorReport {
-		final BufferedReader cfgReader = new BufferedReader(new InputStreamReader(new FileInputStream(configFile)));
-		try {
-			String line;
-			boolean pathStartsNewScope = true;
+	private static void parseConfig(File configFile, final Collection<Config> configs) throws IOException, ErrorReport {
+		new ConfigParser<ErrorReport>(new ConfigParser.Visitor<ErrorReport>() {
 			Config scope = null;
-			while (null != (line = cfgReader.readLine())) {
-				final int posOfComment = line.indexOf('#');
-				if (posOfComment >= 0)
-					line = line.substring(0, posOfComment);
-				final String trimmed = line.trim();
-				if (0 == trimmed.length())
-					continue;
-				if (trimmed.startsWith("max-errors:"))
-					continue;
-				final boolean isRulesFile = Character.isWhitespace(line.charAt(0));
-				if (isRulesFile) {
-					if (null == scope) {
-						scope = new Config();
-						configs.add(scope);
-					}
-					parseRulesIn(trimmed, scope.ruleSets);
-				} else if (null == scope || pathStartsNewScope) {
-					// null check keeps compiler happy
-					scope = new Config();
-					configs.add(scope);
-					scope.classSets.add(new SingleClassSet(new ClassesDirClassSet(new File(trimmed))));
-				} else {
-					scope.classSets.add(new SingleClassSet(new ClassesDirClassSet(new File(trimmed))));
-				}
-				pathStartsNewScope = isRulesFile;
+			RuleSetBuilder builder = null;
+			final Set<File> parsed = New.hashSet();
+			@Override protected void visitClassSpecsStart() throws IOException, ErrorReport {
+				scope = new Config();
 			}
-		} finally {
-			cfgReader.close();
-		}
+			@Override protected void visitClassSpec(String spec) throws IOException, ErrorReport {
+				scope.classSets.add(new SingleClassSet(new ClassesDirClassSet(new File(spec))));
+			}
+			@Override protected void visitRuleSpecsStart(String name) throws IOException, ErrorReport {
+				builder = new RuleSetBuilder(name);
+				parsed.clear();
+			}
+			@Override protected void visitRuleSpec(String spec) throws IOException, ErrorReport {
+				parseRulesIn(spec, builder, parsed);
+			}
+			@Override protected void visitRuleSpecsEnd() throws IOException, ErrorReport {
+				scope.ruleSets.add(builder.finish());
+				builder = null;
+			}
+			@Override protected void visitClassSpecsEnd() throws IOException, ErrorReport {
+				configs.add(scope);
+				scope = null;
+			}
+			@Override protected void visitError(String message) throws IOException, ErrorReport {
+				throw new ErrorReport(message);
+			}
+		}).parseConfig(configFile);
 	}
 
 	private static void parseRulesIn(String fileOrDirPaths, Collection<RuleSet> ruleSets) throws IOException,
 			ErrorReport {
 		final RuleSetBuilder builder = new RuleSetBuilder(fileOrDirPaths);
-		final String[] parts = fileOrDirPaths.split("[" + File.pathSeparator + "]");
-		for (String part : parts)
-			parseRulesInPart(part, builder);
+		final Set<File> parsed = New.hashSet();
+		parseRulesIn(fileOrDirPaths, builder, parsed);
 		ruleSets.add(builder.finish());
 	}
 
-	private static void parseRulesInPart(String fileOrDirPath, RuleSetBuilder builder) throws IOException, ErrorReport {
+	private static void parseRulesIn(String fileOrDirPaths, RuleSetBuilder builder, Set<File> parsed)
+			throws IOException, ErrorReport {
+		final String[] parts = fileOrDirPaths.split("[" + File.pathSeparator + "]");
+		for (String part : parts)
+			parseRulesInPart(part, builder, parsed);
+	}
+
+	private static void parseRulesInPart(String fileOrDirPath, RuleSetBuilder builder, Set<File> parsed)
+			throws IOException, ErrorReport {
 		if (fileOrDirPath.endsWith("/*/")) {
 			final File parentDir = new File(fileOrDirPath.substring(0, fileOrDirPath.length() - "/*/".length()));
 			final FilenameFilter filter = new FilenameFilter() {
@@ -257,19 +260,23 @@ public final class JDepChk {
 					return !name.startsWith(".");
 				}
 			};
-			for (File subDir : parentDir.listFiles(filter))
-				if (subDir.isDirectory())
-					parseRulesInDir(subDir, builder);
+			if (parentDir.isDirectory())
+				for (File subDir : parentDir.listFiles(filter))
+					if (subDir.isDirectory())
+						parseRulesInDir(subDir, builder, parsed);
 		} else {
 			final File fileOrDir = new File(fileOrDirPath);
-			if (fileOrDir.isDirectory())
-				parseRulesInDir(fileOrDir, builder);
+			if (!fileOrDir.exists() && fileOrDirPath.endsWith("/"))
+				; // pass
+			else if (fileOrDir.isDirectory())
+				parseRulesInDir(fileOrDir, builder, parsed);
 			else
-				parseRulesInFile(fileOrDir, builder);
+				parseRulesInFile(fileOrDir, builder, parsed);
 		}
 	}
 
-	private static final void parseRulesInDir(File dir, RuleSetBuilder builder) throws IOException, ErrorReport {
+	private static final void parseRulesInDir(File dir, RuleSetBuilder builder, Set<File> parsed) throws IOException,
+			ErrorReport {
 		final FilenameFilter filter = new FilenameFilter() {
 			public boolean accept(File dir, String name) {
 				return !name.startsWith(".");
@@ -277,19 +284,13 @@ public final class JDepChk {
 		};
 		for (File file : dir.listFiles(filter))
 			if (file.isFile())
-				try {
-					RuleSetLoader.loadInto(file, builder);
-				} catch (FileParseException fpe) {
-					throw new ErrorReport("Error parsing file " + fpe.file + "\n" //
-							+ fpe.cause.getMessage() + "\n" //
-							+ "in the following fragment:\n" //
-							+ "\n" //
-							+ highlightLine(file, fpe.cause.cause.currentToken.next.beginLine) //
-					);
-				}
+				parseRulesInFile(file, builder, parsed);
 	}
 
-	private static final void parseRulesInFile(File file, RuleSetBuilder builder) throws IOException, ErrorReport {
+	private static final void parseRulesInFile(File file, RuleSetBuilder builder, Set<File> parsed) throws IOException,
+			ErrorReport {
+		if (!parsed.add(file))
+			return;
 		try {
 			RuleSetLoader.loadInto(file, builder);
 		} catch (FileParseException fpe) {
