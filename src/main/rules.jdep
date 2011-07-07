@@ -42,3 +42,5 @@ comp $j.check.**
 		$p.java
 	allows:
 		java.io.IOException
+		java.io.PrintStream
+		

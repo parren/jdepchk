@@ -1,6 +1,6 @@
 @Checked//
 @Uses({ "ch.parren.jdepchk.rules", "ch.parren.jdepchk.classes", "ch.parren.java.lang" })//
-@Allows("java.io.IOException") //
+@Allows({ "java.io.IOException", "java.io.PrintStream" }) //
 package ch.parren.jdepchk.check;
 
 import ch.parren.jdepchk.annotations.Allows;
