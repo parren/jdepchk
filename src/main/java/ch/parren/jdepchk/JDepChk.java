@@ -73,7 +73,7 @@ public final class JDepChk {
 
 		} catch (ErrorReport report) {
 			System.err.println(report.getMessage());
-			System.exit(2);
+			System.exit(9);
 		}
 	}
 
@@ -81,9 +81,10 @@ public final class JDepChk {
 		long taken = 0;
 		int contains = 0;
 		int sees = 0;
+		boolean hadChanges = false;
 		boolean hadViolations = false;
 		for (final Scope scope : scopes) {
-			final PrintingListener listener = new PrintingListener();
+			final PrintingListener listener = scope.checkClasses ? new PrintingListener() : null;
 			final long before = System.currentTimeMillis();
 
 			final boolean isSingleThreaded = (nMaxJobs <= 1);
@@ -188,8 +189,13 @@ public final class JDepChk {
 
 			final long after = System.currentTimeMillis();
 			taken += after - before;
-			hadViolations |= listener.hasViolations();
-			System.out.println(listener);
+			if (null != rulesMgr) {
+				hadChanges |= rulesMgr.finish();
+			}
+			if (null != listener) {
+				hadViolations |= listener.hasViolations();
+				System.out.println(listener);
+			}
 		}
 
 		if (showStats) {
@@ -200,7 +206,9 @@ public final class JDepChk {
 			System.out.println(AbstractClassBytes.nFilesRead + " class files read.");
 		}
 
-		if (hadViolations)
+		if (hadChanges)
+			System.exit(2);
+		else if (hadViolations)
 			System.exit(1);
 	}
 

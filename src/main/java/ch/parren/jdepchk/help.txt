@@ -41,9 +41,9 @@ DESCRIPTION
         will typically use this to verify rules against the final result of
         builds. 
 
-	-e, --extract--annotations
-	    Enables extraction of additional rule files from annotations
-	    in the code. These are maintained in the dirs specified via --local
+    -e, --extract-annotations
+        Enables extraction of additional rule files from annotations
+        in the code. These are maintained in the dirs specified via --local
         and --global.
 
     -l, --local-rules DIRNAME
@@ -52,9 +52,9 @@ DESCRIPTION
         in the given dir. Files are created, updated and deleted (!) as
         necessary.
 
-	--no-check
-	    Disables checking classes against the dependency rules.
-	    You typically disable checks when you want to only extract rules. 
+    --no-check
+        Disables checking classes against the dependency rules.
+        You typically disable checks when you want to only extract rules.
 
     --scope NAME
         Introduces a new "scope". JDepChk can run checks with different
@@ -80,6 +80,13 @@ DESCRIPTION
     --show-stats
         Shows information about number of classes inspected, and some other
         details.
+
+EXIT CODES
+
+    0   if no extracted rule files changed and no violations were encountered.
+    1   if no extracted rule files changed, but there were rule violations.
+    2   if any extracted rule file changed.
+    9   if a severe error occurred.
 
 CONFIG FILES
     Configuration files list options for JDepChk and related tools like
