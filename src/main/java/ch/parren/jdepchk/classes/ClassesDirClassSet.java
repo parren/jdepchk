@@ -33,7 +33,7 @@ public final class ClassesDirClassSet implements ClassSet {
 	}
 
 	private void accept(Visitor visitor, File file) throws IOException {
-		final ClassFileReader classFile = new ClassFileReader(this.baseDirPath, file.getPath(), file);
+		final ClassFileScanner classFile = new ClassFileScanner(this.baseDirPath, file.getPath(), file);
 		try {
 			visitor.visitClassFile(classFile);
 		} finally {

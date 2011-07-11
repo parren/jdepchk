@@ -5,7 +5,7 @@ import java.util.Collection;
 import java.util.Stack;
 
 import ch.parren.java.lang.New;
-import ch.parren.jdepchk.classes.ClassReader;
+import ch.parren.jdepchk.classes.ClassScanner;
 import ch.parren.jdepchk.classes.ClassSet;
 import ch.parren.jdepchk.rules.RuleSet;
 import ch.parren.jdepchk.rules.Scope;
@@ -56,7 +56,7 @@ public final class Checker {
 				scopeSetStack.pop();
 			}
 
-			/* @Override */public void visitClassFile(ClassReader classFile) throws IOException {
+			/* @Override */public void visitClassFile(ClassScanner classFile) throws IOException {
 				final Collection<Scope> scopeSet = scopeSetStack.peek();
 				for (Scope scope : scopeSet) {
 					final String name = classFile.compiledClassName();

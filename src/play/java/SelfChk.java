@@ -4,7 +4,7 @@ import java.io.File;
 import ch.parren.jdepchk.check.Checker;
 import ch.parren.jdepchk.check.Violation;
 import ch.parren.jdepchk.check.ViolationListener;
-import ch.parren.jdepchk.classes.ClassParser;
+import ch.parren.jdepchk.classes.AbstractClassScanner;
 import ch.parren.jdepchk.classes.ClassSet;
 import ch.parren.jdepchk.classes.ClassesDirClassSet;
 import ch.parren.jdepchk.rules.RuleSet;
@@ -39,10 +39,7 @@ public final class SelfChk {
 		System.out.println((after - before) + " ms taken.");
 		System.out.println(checker.nContains + " containment checks.");
 		System.out.println(checker.nSees + " usage checks.");
-		System.out.println(ClassParser.nFilesRead + " class files read.");
-		System.out.println(ClassParser.nBytesAvail + " class bytes inspected.");
-		System.out.println(ClassParser.nBytesRead + " class bytes read.");
-		System.out.println(ClassParser.nBytesUsed + " class bytes accessed.");
+		System.out.println(AbstractClassScanner.nFilesRead + " class files read.");
 	}
 
 }

@@ -37,7 +37,7 @@ public final class JarFileClassSet extends AbstractClassFilesSet<JarFile> {
 	}
 
 	@Override protected void visit(Visitor visitor, String className, JarFile jarFile) throws IOException {
-		final ClassReader classFile = new ClassJarEntryReader(className, jarFile, currentEntry);
+		final ClassScanner classFile = new ClassJarEntryScanner(className, jarFile, currentEntry);
 		try {
 			visitor.visitClassFile(classFile);
 		} finally {

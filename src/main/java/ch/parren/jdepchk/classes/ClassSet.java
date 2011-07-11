@@ -8,7 +8,7 @@ public interface ClassSet {
 	
 	interface Visitor {
 		boolean visitPackage(String packagePath) throws IOException;
-		void visitClassFile(ClassReader classFile) throws IOException;
+		void visitClassFile(ClassScanner classFile) throws IOException;
 		void visitPackageEnd() throws IOException;
 	}
 	

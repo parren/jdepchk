@@ -3,12 +3,14 @@ package ch.parren.jdepchk.classes;
 import java.io.IOException;
 import java.util.Set;
 
-abstract class AbstractClassReader implements ClassReader {
+public abstract class AbstractClassScanner implements ClassScanner {
 
+	public static int nFilesRead = 0; 
+	
 	private final String name;
 	private Set<String> refdNames = null;
 
-	protected AbstractClassReader(String compiledClassName) {
+	protected AbstractClassScanner(String compiledClassName) {
 		this.name = compiledClassName;
 	}
 
@@ -21,6 +23,7 @@ abstract class AbstractClassReader implements ClassReader {
 			return refdNames;
 		final Set<String> result;
 
+		nFilesRead++;
 		final ClassParser bytes = newClassParser();
 		try {
 			// TODO use visibility

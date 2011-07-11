@@ -44,9 +44,7 @@
 		<mkdir dir="${temp.tut.dir}" />
 		<mkdir dir="${temp.test.dir}" />
 		<mkdir dir="${temp.test-examples.dir}" />
-
-		<path id="build.classpath">
-		</path>
+		<path id="build.classpath" />
 		<property name="build.classpath" refid="build.classpath" />
 	</target>
 
@@ -108,10 +106,10 @@
 	<target name="check" depends="check-classes, check-jar" description="Runs JDepChk on itself">
 	</target>
 
-	<target name="check-classes" depends="compile-main" description="Runs JDepChk on its own compiled classes">
-		<java classpath="${temp.classes.dir}" classname="ch.parren.jdepchk.JDepChk">
-			<arg value="--config" />
-			<arg file="edepchk.conf" />
+	<target name="check-classes" depends="jar, prepare-run" description="Runs JDepChk on its own compiled classes">
+		<java classpathref="run.classpath" classname="${run.mainclass}">
+			<arg value="--config-file" />
+			<arg file="jdepchk.conf" />
 		</java>
 	</target>
 

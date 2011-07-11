@@ -79,7 +79,7 @@ public class ClassParserTest {
 	}
 
 	private void assertParse(String className, String refd) throws Exception {
-		final ClassParser parser = new ClassParser(new File("temp/classes/test-examples/test/" + className + ".class"));
+		final AsmClassParser parser = new AsmClassParser(new File("temp/classes/test-examples/test/" + className + ".class"));
 		try {
 			assertEquals(Visibility.PUBL, parser.visibility());
 			final Map<String, Visibility> refMap = parser.referencedElementNames();

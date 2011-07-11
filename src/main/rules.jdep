@@ -9,6 +9,7 @@ lib $default
 		java.util.**
 
 lib java.io.**
+lib org.objectweb.asm.**
 
 comp $p.java.**
 
@@ -34,6 +35,7 @@ comp $j.classes.**
 	uses:
 		$p.java
 		java.io
+		org.objectweb.asm
 
 comp $j.check.**
 	uses:
