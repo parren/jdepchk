@@ -29,6 +29,11 @@ public abstract class OptionsParser {
 		closeScope();
 	}
 
+	public void parseOptionsFile(BufferedReader reader) throws IOException, ErrorReport {
+		parse(readFrom(reader), false);
+		closeScope();
+	}
+
 	private void parse(Iterator<String> args, boolean flagUnknown) throws IOException, ErrorReport {
 		while (args.hasNext()) {
 			final String arg = args.next();
@@ -145,7 +150,7 @@ public abstract class OptionsParser {
 
 	@SuppressWarnings("unused")//
 	protected void visitArg(String arg, Iterator<String> more, boolean flagUnknown) throws IOException, ErrorReport {
-		visitError("ERROR: Invalid command line argument: " + arg + "\n" + "Use --help to see help.");
+		throw new ErrorReport("ERROR: Invalid command line argument: " + arg + "\n" + "Use --help to see help.");
 	}
 
 	protected void visitClasses(String spec) throws IOException, ErrorReport {
@@ -175,7 +180,6 @@ public abstract class OptionsParser {
 	protected abstract void visitExtractAnnotations(boolean active) throws IOException, ErrorReport;
 	protected abstract void visitCheckClasses(boolean active) throws IOException, ErrorReport;
 	protected abstract void visitScopeEnd() throws IOException, ErrorReport;
-	protected abstract void visitError(String message) throws IOException, ErrorReport;
 
 	public static final class ErrorReport extends Throwable {
 		public ErrorReport(String message) {

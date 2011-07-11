@@ -307,10 +307,6 @@ public final class JDepChk {
 				}
 			}
 
-			@Override protected void visitError(String message) throws IOException, ErrorReport {
-				throw new ErrorReport(message);
-			}
-
 		}.parseCommandLine(args);
 	}
 
