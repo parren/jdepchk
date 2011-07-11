@@ -94,12 +94,13 @@ public final class Checker {
 			}
 
 			private void asmParse(byte[] bytes) {
-				new ClassReader(bytes).accept(new RefFinder() {
-					@Override public void visitRefs(Visibility ownVisibility, SortedMap<String, Visibility> refs) {
-						check(refs);
-					}
-				}.classVisitor(), 0);
+				new ClassReader(bytes).accept(refFinder.classVisitor(), 0);
 			}
+			private final RefFinder refFinder = new RefFinder() {
+				@Override public void visitRefs(Visibility ownVisibility, SortedMap<String, Visibility> refs) {
+					check(refs);
+				}
+			};
 
 			private void check(final SortedMap<String, Visibility> refs) {
 				for (Scope scope : classScopes) {
