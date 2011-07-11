@@ -2,11 +2,16 @@ package ch.parren.jdepchk.check;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.SortedMap;
 import java.util.Stack;
 
 import ch.parren.java.lang.New;
-import ch.parren.jdepchk.classes.ClassScanner;
+import ch.parren.jdepchk.classes.ClassBytes;
 import ch.parren.jdepchk.classes.ClassSet;
+import ch.parren.jdepchk.classes.ClassSet.Visitor;
+import ch.parren.jdepchk.classes.RefFinder;
+import ch.parren.jdepchk.classes.Visibility;
+import ch.parren.jdepchk.classes.asm.ClassReader;
 import ch.parren.jdepchk.rules.RuleSet;
 import ch.parren.jdepchk.rules.Scope;
 
@@ -29,18 +34,19 @@ public final class Checker {
 		this.ruleSets = ruleSets;
 	}
 
-	public void check(ClassSet classes) throws IOException {
-		final Stack<Collection<Scope>> scopeSetStack = New.stack();
+	public Visitor newClassSetVisitor() {
+		return new ClassSet.Visitor() {
 
-		final Collection<Scope> initalScopeSet = New.linkedList();
-		for (RuleSet ruleSet : ruleSets)
-			for (Scope scope : ruleSet.scopesToCheck())
-				initalScopeSet.add(scope);
-		scopeSetStack.push(initalScopeSet);
+			private final Stack<Collection<Scope>> scopeSetStack = New.stack();
+			private final Collection<Scope> initalScopeSet = New.linkedList();
+			{
+				for (RuleSet ruleSet : ruleSets)
+					for (Scope scope : ruleSet.scopesToCheck())
+						initalScopeSet.add(scope);
+				scopeSetStack.push(initalScopeSet);
+			}
 
-		classes.accept(new ClassSet.Visitor() {
-
-			/* @Override */public boolean visitPackage(String packagePath) {
+			@Override public boolean visitPackage(String packagePath) {
 				final Collection<Scope> scopeSet = scopeSetStack.peek();
 				final Collection<Scope> newScopeSet = New.linkedList();
 				for (Scope scope : scopeSet)
@@ -52,27 +58,44 @@ public final class Checker {
 				return true;
 			}
 
-			/* @Override */public void visitPackageEnd() throws IOException {
+			@Override public void visitPackageEnd() throws IOException {
 				scopeSetStack.pop();
 			}
 
-			/* @Override */public void visitClassFile(ClassScanner classFile) throws IOException {
+			private final Collection<Scope> classScopes = New.arrayList();
+			private String className;
+
+			@Override public boolean visitClassFile(ClassBytes classFile) throws IOException {
+				final String name = classFile.compiledClassName();
 				final Collection<Scope> scopeSet = scopeSetStack.peek();
+				className = name;
+				classScopes.clear();
 				for (Scope scope : scopeSet) {
-					final String name = classFile.compiledClassName();
 					nContains++;
-					if (scope.contains(name)) {
-						for (String refd : classFile.referencedElementNames()) {
+					if (scope.contains(name))
+						classScopes.add(scope);
+				}
+				return !classScopes.isEmpty();
+			}
+			
+			@Override public void visitClassReader(ClassReader classReader) throws IOException {
+				classReader.accept(refFinder.classVisitor(), 0);
+			}
+
+			private final RefFinder refFinder = new RefFinder() {
+				@Override public void visitRefs(Visibility vis, SortedMap<String, Visibility> refs) {
+					for (Scope scope : classScopes) {
+						for (String refd : refs.keySet()) {
 							nContains++;
 							nSees++;
 							if (debugOutput)
 								System.out.println(refd);
 							if (!scope.allows(refd))
-								report(scope, name, refd);
+								report(scope, className, refd);
 						}
 					}
 				}
-			}
+			};
 
 			protected boolean report(Scope scope, final String name, String refd) {
 				final String[] parts = refd.split("#");
@@ -82,7 +105,7 @@ public final class Checker {
 				return listener.report(new Violation(scope.ruleSet(), scope, name, className, eltName, eltDesc));
 			}
 
-		});
+		};
 	}
 
 }

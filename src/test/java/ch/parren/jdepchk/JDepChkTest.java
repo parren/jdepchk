@@ -26,7 +26,7 @@ public class JDepChkTest {
 			}
 		};
 		final Checker checker = new Checker(listener, rules);
-		checker.check(classes);
+		classes.accept(checker.newClassSetVisitor());
 		assertEquals("" + //
 				"user/MyUser > api/impl/MyImpl\n" + //
 				"user/MyUser > api/impl/MyImpl#<init>#()V\n" + // 

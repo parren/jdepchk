@@ -9,13 +9,14 @@ lib $default
 		java.util.**
 
 lib java.io.**
-lib org.objectweb.asm.**
 
 comp $p.java.**
 
 comp $j.*
 	uses $p.java java.io
 	allows $j.**
+
+comp $j.annotations.*
 
 comp $j.rules.*
 	uses $p.java
@@ -35,7 +36,6 @@ comp $j.classes.**
 	uses:
 		$p.java
 		java.io
-		org.objectweb.asm
 
 comp $j.check.**
 	uses:
@@ -45,4 +45,11 @@ comp $j.check.**
 	allows:
 		java.io.IOException
 		java.io.PrintStream
-		
+
+comp $j.extraction.**
+	uses:
+		$j.rules
+		$j.classes
+		$j.annotations
+		$p.java
+		java.io

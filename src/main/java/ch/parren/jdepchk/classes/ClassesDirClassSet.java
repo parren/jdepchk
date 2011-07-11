@@ -3,7 +3,7 @@ package ch.parren.jdepchk.classes;
 import java.io.File;
 import java.io.IOException;
 
-public final class ClassesDirClassSet implements ClassSet {
+public final class ClassesDirClassSet extends AbstractClassFilesSet<Void> {
 
 	private final File baseDir;
 	private final String baseDirPath;
@@ -33,12 +33,8 @@ public final class ClassesDirClassSet implements ClassSet {
 	}
 
 	private void accept(Visitor visitor, File file) throws IOException {
-		final ClassFileScanner classFile = new ClassFileScanner(this.baseDirPath, file.getPath(), file);
-		try {
-			visitor.visitClassFile(classFile);
-		} finally {
-			classFile.close();
-		}
+		acceptClassBytes(visitor, new ClassFile(this.baseDirPath, file.getPath(), file));
 	}
 
+	@Override protected void visit(Visitor visitor, String className, Void context) throws IOException {}
 }

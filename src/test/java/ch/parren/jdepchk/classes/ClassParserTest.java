@@ -1,16 +1,20 @@
 package ch.parren.jdepchk.classes;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
 
 import org.junit.Test;
 
 import ch.parren.java.lang.New;
+import ch.parren.jdepchk.classes.asm.ClassReader;
 
 public class ClassParserTest {
 
@@ -78,26 +82,31 @@ public class ClassParserTest {
 				"");
 	}
 
-	private void assertParse(String className, String refd) throws Exception {
-		final AsmClassParser parser = new AsmClassParser(new File("temp/classes/test-examples/test/" + className + ".class"));
+	private void assertParse(String className, final String refd) throws Exception {
+		final File file = new File("temp/classes/test-examples/test/" + className + ".class");
+		final BufferedInputStream stream = new BufferedInputStream(new FileInputStream(file));
 		try {
-			assertEquals(Visibility.PUBL, parser.visibility());
-			final Map<String, Visibility> refMap = parser.referencedElementNames();
-			final List<String> refs = New.arrayList(refMap.size());
-			for (Map.Entry<String, Visibility> e : refMap.entrySet())
-				refs.add(e.getKey() + " " + e.getValue().toString().toLowerCase());
-			Collections.sort(refs);
-			assertEquals(refd, toString(refs));
+			final ClassReader reader = new ClassReader(stream);
+			final RefFinder finder = new RefFinder() {
+				@Override public void visitRefs(Visibility vis, SortedMap<String, Visibility> refs) {
+					assertEquals(Visibility.PUBL, vis);
+					final List<String> sortedRefs = New.arrayList();
+					for (Map.Entry<String, Visibility> e : refs.entrySet())
+						sortedRefs.add(e.getKey() + " " + e.getValue().toString().toLowerCase());
+					Collections.sort(sortedRefs);
+					assertEquals(refd, collToString(sortedRefs));
+				}
+				private <E> String collToString(Collection<E> coll) {
+					final StringBuilder b = new StringBuilder();
+					for (E e : coll)
+						b.append(e).append("\n");
+					return b.toString();
+				}
+			};
+			reader.accept(finder.classVisitor(), 0);
 		} finally {
-			parser.close();
+			stream.close();
 		}
-	}
-
-	private <E> String toString(Collection<E> coll) {
-		final StringBuilder b = new StringBuilder();
-		for (E e : coll)
-			b.append(e).append("\n");
-		return b.toString();
 	}
 
 }

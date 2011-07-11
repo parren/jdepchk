@@ -6,4 +6,8 @@ public class UIClass {
 
 	public CoreClass validRef;
 	
+	public void goodRef() {
+		validRef.foo(null, null);
+	}
+	
 }

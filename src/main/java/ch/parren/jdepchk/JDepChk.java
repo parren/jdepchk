@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -16,14 +17,13 @@ import ch.parren.jdepchk.check.Checker;
 import ch.parren.jdepchk.check.MemberFilteringViolationListener;
 import ch.parren.jdepchk.check.Violation;
 import ch.parren.jdepchk.check.ViolationListener;
-import ch.parren.jdepchk.classes.AbstractClassScanner;
+import ch.parren.jdepchk.classes.AbstractClassBytes;
 import ch.parren.jdepchk.classes.ClassSet;
 import ch.parren.jdepchk.classes.ClassSets;
-import ch.parren.jdepchk.classes.ClassesDirClassSet;
-import ch.parren.jdepchk.classes.JarFileClassSet;
-import ch.parren.jdepchk.classes.JarsDirClassSet;
-import ch.parren.jdepchk.classes.SingleClassSet;
-import ch.parren.jdepchk.config.ConfigParser;
+import ch.parren.jdepchk.classes.CombinedClassSetVisitor;
+import ch.parren.jdepchk.config.OptionsParser;
+import ch.parren.jdepchk.extraction.Extractor;
+import ch.parren.jdepchk.extraction.RuleFilesManager;
 import ch.parren.jdepchk.rules.RuleSet;
 import ch.parren.jdepchk.rules.builder.RuleSetBuilder;
 import ch.parren.jdepchk.rules.parser.FileParseException;
@@ -54,142 +54,22 @@ public final class JDepChk {
 	// TODO Bulk file attr scanning on JDK 7
 	// TODO Form a hierarchy of scopes by path prefix to exit matching early
 
+	final Collection<Scope> scopes = New.arrayList();
+
+	boolean showRules = false;
+	boolean showStats = false;
+	int nMaxJobs = Runtime.getRuntime().availableProcessors() * 2;
+
 	public static void main(String[] args) throws Exception {
+		new JDepChk().run(args);
+	}
+
+	private void run(String[] args) throws Exception {
 		try {
-			final Collection<Config> cfgs = New.arrayList();
-			boolean showRules = false;
-			boolean showStats = false;
-			int nMaxJobs = Runtime.getRuntime().availableProcessors() * 2;
-
-			{
-				final Config cfg = new Config();
-				int i = 0;
-				while (i < args.length) {
-					final String arg = args[i++];
-					if ("--config".equals(arg) || "-f".equals(arg)) {
-						parseConfig(new File(args[i++]), cfgs);
-					} else if ("--rules".equals(arg) || "-r".equals(arg)) {
-						parseRulesIn(args[i++], cfg.ruleSets);
-					} else if ("--classes".equals(arg) || "-c".equals(arg)) {
-						final File f = new File(args[i++]);
-						if (f.isDirectory())
-							cfg.classSets.add(new SingleClassSet(new ClassesDirClassSet(f)));
-						else
-							System.err.println("WARNING: Ignoring --classes " + f);
-					} else if ("--jars".equals(arg) || "--jar".equals(arg) || "-j".equals(arg)) {
-						final File f = new File(args[i++]);
-						if (f.isDirectory())
-							cfg.classSets.add(new JarsDirClassSet(true, f));
-						else if (f.isFile())
-							cfg.classSets.add(new SingleClassSet(new JarFileClassSet(f)));
-						else
-							System.err.println("WARNING: Ignoring --jar(s) " + f);
-					} else if ("--jobs".equals(arg)) {
-						nMaxJobs = Integer.parseInt(args[i++]);
-					} else if ("--show-rules".equals(arg)) {
-						showRules = true;
-					} else if ("--show-stats".equals(arg)) {
-						showStats = true;
-					} else if ("--debug".equals(arg)) {
-						Checker.debugOutput = true;
-					} else if ("--help".equals(arg) || "-h".equals(arg)) {
-						showHelp();
-						return;
-					} else {
-						System.out.println("ERROR: Invalid command line argument: " + arg);
-						System.out.println("Use --help to see help.");
-						System.exit(2);
-					}
-				}
-
-				if (!cfg.classSets.isEmpty())
-					cfgs.add(cfg);
-			}
-
-			for (Config cfg : cfgs) {
-				if (showRules) {
-					for (RuleSet ruleSet : cfg.ruleSets)
-						System.out.println(ruleSet.describe());
-					System.out.println();
-				}
-			}
-
-			long taken = 0;
-			int contains = 0;
-			int sees = 0;
-			boolean hadViolations = false;
-			for (final Config cfg : cfgs) {
-				final PrintingListener listener = new PrintingListener();
-				final long before = System.currentTimeMillis();
-
-				if (1 >= nMaxJobs) {
-					final Checker checker = new Checker(new MemberFilteringViolationListener(listener), cfg.ruleSets);
-					for (ClassSets classSets : cfg.classSets) {
-						classSets.accept(new ClassSets.Visitor() {
-							public void visitClassSet(ClassSet classSet) throws IOException {
-								checker.check(classSet);
-							}
-						});
-					}
-					contains += checker.nContains;
-					sees += checker.nSees;
-				} else {
-					final ConcurrentLinkedQueue<ClassSet> sets = new ConcurrentLinkedQueue<ClassSet>();
-					for (ClassSets classSets : cfg.classSets) {
-						classSets.accept(new ClassSets.Visitor() {
-							public void visitClassSet(ClassSet classSet) throws IOException {
-								sets.add(classSet);
-							}
-						});
-					}
-					final int nJobs = Math.min(nMaxJobs, sets.size());
-					final Checker[] checkers = new Checker[nJobs];
-					final Thread[] jobs = new Thread[nJobs];
-					for (int i = 0; i < nJobs; i++) {
-						final int iJob = i;
-						jobs[iJob] = new Thread() {
-							@Override public void run() {
-								final Checker checker = new Checker(new MemberFilteringViolationListener(listener),
-										cfg.ruleSets);
-								checkers[iJob] = checker;
-								while (true) {
-									final ClassSet set = sets.poll();
-									if (null == set)
-										break;
-									try {
-										checker.check(set);
-									} catch (IOException e) {
-										e.printStackTrace();
-										throw new RuntimeException(e);
-									}
-								}
-							}
-						};
-						jobs[iJob].start();
-					}
-					for (int i = 0; i < nJobs; i++) {
-						jobs[i].join();
-						contains += checkers[i].nContains;
-						sees += checkers[i].nSees;
-					}
-				}
-
-				final long after = System.currentTimeMillis();
-				taken += after - before;
-				hadViolations |= listener.hasViolations();
-				System.out.println(listener);
-			}
-
-			if (showStats) {
-				System.out.println();
-				System.out.println(taken + " ms taken.");
-				System.out.println(contains + " containment checks.");
-				System.out.println(sees + " usage checks.");
-				System.out.println(AbstractClassScanner.nFilesRead + " class files read.");
-			}
-
-			if (hadViolations)
-				System.exit(1);
+			parseOptions(args);
+			if (showRules)
+				showRules();
+			run();
 
 		} catch (ErrorReport report) {
 			System.err.println(report.getMessage());
@@ -197,49 +77,223 @@ public final class JDepChk {
 		}
 	}
 
-	private static final class Config {
-		final Collection<RuleSet> ruleSets = New.linkedList();
-		final Collection<ClassSets> classSets = New.linkedList();
+	private void run() throws IOException, InterruptedException {
+		long taken = 0;
+		int contains = 0;
+		int sees = 0;
+		boolean hadViolations = false;
+		for (final Scope scope : scopes) {
+			final PrintingListener listener = new PrintingListener();
+			final long before = System.currentTimeMillis();
+
+			final boolean isSingleThreaded = (nMaxJobs <= 1);
+			final RuleFilesManager rulesMgr = scope.extractRules ? new RuleFilesManager(scope.localExtractedRulesDir,
+					scope.globalExtractedRulesDir, "", !isSingleThreaded) : null;
+
+			class SingleThreaded {
+
+				private final Checker checker;
+				private final Extractor extractor;
+				private final ClassSet.Visitor visitor;
+				private int nContains;
+				private int nSees;
+
+				public SingleThreaded() {
+					checker = scope.checkClasses ? new Checker(new MemberFilteringViolationListener(listener),
+							scope.ruleSets) : null;
+					final ClassSet.Visitor checkerVisitor = (null == checker) ? null : checker.newClassSetVisitor();
+					extractor = scope.extractRules ? new Extractor(rulesMgr) : null;
+					final ClassSet.Visitor extractorVisitor = (null == extractor) ? null : extractor
+							.newClassSetVisitor();
+					if (null == checkerVisitor)
+						visitor = extractorVisitor;
+					else if (null == extractorVisitor)
+						visitor = checkerVisitor;
+					else
+						visitor = new CombinedClassSetVisitor(checkerVisitor, extractorVisitor);
+				}
+
+				public void process(Collection<ClassSets> classSetsInScope) throws IOException {
+					final ClassSets.Visitor setsVisitor = new ClassSets.Visitor() {
+						public void visitClassSet(ClassSet classSet) throws IOException {
+							classSet.accept(visitor);
+						}
+					};
+					for (ClassSets classSets : classSetsInScope)
+						classSets.accept(setsVisitor);
+				}
+
+				public void process(ClassSet classSet) throws IOException {
+					classSet.accept(visitor);
+				}
+
+				public void finish() {
+					nContains = (null == checker) ? 0 : checker.nContains;
+					nSees = (null == checker) ? 0 : checker.nSees;
+				}
+
+			}
+
+			if (isSingleThreaded) {
+				final SingleThreaded single = new SingleThreaded();
+				single.process(scope.classSets);
+				single.finish();
+				contains += single.nContains;
+				sees += single.nSees;
+			} else {
+				final ConcurrentLinkedQueue<ClassSet> sets = new ConcurrentLinkedQueue<ClassSet>();
+
+				final ClassSets.Visitor setsVisitor = new ClassSets.Visitor() {
+					public void visitClassSet(ClassSet classSet) throws IOException {
+						sets.add(classSet);
+					}
+				};
+				for (ClassSets classSets : scope.classSets)
+					classSets.accept(setsVisitor);
+
+				final int nJobs = Math.min(nMaxJobs, sets.size());
+				final SingleThreaded[] singles = new SingleThreaded[nJobs];
+				final Thread[] jobs = new Thread[nJobs];
+				for (int i = 0; i < nJobs; i++) {
+					final int iJob = i;
+					jobs[iJob] = new Thread() {
+
+						@Override public void run() {
+							final SingleThreaded single = new SingleThreaded();
+							singles[iJob] = single;
+							while (true) {
+								final ClassSet set = sets.poll();
+								if (null == set)
+									break;
+								try {
+									single.process(set);
+								} catch (IOException e) {
+									e.printStackTrace();
+									throw new RuntimeException(e);
+								}
+							}
+						}
+
+					};
+					jobs[iJob].start();
+				}
+				for (int i = 0; i < nJobs; i++) {
+					jobs[i].join();
+					final SingleThreaded single = singles[i];
+					single.finish();
+					contains += single.nContains;
+					sees += single.nSees;
+				}
+			}
+
+			final long after = System.currentTimeMillis();
+			taken += after - before;
+			hadViolations |= listener.hasViolations();
+			System.out.println(listener);
+		}
+
+		if (showStats) {
+			System.out.println();
+			System.out.println(taken + " ms taken.");
+			System.out.println(contains + " containment checks.");
+			System.out.println(sees + " usage checks.");
+			System.out.println(AbstractClassBytes.nFilesRead + " class files read.");
+		}
+
+		if (hadViolations)
+			System.exit(1);
 	}
 
-	private static void parseConfig(File configFile, final Collection<Config> configs) throws IOException, ErrorReport {
-		new ConfigParser<ErrorReport>(new ConfigParser.Visitor<ErrorReport>() {
-			Config scope = null;
-			RuleSetBuilder builder = null;
-			final Set<File> parsed = New.hashSet();
-			@Override protected void visitClassSpecsStart() throws IOException, ErrorReport {
-				scope = new Config();
+	private void showRules() {
+		for (Scope scope : scopes) {
+			for (RuleSet ruleSet : scope.ruleSets)
+				System.out.println(ruleSet.describe());
+			System.out.println();
+		}
+	}
+
+	private void parseOptions(String[] args) throws IOException, ErrorReport {
+		new OptionsParser<ErrorReport>() {
+
+			private Scope scope;
+			private RuleSetBuilder rules;
+			private Set<File> parsed;
+
+			@Override protected void visitScopeStart(String name) throws IOException, ErrorReport {
+				scope = new Scope();
 			}
-			@Override protected void visitClassSpec(String spec) throws IOException, ErrorReport {
-				scope.classSets.add(new SingleClassSet(new ClassesDirClassSet(new File(spec))));
+
+			@Override protected void visitClassSets(ClassSets classSets) throws IOException, ErrorReport {
+				scope.classSets.add(classSets);
 			}
-			@Override protected void visitRuleSpecsStart(String name) throws IOException, ErrorReport {
-				builder = new RuleSetBuilder(name);
-				parsed.clear();
+
+			@Override protected void visitRuleSetStart(String name) throws IOException, ErrorReport {
+				rules = new RuleSetBuilder(name);
+				parsed = New.hashSet();
 			}
+
 			@Override protected void visitRuleSpec(String spec) throws IOException, ErrorReport {
-				parseRulesIn(spec, builder, parsed);
+				parseRulesIn(spec, rules, parsed);
 			}
-			@Override protected void visitRuleSpecsEnd() throws IOException, ErrorReport {
-				scope.ruleSets.add(builder.finish());
-				builder = null;
+
+			@Override protected void visitRuleSetEnd() throws IOException, ErrorReport {
+				scope.ruleSets.add(rules.finish());
+				rules = null;
+				parsed = null;
 			}
-			@Override protected void visitClassSpecsEnd() throws IOException, ErrorReport {
-				configs.add(scope);
+
+			@Override protected void visitCheckClasses(boolean active) throws IOException, ErrorReport {
+				scope.checkClasses = active;
+			}
+
+			@Override protected void visitExtractAnnotations(boolean active) throws IOException, ErrorReport {
+				scope.extractRules = active;
+			}
+
+			@Override protected void visitLocalRulesDir(File dir) throws IOException, ErrorReport {
+				scope.localExtractedRulesDir = dir;
+			}
+
+			@Override protected void visitGlobalRulesDir(File dir) throws IOException, ErrorReport {
+				scope.globalExtractedRulesDir = dir;
+			}
+
+			@Override protected void visitScopeEnd() throws IOException, ErrorReport {
+				scopes.add(scope);
 				scope = null;
 			}
+
+			@Override protected void visitArg(String arg, Iterator<String> more, boolean flagUnknown)
+					throws IOException, ErrorReport {
+				if ("--jobs".equals(arg)) {
+					nMaxJobs = Integer.parseInt(more.next());
+				} else if ("--show-rules".equals(arg)) {
+					showRules = true;
+				} else if ("--show-stats".equals(arg)) {
+					showStats = true;
+				} else if ("--debug".equals(arg)) {
+					Checker.debugOutput = true;
+				} else if ("--help".equals(arg) || "-h".equals(arg)) {
+					showHelp();
+				} else {
+					super.visitArg(arg, more, flagUnknown);
+				}
+			}
+
 			@Override protected void visitError(String message) throws IOException, ErrorReport {
 				throw new ErrorReport(message);
 			}
-		}).parseConfig(configFile);
+
+		}.parseCommandLine(args);
 	}
 
-	private static void parseRulesIn(String fileOrDirPaths, Collection<RuleSet> ruleSets) throws IOException,
-			ErrorReport {
-		final RuleSetBuilder builder = new RuleSetBuilder(fileOrDirPaths);
-		final Set<File> parsed = New.hashSet();
-		parseRulesIn(fileOrDirPaths, builder, parsed);
-		ruleSets.add(builder.finish());
+	private static final class Scope {
+		final Collection<RuleSet> ruleSets = New.linkedList();
+		final Collection<ClassSets> classSets = New.linkedList();
+		File localExtractedRulesDir;
+		File globalExtractedRulesDir;
+		boolean extractRules = false;
+		boolean checkClasses = true;
 	}
 
 	private static void parseRulesIn(String fileOrDirPaths, RuleSetBuilder builder, Set<File> parsed)

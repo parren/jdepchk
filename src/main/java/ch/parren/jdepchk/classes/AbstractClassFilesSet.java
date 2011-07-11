@@ -1,7 +1,10 @@
 package ch.parren.jdepchk.classes;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Iterator;
+
+import ch.parren.jdepchk.classes.asm.ClassReader;
 
 public abstract class AbstractClassFilesSet<C> implements ClassSet {
 
@@ -37,4 +40,14 @@ public abstract class AbstractClassFilesSet<C> implements ClassSet {
 
 	protected abstract void visit(Visitor visitor, String className, C context) throws IOException;
 
+	protected void acceptClassBytes(Visitor visitor, ClassBytes classBytes) throws IOException {
+		if (visitor.visitClassFile(classBytes)) {
+			final InputStream stream = classBytes.inputStream();
+			try {
+				visitor.visitClassReader(new ClassReader(stream));
+			} finally {
+				stream.close();
+			}
+		}
+	}
 }

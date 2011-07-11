@@ -34,6 +34,7 @@ THE POSSIBILITY OF SUCH DAMAGE.
  */
 package ch.parren.jdepchk.classes;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -47,7 +48,7 @@ import ch.parren.java.lang.New;
  * JVM class file format parser based on ASM's ClassReader class, but tuned for
  * speed with JDepChk's requirements.
  */
-public final class RefsOnlyClassParser implements ClassParser {
+public final class RefsOnlyClassParser implements Closeable {
 
 	private static final int UTF8 = 1;
 	private static final int INT = 3;

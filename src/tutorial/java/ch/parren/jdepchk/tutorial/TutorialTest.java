@@ -72,7 +72,7 @@ public class TutorialTest extends AbstractTutorialTest {
 
 		/** So we run the check, gathering rule violations into a list: */
 		final Checker checker = new Checker(violationsGatherer, ruleSet);
-		checker.check(classSet);
+		classSet.accept(checker.newClassSetVisitor());
 
 		/**
 		 * The class {@link OnlyCoreJava} should pass, but {@link UsesNet}
@@ -291,7 +291,7 @@ public class TutorialTest extends AbstractTutorialTest {
 		final RuleSet ruleSet = parse(rulesLines);
 		final ClassSet classSet = new ClassesDirClassSet(new File(classDirName));
 		final Checker checker = new Checker(violationsGatherer, ruleSet);
-		checker.check(classSet);
+		classSet.accept(checker.newClassSetVisitor());
 	}
 
 	private final RuleSet parse(String[] rulesLines) {
