@@ -22,6 +22,7 @@ import ch.parren.jdepchk.classes.ClassSet;
 import ch.parren.jdepchk.classes.ClassSets;
 import ch.parren.jdepchk.classes.CombinedClassSetVisitor;
 import ch.parren.jdepchk.config.OptionsParser;
+import ch.parren.jdepchk.config.OptionsParser.ErrorReport;
 import ch.parren.jdepchk.extraction.Extractor;
 import ch.parren.jdepchk.extraction.RuleFilesManager;
 import ch.parren.jdepchk.rules.RuleSet;
@@ -233,7 +234,7 @@ public final class JDepChk {
 	}
 
 	private void parseOptions(String[] args) throws IOException, ErrorReport {
-		new OptionsParser<ErrorReport>() {
+		new OptionsParser() {
 
 			private Scope scope;
 			private RuleSetBuilder rules;
@@ -455,12 +456,6 @@ public final class JDepChk {
 				}
 		} finally {
 			r.close();
-		}
-	}
-
-	private static final class ErrorReport extends Throwable {
-		public ErrorReport(String message) {
-			super(message);
 		}
 	}
 

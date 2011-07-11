@@ -17,19 +17,19 @@ import ch.parren.jdepchk.classes.JarFileClassSet;
 import ch.parren.jdepchk.classes.JarsDirClassSet;
 import ch.parren.jdepchk.classes.SingleClassSet;
 
-public abstract class OptionsParser<T extends Throwable> {
+public abstract class OptionsParser {
 
-	public void parseCommandLine(String[] args) throws IOException, T {
+	public void parseCommandLine(String[] args) throws IOException, ErrorReport {
 		parse(New.arrayList(args).iterator(), true);
 		closeScope();
 	}
 
-	public void parseOptionsFile(File file) throws IOException, T {
+	public void parseOptionsFile(File file) throws IOException, ErrorReport {
 		parseFromFile(file);
 		closeScope();
 	}
 
-	private void parse(Iterator<String> args, boolean flagUnknown) throws IOException, T {
+	private void parse(Iterator<String> args, boolean flagUnknown) throws IOException, ErrorReport {
 		while (args.hasNext()) {
 			final String arg = args.next();
 			if ("--config-file".equals(arg) || "-f".equals(arg)) {
@@ -76,7 +76,7 @@ public abstract class OptionsParser<T extends Throwable> {
 		}
 	}
 
-	private void parseFromFile(File file) throws IOException, T {
+	private void parseFromFile(File file) throws IOException, ErrorReport {
 		parse(readFrom(file), false);
 	}
 
@@ -107,17 +107,17 @@ public abstract class OptionsParser<T extends Throwable> {
 	private Pattern COMMENT_START = Pattern.compile("(\\s|^)#");
 	private Pattern ARG_SEP = Pattern.compile("\\s");
 
-	private void startScope(String name) throws IOException, T {
+	private void startScope(String name) throws IOException, ErrorReport {
 		closeScope();
 		visitScopeStart(name);
 		inScope = true;
 	}
-	protected void startDefaultScopeIfNecessary() throws IOException, T {
+	protected void startDefaultScopeIfNecessary() throws IOException, ErrorReport {
 		if (inScope)
 			return;
 		startScope("default");
 	}
-	private void closeScope() throws IOException, T {
+	private void closeScope() throws IOException, ErrorReport {
 		closeRuleSet();
 		if (inScope)
 			visitScopeEnd();
@@ -125,18 +125,18 @@ public abstract class OptionsParser<T extends Throwable> {
 	}
 	private boolean inScope = false;
 
-	private void startRuleSet(String name) throws IOException, T {
+	private void startRuleSet(String name) throws IOException, ErrorReport {
 		startDefaultScopeIfNecessary();
 		closeRuleSet();
 		visitRuleSetStart(name);
 		inRuleSet = true;
 	}
-	private void startDefaultRuleSetIfNecessary(String name) throws IOException, T {
+	private void startDefaultRuleSetIfNecessary(String name) throws IOException, ErrorReport {
 		if (inRuleSet)
 			return;
 		startRuleSet(name);
 	}
-	private void closeRuleSet() throws IOException, T {
+	private void closeRuleSet() throws IOException, ErrorReport {
 		if (inRuleSet)
 			visitRuleSetEnd();
 		inRuleSet = false;
@@ -144,18 +144,18 @@ public abstract class OptionsParser<T extends Throwable> {
 	private boolean inRuleSet = false;
 
 	@SuppressWarnings("unused")//
-	protected void visitArg(String arg, Iterator<String> more, boolean flagUnknown) throws IOException, T {
+	protected void visitArg(String arg, Iterator<String> more, boolean flagUnknown) throws IOException, ErrorReport {
 		visitError("ERROR: Invalid command line argument: " + arg + "\n" + "Use --help to see help.");
 	}
 
-	protected void visitClasses(String spec) throws IOException, T {
+	protected void visitClasses(String spec) throws IOException, ErrorReport {
 		final File f = new File(spec);
 		if (f.isDirectory())
 			visitClassSets(new SingleClassSet(new ClassesDirClassSet(f)));
 		else
 			System.err.println("WARNING: Ignoring --classes " + f);
 	}
-	protected void visitJars(String spec) throws IOException, T {
+	protected void visitJars(String spec) throws IOException, ErrorReport {
 		final File f = new File(spec);
 		if (f.isDirectory())
 			visitClassSets(new JarsDirClassSet(true, f));
@@ -165,15 +165,22 @@ public abstract class OptionsParser<T extends Throwable> {
 			System.err.println("WARNING: Ignoring --jar(s) " + f);
 	}
 
-	protected abstract void visitScopeStart(String name) throws IOException, T;
-	protected abstract void visitClassSets(ClassSets classSets) throws IOException, T;
-	protected abstract void visitRuleSetStart(String name) throws IOException, T;
-	protected abstract void visitRuleSpec(String spec) throws IOException, T;
-	protected abstract void visitRuleSetEnd() throws IOException, T;
-	protected abstract void visitLocalRulesDir(File dir) throws IOException, T;
-	protected abstract void visitGlobalRulesDir(File dir) throws IOException, T;
-	protected abstract void visitExtractAnnotations(boolean active) throws IOException, T;
-	protected abstract void visitCheckClasses(boolean active) throws IOException, T;
-	protected abstract void visitScopeEnd() throws IOException, T;
-	protected abstract void visitError(String message) throws IOException, T;
+	protected abstract void visitScopeStart(String name) throws IOException, ErrorReport;
+	protected abstract void visitClassSets(ClassSets classSets) throws IOException, ErrorReport;
+	protected abstract void visitRuleSetStart(String name) throws IOException, ErrorReport;
+	protected abstract void visitRuleSpec(String spec) throws IOException, ErrorReport;
+	protected abstract void visitRuleSetEnd() throws IOException, ErrorReport;
+	protected abstract void visitLocalRulesDir(File dir) throws IOException, ErrorReport;
+	protected abstract void visitGlobalRulesDir(File dir) throws IOException, ErrorReport;
+	protected abstract void visitExtractAnnotations(boolean active) throws IOException, ErrorReport;
+	protected abstract void visitCheckClasses(boolean active) throws IOException, ErrorReport;
+	protected abstract void visitScopeEnd() throws IOException, ErrorReport;
+	protected abstract void visitError(String message) throws IOException, ErrorReport;
+
+	public static final class ErrorReport extends Throwable {
+		public ErrorReport(String message) {
+			super(message);
+		}
+	}
+
 }
