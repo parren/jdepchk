@@ -32,7 +32,14 @@ comp $j.rules.parser.**
 		$p.java
 		java.io
 
-comp $j.classes.**
+comp $j.classes.asm.**
+	uses:
+		$p.java
+		java.io
+
+comp $j.classes.*
+	extends:
+		$j.classes.asm
 	uses:
 		$p.java
 		java.io
