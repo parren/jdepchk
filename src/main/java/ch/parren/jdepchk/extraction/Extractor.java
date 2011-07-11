@@ -49,8 +49,8 @@ public final class Extractor {
 			@Override public boolean visitClassFile(ClassBytes classFile) throws IOException {
 				return true;
 			}
-			@Override public void visitClassReader(ClassReader classReader) throws IOException {
-				classReader.accept(reusableClassVisitor, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG);
+			@Override public void visitClassBytes(byte[] bytes) throws IOException {
+				new ClassReader(bytes).accept(reusableClassVisitor, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG);
 			}
 			@Override public void visitPackageEnd() throws IOException {}
 		};

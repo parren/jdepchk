@@ -8,8 +8,9 @@ import java.util.Stack;
 import ch.parren.java.lang.New;
 import ch.parren.jdepchk.classes.ClassBytes;
 import ch.parren.jdepchk.classes.ClassSet;
-import ch.parren.jdepchk.classes.ClassSet.Visitor;
 import ch.parren.jdepchk.classes.RefFinder;
+import ch.parren.jdepchk.classes.ClassSet.Visitor;
+import ch.parren.jdepchk.classes.RefsOnlyClassParser;
 import ch.parren.jdepchk.classes.Visibility;
 import ch.parren.jdepchk.classes.asm.ClassReader;
 import ch.parren.jdepchk.rules.RuleSet;
@@ -17,6 +18,7 @@ import ch.parren.jdepchk.rules.Scope;
 
 public final class Checker {
 
+	public static boolean useCustomParser = true;
 	public static boolean debugOutput = false;
 
 	private final ViolationListener listener;
@@ -77,25 +79,40 @@ public final class Checker {
 				}
 				return !classScopes.isEmpty();
 			}
-			
-			@Override public void visitClassReader(ClassReader classReader) throws IOException {
-				classReader.accept(refFinder.classVisitor(), 0);
+
+			@Override public void visitClassBytes(byte[] bytes) throws IOException {
+				if (useCustomParser)
+					customParse(bytes);
+				else
+					asmParse(bytes);
 			}
 
-			private final RefFinder refFinder = new RefFinder() {
-				@Override public void visitRefs(Visibility vis, SortedMap<String, Visibility> refs) {
-					for (Scope scope : classScopes) {
-						for (String refd : refs.keySet()) {
-							nContains++;
-							nSees++;
-							if (debugOutput)
-								System.out.println(refd);
-							if (!scope.allows(refd))
-								report(scope, className, refd);
-						}
+			private void customParse(byte[] bytes) throws IOException {
+				final RefsOnlyClassParser parser = new RefsOnlyClassParser(bytes);
+				final SortedMap<String, Visibility> refs = parser.referencedElementNames();
+				check(refs);
+			}
+
+			private void asmParse(byte[] bytes) {
+				new ClassReader(bytes).accept(new RefFinder() {
+					@Override public void visitRefs(Visibility ownVisibility, SortedMap<String, Visibility> refs) {
+						check(refs);
+					}
+				}.classVisitor(), 0);
+			}
+
+			private void check(final SortedMap<String, Visibility> refs) {
+				for (Scope scope : classScopes) {
+					for (String refd : refs.keySet()) {
+						nContains++;
+						nSees++;
+						if (debugOutput)
+							System.out.println(refd);
+						if (!scope.allows(refd))
+							report(scope, className, refd);
 					}
 				}
-			};
+			}
 
 			protected boolean report(Scope scope, final String name, String refd) {
 				final String[] parts = refd.split("#");

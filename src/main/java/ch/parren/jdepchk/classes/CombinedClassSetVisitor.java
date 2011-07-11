@@ -2,8 +2,6 @@ package ch.parren.jdepchk.classes;
 
 import java.io.IOException;
 
-import ch.parren.jdepchk.classes.asm.ClassReader;
-
 public class CombinedClassSetVisitor extends ClassSet.Visitor {
 
 	private static final int MAX_PACKAGE_DEPTH = 64;
@@ -39,11 +37,11 @@ public class CombinedClassSetVisitor extends ClassSet.Visitor {
 		return visit;
 	}
 	
-	@Override public void visitClassReader(ClassReader classReader) throws IOException {
+	@Override public void visitClassBytes(byte[] bytes) throws IOException {
 		if (visitingA[at])
-			a.visitClassReader(classReader);
+			a.visitClassBytes(bytes);
 		if (visitingB[at])
-			b.visitClassReader(classReader);
+			b.visitClassBytes(bytes);
 	}
 
 	@Override public void visitPackageEnd() throws IOException {

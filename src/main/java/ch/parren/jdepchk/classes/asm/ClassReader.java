@@ -377,7 +377,7 @@ public class ClassReader {
      * @return the bytecode read from the given input stream.
      * @throws IOException if a problem occurs during reading.
      */
-    private static byte[] readClass(final InputStream is) throws IOException {
+    public static byte[] readClass(final InputStream is) throws IOException {
         if (is == null) {
             throw new IOException("Class not found");
         }

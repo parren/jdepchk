@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
 
-import ch.parren.jdepchk.classes.asm.ClassReader;
-
 public abstract class AbstractClassFilesSet<C> implements ClassSet {
 
 	public static int approximateNumberOfClassesParsed = 0;
@@ -47,10 +45,48 @@ public abstract class AbstractClassFilesSet<C> implements ClassSet {
 			approximateNumberOfClassesParsed++;
 			final InputStream stream = classBytes.inputStream();
 			try {
-				visitor.visitClassReader(new ClassReader(stream));
+				visitor.visitClassBytes(readClass(stream));
 			} finally {
 				stream.close();
 			}
 		}
 	}
+
+    /**
+     * Reads the bytecode of a class.
+     * 
+     * @param is an input stream from which to read the class.
+     * @return the bytecode read from the given input stream.
+     * @throws IOException if a problem occurs during reading.
+     */
+    public static byte[] readClass(final InputStream is) throws IOException {
+        if (is == null) {
+            throw new IOException("Class not found");
+        }
+        byte[] b = new byte[is.available()];
+        int len = 0;
+        while (true) {
+            int n = is.read(b, len, b.length - len);
+            if (n == -1) {
+                if (len < b.length) {
+                    byte[] c = new byte[len];
+                    System.arraycopy(b, 0, c, 0, len);
+                    b = c;
+                }
+                return b;
+            }
+            len += n;
+            if (len == b.length) {
+                int last = is.read();
+                if (last < 0) {
+                    return b;
+                }
+                byte[] c = new byte[b.length + 1000];
+                System.arraycopy(b, 0, c, 0, len);
+                c[len++] = (byte) last;
+                b = c;
+            }
+        }
+    }
+
 }

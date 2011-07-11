@@ -35,8 +35,6 @@ THE POSSIBILITY OF SUCH DAMAGE.
 package ch.parren.jdepchk.classes;
 
 import java.io.Closeable;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
@@ -73,7 +71,6 @@ public final class RefsOnlyClassParser implements Closeable {
 	public static long nBytesUsed = 0;
 
 	private InputStream stream;
-	private boolean shouldClose = false;
 	private byte[] bytes;
 	private int accessed = 0;
 	private int read = 0;
@@ -89,11 +86,15 @@ public final class RefsOnlyClassParser implements Closeable {
 	private SortedMap<String, Visibility> refdElements = New.treeMap(); // want sorting here
 
 	public RefsOnlyClassParser(int size, InputStream stream) throws IOException {
-		this(size, stream, false);
+		this.bytes = new byte[size];
+		this.stream = stream;
+		parse();
 	}
 
-	public RefsOnlyClassParser(File file) throws IOException {
-		this((int) file.length(), new FileInputStream(file), true);
+	public RefsOnlyClassParser(byte[] bytes) throws IOException {
+		this.bytes = bytes;
+		this.read = bytes.length;
+		parse();
 	}
 
 	public SortedMap<String, Visibility> referencedElementNames() {
@@ -104,10 +105,7 @@ public final class RefsOnlyClassParser implements Closeable {
 		return visibility;
 	}
 
-	private RefsOnlyClassParser(int streamSize, InputStream stream, boolean shouldClose) throws IOException {
-		this.bytes = new byte[streamSize];
-		this.stream = stream;
-		this.shouldClose = shouldClose;
+	private void parse() throws IOException {
 
 		// Parse the constant pool.
 		final int n = readUnsignedShort(8);
@@ -480,11 +478,6 @@ public final class RefsOnlyClassParser implements Closeable {
 	}
 
 	/* @Override */public void close() throws IOException {
-		if (null == stream)
-			return;
-		if (shouldClose)
-			stream.close();
-		stream = null;
 		nFilesRead++;
 		nBytesAvail += bytes.length;
 		nBytesRead += read;
