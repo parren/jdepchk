@@ -1,0 +1,6 @@
+lib $default
+	contains java.lang.**
+
+lib com.example.a.**
+lib com.example.b.**
+	extends com.example.a

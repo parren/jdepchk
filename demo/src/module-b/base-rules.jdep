@@ -1,0 +1,5 @@
+lib $default
+	contains java.lang.**
+
+lib com.example.a.**
+ 

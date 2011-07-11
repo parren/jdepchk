@@ -1,0 +1,187 @@
+<project name="JDepExtract Demo" default="build">
+
+	<target name="build" depends="compile, extract-config, both-config" />
+
+
+	<target name="clean">
+		<delete dir="temp" />
+	</target>
+
+
+	<macrodef name="javac_">
+		<attribute name="module" />
+		<element name="addlpath" optional="true" />
+		<sequential>
+			<mkdir dir="temp/@{module}/classes" />
+			<javac srcdir="src/@{module}/java" destdir="temp/@{module}/classes" includeantruntime="false">
+				<classpath>
+					<path location="../build/jdepchk.jar" />
+					<addlpath />
+				</classpath>
+			</javac>
+		</sequential>
+	</macrodef>
+
+	<target name="compile">
+		<javac_ module="module-a" />
+		<javac_ module="module-b">
+			<addlpath>
+				<path location="temp/module-a/classes" />
+			</addlpath>
+		</javac_>
+		<javac_ module="module-c">
+			<addlpath>
+				<path location="temp/module-a/classes" />
+				<path location="temp/module-b/classes" />
+			</addlpath>
+		</javac_>
+	</target>
+
+
+	<macrodef name="extract-cmdline">
+		<attribute name="module" />
+		<sequential>
+			<!-- faster than a forked jar=... -->
+			<java classname="ch.parren.jdepchk.JDepChk">
+				<classpath>
+					<fileset dir="..">
+						<include name="build/*.jar" />
+					</fileset>
+				</classpath>
+				<arg value="--classes" />
+				<arg value="temp/@{module}/classes" />
+				<arg value="--no-check" />
+				<arg value="--extract-annotations" />
+				<arg value="--local-rules" />
+				<arg value="temp/@{module}/local-rules" />
+				<arg value="--global-rules" />
+				<arg value="temp/global-rules/@{module}" />
+			</java>
+		</sequential>
+	</macrodef>
+
+	<target name="extract-cmdline">
+		<extract-cmdline module="module-a" />
+		<extract-cmdline module="module-b" />
+		<extract-cmdline module="module-c" />
+	</target>
+
+	<macrodef name="check-cmdline">
+		<attribute name="module" />
+		<sequential>
+			<!-- faster than a forked jar=... -->
+			<java classname="ch.parren.jdepchk.JDepChk">
+				<classpath>
+					<fileset dir="..">
+						<include name="build/*.jar" />
+					</fileset>
+				</classpath>
+				<arg value="--classes" />
+				<arg value="temp/@{module}/classes" />
+				<arg value="--rule-set" />
+				<arg value="local" />
+				<arg value="--rules" />
+				<arg value="src/@{module}/base-rules.jdep" />
+				<arg value="--rules" />
+				<arg value="temp/@{module}/local-rules" />
+				<arg value="--rule-set" />
+				<arg value="global" />
+				<arg value="--rules" />
+				<arg value="temp/global-rules/*/" />
+			</java>
+		</sequential>
+	</macrodef>
+
+	<target name="check-cmdline">
+		<check-cmdline module="module-a" />
+		<check-cmdline module="module-b" />
+		<check-cmdline module="module-c" />
+	</target>
+
+	<macrodef name="both-cmdline">
+		<attribute name="module" />
+		<sequential>
+			<mkdir dir="temp/@{module}/local-rules" />
+			<mkdir dir="temp/global-rules/@{module}" />
+			<!-- faster than a forked jar=... -->
+			<java classname="ch.parren.jdepchk.JDepChk">
+				<classpath>
+					<fileset dir="..">
+						<include name="build/*.jar" />
+					</fileset>
+				</classpath>
+				<arg value="--classes" />
+				<arg value="temp/@{module}/classes" />
+				<arg value="--extract-annotations" />
+				<arg value="--local-rules" />
+				<arg value="temp/@{module}/local-rules" />
+				<arg value="--global-rules" />
+				<arg value="temp/global-rules/@{module}" />
+				<arg value="--rule-set" />
+				<arg value="local" />
+				<arg value="--rules" />
+				<arg value="src/@{module}/base-rules.jdep" />
+				<arg value="--rules" />
+				<arg value="temp/@{module}/local-rules" />
+				<arg value="--rule-set" />
+				<arg value="global" />
+				<arg value="--rules" />
+				<arg value="temp/global-rules/*/" />
+			</java>
+		</sequential>
+	</macrodef>
+
+	<target name="both-cmdline">
+		<both-cmdline module="module-a" />
+		<both-cmdline module="module-b" />
+		<both-cmdline module="module-c" />
+	</target>
+
+
+	<macrodef name="extract-config">
+		<attribute name="module" />
+		<sequential>
+			<!-- faster than a forked jar=... -->
+			<java classname="ch.parren.jdepchk.JDepChk">
+				<classpath>
+					<fileset dir="..">
+						<include name="build/*.jar" />
+					</fileset>
+				</classpath>
+				<arg value="--config-file" />
+				<arg value="src/@{module}/jdepchk.conf" />
+				<arg value="--no-check" />
+			</java>
+		</sequential>
+	</macrodef>
+
+	<target name="extract-config">
+		<extract-config module="module-a" />
+		<extract-config module="module-b" />
+		<extract-config module="module-c" />
+	</target>
+
+	<macrodef name="both-config">
+		<attribute name="module" />
+		<sequential>
+			<!-- faster than a forked jar=... -->
+			<java classname="ch.parren.jdepchk.JDepChk">
+				<classpath>
+					<fileset dir="..">
+						<include name="build/*.jar" />
+					</fileset>
+				</classpath>
+				<arg value="--config-file" />
+				<arg value="src/@{module}/jdepchk.conf" />
+			</java>
+		</sequential>
+	</macrodef>
+
+	<target name="both-config">
+		<both-config module="module-a" />
+		<both-config module="module-b" />
+		<both-config module="module-c" />
+	</target>
+
+
+</project>

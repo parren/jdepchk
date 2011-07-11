@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src/module-a/java"/>
+	<classpathentry kind="src" path="src/module-b/java"/>
+	<classpathentry kind="src" path="src/module-c/java"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/jdepchk"/>
+	<classpathentry kind="output" path="temp/eclipse"/>
+</classpath>

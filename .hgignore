@@ -4,4 +4,5 @@
 ^doc/
 ^dist/
 ^build.properties$
-
+^demo/temp/
+^demo/settings/
