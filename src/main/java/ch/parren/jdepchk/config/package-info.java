@@ -1,8 +1,6 @@
 @Checked @ExcludingSubPackages //
-@Uses({ "ch.parren.java.lang", "java.io" })//
+@Extends({ "ch.parren.jdepchk.classes", "java.io" })//
+@Uses({ "ch.parren.java.lang" })//
 package ch.parren.jdepchk.config;
 
-import ch.parren.jdepchk.annotations.Checked;
-import ch.parren.jdepchk.annotations.ExcludingSubPackages;
-import ch.parren.jdepchk.annotations.Uses;
-
+import ch.parren.jdepchk.annotations.*;

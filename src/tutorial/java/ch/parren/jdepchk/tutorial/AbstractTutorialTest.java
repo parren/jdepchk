@@ -22,7 +22,7 @@ public abstract class AbstractTutorialTest {
 	}
 
 	protected final ViolationListener violationsGatherer = new ViolationListener() {
-		@Override protected boolean report(Violation v) {
+		@Override public boolean report(Violation v) {
 			violations.add(v);
 			return true;
 		}

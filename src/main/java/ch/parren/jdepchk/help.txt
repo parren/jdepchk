@@ -52,6 +52,10 @@ DESCRIPTION
         in the given dir. Files are created, updated and deleted (!) as
         necessary.
 
+    -a, --auto-recheck
+        Automatically re-runs a pure check run if any of the extracted rule
+        files changed.
+
     --no-check
         Disables checking classes against the dependency rules.
         You typically disable checks when you want to only extract rules.

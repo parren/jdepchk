@@ -127,6 +127,7 @@
 				<arg value="global" />
 				<arg value="--rules" />
 				<arg value="temp/global-rules/*/" />
+				<arg value="--auto-recheck" />
 			</java>
 		</sequential>
 	</macrodef>

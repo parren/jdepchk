@@ -15,7 +15,7 @@ public final class MemberFilteringViolationListener extends ViolationListener {
 		this.wrapped = wrapped;
 	}
 
-	@Override final protected boolean report(Violation v) {
+	@Override final public boolean report(Violation v) {
 
 		if (!v.fromClassName.equals(lastFrom)) {
 			lastFrom = v.fromClassName;

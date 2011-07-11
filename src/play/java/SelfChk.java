@@ -19,7 +19,7 @@ public final class SelfChk {
 		final ClassSet classes = new ClassesDirClassSet(new File("temp/classes/main"));
 		final ViolationListener listener = new ViolationListener() {
 			private int nViol = 0;
-			@Override protected boolean report(Violation v) {
+			@Override public boolean report(Violation v) {
 				System.out.println(v.fromClassName + " > " + v.toClassName //
 						+ " in " + v.scope.name() //
 						+ " from " + v.ruleSet.name());

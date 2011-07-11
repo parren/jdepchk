@@ -20,7 +20,7 @@ public class JDepChkTest {
 		final ClassesDirClassSet classes = new ClassesDirClassSet(new File("temp/classes/test-examples"));
 		final StringBuilder violations = new StringBuilder();
 		final ViolationListener listener = new ViolationListener() {
-			@Override protected boolean report(Violation v) {
+			@Override public boolean report(Violation v) {
 				violations.append(v).append("\n");
 				return true;
 			}

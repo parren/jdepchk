@@ -103,13 +103,21 @@
 	<!-- Runs JDepChk on itself                                            -->
 	<!-- ================================================================= -->
 
-	<target name="check" depends="check-classes, check-jar" description="Runs JDepChk on itself">
+	<target name="check" depends="check-classes, check-jar, check-classes-anns" description="Runs JDepChk on itself">
 	</target>
 
 	<target name="check-classes" depends="jar, prepare-run" description="Runs JDepChk on its own compiled classes">
 		<java classpathref="run.classpath" classname="${run.mainclass}">
 			<arg value="--config-file" />
 			<arg file="jdepchk.conf" />
+		</java>
+	</target>
+
+	<target name="check-classes-anns" depends="jar, prepare-run" description="Runs JDepChk on its own compiled classes using annotation rules">
+		<java classpathref="run.classpath" classname="${run.mainclass}">
+			<arg value="--config-file" />
+			<arg file="jdepextract.conf" />
+			<arg value="--auto-recheck" />
 		</java>
 	</target>
 

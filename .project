@@ -20,4 +20,15 @@
 		<nature>org.eclipse.jdt.core.javanature</nature>
 		<nature>ch.parren.edepchk.core.edepchkNature</nature>
 	</natures>
+	<filteredResources>
+		<filter>
+			<id>1310389858022</id>
+			<name></name>
+			<type>10</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-demo</arguments>
+			</matcher>
+		</filter>
+	</filteredResources>
 </projectDescription>

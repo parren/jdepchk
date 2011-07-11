@@ -20,7 +20,7 @@ public final class AbaChk {
 		final ClassSets classes = new JarsDirClassSet(true, new File("/home/peo/dev/aba/trunk/abajars/jars/aba/"));
 		final ViolationListener listener = new ViolationListener() {
 			private int nViol = 0;
-			@Override protected boolean report(Violation v) {
+			@Override public boolean report(Violation v) {
 				System.out.println(v.fromClassName + " > " + v.toClassName //
 						+ " in " + v.scope.name() //
 						+ " from " + v.ruleSet.name());

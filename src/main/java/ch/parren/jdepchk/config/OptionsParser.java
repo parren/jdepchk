@@ -112,7 +112,7 @@ public abstract class OptionsParser<T extends Throwable> {
 		visitScopeStart(name);
 		inScope = true;
 	}
-	private void startDefaultScopeIfNecessary() throws IOException, T {
+	protected void startDefaultScopeIfNecessary() throws IOException, T {
 		if (inScope)
 			return;
 		startScope("default");

@@ -56,35 +56,53 @@ public final class JDepChk {
 
 	final Collection<Scope> scopes = New.arrayList();
 
+	boolean autoRecheckWhenRulesChanged = false;
 	boolean showRules = false;
 	boolean showStats = false;
 	int nMaxJobs = Runtime.getRuntime().availableProcessors() * 2;
 
 	public static void main(String[] args) throws Exception {
-		new JDepChk().run(args);
-	}
-
-	private void run(String[] args) throws Exception {
 		try {
-			parseOptions(args);
-			if (showRules)
-				showRules();
-			run();
-
+			final JDepChk chk = new JDepChk();
+			chk.parseOptions(args);
+			final CountingListener counter = new CountingListener(new PrintingListener());
+			if (chk.autoRecheckWhenRulesChanged) {
+				final BufferingListener bufferer = new BufferingListener();
+				if (chk.run(bufferer)) {
+					System.out.println("Extracted rules changed. Rechecking.");
+					final JDepChk rechk = new JDepChk();
+					rechk.parseOptions(args);
+					for (Scope scope : rechk.scopes)
+						scope.extractRules = false;
+					rechk.run(counter);
+				} else
+					bufferer.replayTo(counter);
+			} else {
+				if (chk.run(counter)) {
+					System.out.println("Extracted rules changed.");
+					System.exit(2);
+				}
+			}
+			System.out.println(counter);
+			if (counter.hasViolations())
+				System.exit(1);
 		} catch (ErrorReport report) {
 			System.err.println(report.getMessage());
+			System.exit(9);
+		} catch (Throwable report) {
+			report.printStackTrace();
 			System.exit(9);
 		}
 	}
 
-	private void run() throws IOException, InterruptedException {
+	private boolean run(final ViolationListener listener) throws Exception {
+		if (showRules)
+			showRules();
 		long taken = 0;
 		int contains = 0;
 		int sees = 0;
 		boolean hadChanges = false;
-		boolean hadViolations = false;
 		for (final Scope scope : scopes) {
-			final PrintingListener listener = scope.checkClasses ? new PrintingListener() : null;
 			final long before = System.currentTimeMillis();
 
 			final boolean isSingleThreaded = (nMaxJobs <= 1);
@@ -192,10 +210,6 @@ public final class JDepChk {
 			if (null != rulesMgr) {
 				hadChanges |= rulesMgr.finish();
 			}
-			if (null != listener) {
-				hadViolations |= listener.hasViolations();
-				System.out.println(listener);
-			}
 		}
 
 		if (showStats) {
@@ -206,10 +220,7 @@ public final class JDepChk {
 			System.out.println(AbstractClassBytes.nFilesRead + " class files read.");
 		}
 
-		if (hadChanges)
-			System.exit(2);
-		else if (hadViolations)
-			System.exit(1);
+		return hadChanges;
 	}
 
 	private void showRules() {
@@ -275,6 +286,8 @@ public final class JDepChk {
 					throws IOException, ErrorReport {
 				if ("--jobs".equals(arg)) {
 					nMaxJobs = Integer.parseInt(more.next());
+				} else if ("--auto-recheck".equals(arg) || "-a".equals(arg)) {
+					autoRecheckWhenRulesChanged = true;
 				} else if ("--show-rules".equals(arg)) {
 					showRules = true;
 				} else if ("--show-stats".equals(arg)) {
@@ -385,22 +398,44 @@ public final class JDepChk {
 		}
 	}
 
-	private static final class PrintingListener extends ViolationListener {
+	private static final class CountingListener extends ViolationListener {
+		private final ViolationListener base;
 		private int nViol = 0;
-		@Override protected synchronized boolean report(Violation v) {
-			System.out.print(v.fromClassName + " > " + v.toClassName);
-			if (null != v.toElementName)
-				System.out.print("#" + v.toElementName + "#" + v.toElementDesc);
-			System.out.println(" in " + v.scope.name() //
-					+ " from " + v.ruleSet.name());
+		public CountingListener(ViolationListener base) {
+			this.base = base;
+		}
+		@Override public synchronized boolean report(Violation v) {
 			nViol++;
-			return true;
+			return base.report(v);
 		}
 		@Override public String toString() {
 			return nViol + " violations.";
 		}
 		public boolean hasViolations() {
 			return nViol > 0;
+		}
+	}
+
+	private static final class PrintingListener extends ViolationListener {
+		@Override public synchronized boolean report(Violation v) {
+			System.out.print(v.fromClassName + " > " + v.toClassName);
+			if (null != v.toElementName)
+				System.out.print("#" + v.toElementName + "#" + v.toElementDesc);
+			System.out.println(" in " + v.scope.name() //
+					+ " from " + v.ruleSet.name());
+			return true;
+		}
+	}
+
+	private static final class BufferingListener extends ViolationListener {
+		private final Collection<Violation> violations = New.arrayList();
+		@Override public synchronized boolean report(Violation v) {
+			violations.add(v);
+			return true;
+		}
+		public void replayTo(ViolationListener listener) {
+			for (Violation v : violations)
+				listener.report(v);
 		}
 	}
 
