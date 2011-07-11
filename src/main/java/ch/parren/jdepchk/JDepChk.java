@@ -17,7 +17,7 @@ import ch.parren.jdepchk.check.Checker;
 import ch.parren.jdepchk.check.MemberFilteringViolationListener;
 import ch.parren.jdepchk.check.Violation;
 import ch.parren.jdepchk.check.ViolationListener;
-import ch.parren.jdepchk.classes.AbstractClassBytes;
+import ch.parren.jdepchk.classes.AbstractClassFilesSet;
 import ch.parren.jdepchk.classes.ClassSet;
 import ch.parren.jdepchk.classes.ClassSets;
 import ch.parren.jdepchk.classes.CombinedClassSetVisitor;
@@ -217,7 +217,8 @@ public final class JDepChk {
 			System.out.println(taken + " ms taken.");
 			System.out.println(contains + " containment checks.");
 			System.out.println(sees + " usage checks.");
-			System.out.println(AbstractClassBytes.nFilesRead + " class files read.");
+			System.out.println(AbstractClassFilesSet.approximateNumberOfClassesParsed
+					+ " class files read (approximate).");
 		}
 
 		return hadChanges;

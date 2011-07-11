@@ -8,6 +8,8 @@ import ch.parren.jdepchk.classes.asm.ClassReader;
 
 public abstract class AbstractClassFilesSet<C> implements ClassSet {
 
+	public static int approximateNumberOfClassesParsed = 0;
+	
 	private static final int CLASS_EXT_LEN = ".class".length();
 
 	protected final void accept(Visitor visitor, C context, Iterator<String> fileNames) throws IOException {
@@ -42,6 +44,7 @@ public abstract class AbstractClassFilesSet<C> implements ClassSet {
 
 	protected void acceptClassBytes(Visitor visitor, ClassBytes classBytes) throws IOException {
 		if (visitor.visitClassFile(classBytes)) {
+			approximateNumberOfClassesParsed++;
 			final InputStream stream = classBytes.inputStream();
 			try {
 				visitor.visitClassReader(new ClassReader(stream));
