@@ -48,6 +48,7 @@
 						<include name="build/*.jar" />
 					</fileset>
 				</classpath>
+				<arg value="--no-exit" />
 				<arg value="--classes" />
 				<arg value="temp/@{module}/classes" />
 				<arg value="--no-check" />
@@ -76,6 +77,7 @@
 						<include name="build/*.jar" />
 					</fileset>
 				</classpath>
+				<arg value="--no-exit" />
 				<arg value="--classes" />
 				<arg value="temp/@{module}/classes" />
 				<arg value="--rule-set" />
@@ -110,6 +112,7 @@
 						<include name="build/*.jar" />
 					</fileset>
 				</classpath>
+				<arg value="--no-exit" />
 				<arg value="--classes" />
 				<arg value="temp/@{module}/classes" />
 				<arg value="--extract-annotations" />
@@ -149,10 +152,12 @@
 						<include name="build/*.jar" />
 					</fileset>
 				</classpath>
+				<arg value="--no-exit" />
 				<arg value="--config-file" />
 				<arg value="src/@{module}/jdepchk.conf" />
 				<arg value="--no-check" />
 			</java>
+			<fail if="stderr" message="${stdout}" />
 		</sequential>
 	</macrodef>
 
@@ -172,6 +177,7 @@
 						<include name="build/*.jar" />
 					</fileset>
 				</classpath>
+				<arg value="--no-exit" />
 				<arg value="--config-file" />
 				<arg value="src/@{module}/jdepchk.conf" />
 			</java>

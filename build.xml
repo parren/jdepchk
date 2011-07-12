@@ -12,7 +12,8 @@
 	<property name="src.classes.dir" location="${src.dir}/main/java" />
 	<property name="src.tut.dir" location="${src.dir}/tutorial/java" />
 	<property name="src.test.dir" location="${src.dir}/test/java" />
-	<property name="src.test-examples.dir" location="${src.dir}/test/java-examples" />
+	<property name="src.test-examples.dir"
+	          location="${src.dir}/test/java-examples" />
 
 	<!-- Targets -->
 
@@ -20,7 +21,8 @@
 	<property name="temp.classes.dir" location="${temp.dir}/classes/main" />
 	<property name="temp.tut.dir" location="${temp.dir}/classes/tutorial" />
 	<property name="temp.test.dir" location="${temp.dir}/classes/test" />
-	<property name="temp.test-examples.dir" location="${temp.dir}/classes/test-examples" />
+	<property name="temp.test-examples.dir"
+	          location="${temp.dir}/classes/test-examples" />
 
 	<property name="build.dir" location="${basedir}/build" />
 	<property name="dist.dir" location="${basedir}/dist" />
@@ -70,8 +72,17 @@
 	<!-- Compiles the source code                                          -->
 	<!-- ================================================================= -->
 
-	<target name="compile-main" depends="prepare" description="Compiles the source code">
-		<javac srcdir="${src.classes.dir}" destdir="${temp.classes.dir}" classpath="${build.classpath}" debug="false" deprecation="on" source="${javac.source}" target="${javac.target}" includeantruntime="false">
+	<target name="compile-main"
+	        depends="prepare"
+	        description="Compiles the source code">
+		<javac srcdir="${src.classes.dir}"
+		       destdir="${temp.classes.dir}"
+		       classpath="${build.classpath}"
+		       debug="false"
+		       deprecation="on"
+		       source="${javac.source}"
+		       target="${javac.target}"
+		       includeantruntime="false">
 			<include name="ch/parren/**" />
 		</javac>
 		<copy todir="${temp.classes.dir}">
@@ -81,7 +92,9 @@
 		</copy>
 	</target>
 
-	<target name="compile" depends="prepare, compile-main" description="Compiles the source code">
+	<target name="compile"
+	        depends="prepare, compile-main"
+	        description="Compiles the source code">
 	</target>
 
 	<!-- ================================================================= -->
@@ -89,7 +102,9 @@
 	<!-- Creates jar file                                                  -->
 	<!-- ================================================================= -->
 
-	<target name="jar-main" depends="compile-main" description="Creates the main jar file">
+	<target name="jar-main"
+	        depends="compile-main"
+	        description="Creates the main jar file">
 		<jar manifest="${jar.manifest}" jarfile="${jar.file}" compress="false">
 			<fileset dir="${temp.classes.dir}" />
 		</jar>
@@ -103,26 +118,65 @@
 	<!-- Runs JDepChk on itself                                            -->
 	<!-- ================================================================= -->
 
-	<target name="check" depends="check-classes, check-jar, check-classes-anns" description="Runs JDepChk on itself">
+	<target name="check"
+	        depends="check-classes, check-jar, check-classes-anns"
+	        description="Runs JDepChk on itself">
 	</target>
 
-	<target name="check-classes" depends="jar, prepare-run" description="Runs JDepChk on its own compiled classes">
-		<java classpathref="run.classpath" classname="${run.mainclass}">
-			<arg value="--config-file" />
-			<arg file="jdepchk.conf" />
-		</java>
+	<!-- Shows how to run JDepChk from Ant in a couple of different
+	     configurations. It needs the no-exit flag to run within the
+	     same JVM as Ant, which is far faster than launching a separate
+	     JVM.
+	 -->
+	<macrodef name="jdepchk">
+		<element name="args" optional="no" />
+		<sequential>
+			<java classpath="build/jdepchk.jar"
+			      classname="ch.parren.jdepchk.JDepChk"
+			      errorproperty="stderr">
+				<arg value="--no-exit" />
+				<args />
+			</java>
+			<fail message="JDepChk error: ${stderr}">
+				<condition>
+					<length string="${stderr}" when="greater" length="0" />
+				</condition>
+			</fail>
+		</sequential>
+	</macrodef>
+
+	<target name="check-classes"
+	        depends="jar, prepare-run"
+	        description="Runs JDepChk on its own compiled classes">
+		<jdepchk>
+			<args>
+				<arg value="--config-file" />
+				<arg file="jdepchk.conf" />
+			</args>
+		</jdepchk>
 	</target>
 
-	<target name="check-classes-anns" depends="jar, prepare-run" description="Runs JDepChk on its own compiled classes using annotation rules">
-		<java classpathref="run.classpath" classname="${run.mainclass}">
-			<arg value="--config-file" />
-			<arg file="jdepextract.conf" />
-			<arg value="--auto-recheck" />
-		</java>
+	<target name="check-classes-anns"
+	        depends="jar, prepare-run"
+	        description="Runs JDepChk on its own compiled classes using annotation rules">
+		<jdepchk>
+			<args>
+				<arg value="--config-file" />
+				<arg file="jdepextract.conf" />
+				<arg value="--auto-recheck" />
+			</args>
+		</jdepchk>
 	</target>
 
-	<target name="check-jar" depends="jar-main" description="Runs JDepChk on its own jar">
-		<java jar="${jar.file}" fork="true">
+	<!-- This runs JDepChk in a separate JVM, so no tricks like no-exit
+	     are required, and it can use the startup options from the manifest
+	     in the .jar file directly. But it's a lot slower, especially on
+	     smallish projects.
+	 -->
+	<target name="check-jar"
+	        depends="jar-main"
+	        description="Runs JDepChk on its own jar">
+		<java jar="${jar.file}" fork="true" failonerror="true">
 			<arg value="--jar" />
 			<arg file="${jar.file}" />
 			<arg value="--rules" />
@@ -135,7 +189,9 @@
 	<!-- The default target                                                -->
 	<!-- ================================================================= -->
 
-	<target name="build" depends="jar, test, check" description="Builds an executable target (default)">
+	<target name="build"
+	        depends="jar, test, check"
+	        description="Builds an executable target (default)">
 	</target>
 
 	<!-- ================================================================= -->
@@ -146,7 +202,14 @@
 	<target name="compile-tests" depends="prepare-run, jar">
 		<mkdir dir="${temp.test.dir}" />
 
-		<javac srcdir="${src.test.dir}" destdir="${temp.test.dir}" classpath="${test.classpath}" debug="true" deprecation="on" source="${javac.source}" target="${javac.target}" includeantruntime="true">
+		<javac srcdir="${src.test.dir}"
+		       destdir="${temp.test.dir}"
+		       classpath="${test.classpath}"
+		       debug="true"
+		       deprecation="on"
+		       source="${javac.source}"
+		       target="${javac.target}"
+		       includeantruntime="true">
 		</javac>
 		<copy todir="${temp.test.dir}">
 			<fileset dir="${src.test.dir}">
@@ -154,19 +217,39 @@
 			</fileset>
 		</copy>
 
-		<javac srcdir="${src.tut.dir}" destdir="${temp.tut.dir}" classpath="${test.classpath}" debug="true" deprecation="on" source="${javac.source}" target="${javac.target}" includeantruntime="true">
+		<javac srcdir="${src.tut.dir}"
+		       destdir="${temp.tut.dir}"
+		       classpath="${test.classpath}"
+		       debug="true"
+		       deprecation="on"
+		       source="${javac.source}"
+		       target="${javac.target}"
+		       includeantruntime="true">
 		</javac>
 	</target>
 
 	<target name="compile-test-examples" depends="prepare-run">
 		<mkdir dir="${temp.test-examples.dir}" />
-		<javac srcdir="${src.test-examples.dir}" destdir="${temp.test-examples.dir}" source="${javac.source}" target="${javac.target}" includeantruntime="false">
+		<javac srcdir="${src.test-examples.dir}"
+		       destdir="${temp.test-examples.dir}"
+		       source="${javac.source}"
+		       target="${javac.target}"
+		       includeantruntime="false">
 		</javac>
 	</target>
 
-	<target name="test" depends="prepare-run, compile-tests, compile-test-examples" description="Runs JUnit test suites">
-		<taskdef name="junit" classname="org.apache.tools.ant.taskdefs.optional.junit.JUnitTask" classpath="${test.classpath}" />
-		<junit printsummary="yes" showoutput="no" haltonerror="yes" haltonfailure="yes" fork="yes" dir="${basedir}">
+	<target name="test"
+	        depends="prepare-run, compile-tests, compile-test-examples"
+	        description="Runs JUnit test suites">
+		<taskdef name="junit"
+		         classname="org.apache.tools.ant.taskdefs.optional.junit.JUnitTask"
+		         classpath="${test.classpath}" />
+		<junit printsummary="yes"
+		       showoutput="no"
+		       haltonerror="yes"
+		       haltonfailure="yes"
+		       fork="yes"
+		       dir="${basedir}">
 			<formatter type="plain" usefile="no" />
 			<classpath refid="test.classpath" />
 			<batchtest>
@@ -199,7 +282,9 @@
 	<!-- Removes all build files                                           -->
 	<!-- ================================================================= -->
 
-	<target name="clobber" depends="clean" description="Removes all build files">
+	<target name="clobber"
+	        depends="clean"
+	        description="Removes all build files">
 		<delete dir="${dist.dir}" />
 	</target>
 
@@ -208,22 +293,27 @@
 	<!-- Package distribution version                                      -->
 	<!-- ================================================================= -->
 
-	<target name="check-jre1.5" description="Checks that ANT is running on JRE 1.5.">
+	<target name="check-jre1.5"
+	        description="Checks that ANT is running on JRE 1.5.">
 		<condition property="is.jre15">
 			<and>
 				<equals arg1="Sun Microsystems Inc." arg2="${java.vendor}" />
 				<contains substring="1.5.0" string="${java.runtime.version}" />
 			</and>
 		</condition>
-		<fail message="Distributions must be built with Sun JDK 1.5.0, not ${java.runtime.name} ${java.runtime.version}. Aborting." unless="is.jre15" />
+		<fail message="Distributions must be built with Sun JDK 1.5.0, not ${java.runtime.name} ${java.runtime.version}. Aborting."
+		      unless="is.jre15" />
 	</target>
 
-	<target name="dist" depends="check-jre1.5, clean, build, test, check" description="Builds distribution">
+	<target name="dist"
+	        depends="check-jre1.5, clean, build, test, check"
+	        description="Builds distribution">
 		<property name="dist.name" value="${name}-${dist.version}" />
 		<property name="dist.file" value="${dist.dir}/${dist.name}" />
 
 		<property name="dist.tmp.dir" value="${dist.dir}/tmp" />
-		<property name="dist.staging.dir" value="${dist.tmp.dir}/${dist.name}" />
+		<property name="dist.staging.dir"
+		          value="${dist.tmp.dir}/${dist.name}" />
 
 		<!-- binary -->
 		<delete dir="${dist.tmp.dir}" />
@@ -239,11 +329,14 @@
 		<copy todir="${dist.staging.dir}" overwrite="yes">
 			<filterset>
 				<filter token="dist.version" value="${dist.version}" />
-				<filter token="dist.version.long" value="${dist.version.long}" />
+				<filter token="dist.version.long"
+				        value="${dist.version.long}" />
 			</filterset>
 			<fileset dir="${basedir}" includes="README.html" />
 		</copy>
-		<zip basedir="${dist.tmp.dir}" destfile="${dist.file}-bin.zip" filesonly="no" />
+		<zip basedir="${dist.tmp.dir}"
+		     destfile="${dist.file}-bin.zip"
+		     filesonly="no" />
 
 		<!-- source -->
 		<delete dir="${dist.tmp.dir}" />
@@ -265,11 +358,14 @@
 		<copy todir="${dist.staging.dir}" overwrite="yes">
 			<filterset>
 				<filter token="dist.version" value="${dist.version}" />
-				<filter token="dist.version.long" value="${dist.version.long}" />
+				<filter token="dist.version.long"
+				        value="${dist.version.long}" />
 			</filterset>
 			<fileset dir="${basedir}" includes="README.html" />
 		</copy>
-		<zip basedir="${dist.tmp.dir}" destfile="${dist.file}-src.zip" filesonly="no" />
+		<zip basedir="${dist.tmp.dir}"
+		     destfile="${dist.file}-src.zip"
+		     filesonly="no" />
 
 		<delete dir="${dist.tmp.dir}" />
 	</target>

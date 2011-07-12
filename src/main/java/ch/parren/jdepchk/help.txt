@@ -85,6 +85,11 @@ DESCRIPTION
         Shows information about number of classes inspected, and some other
         details.
 
+    --no-exit
+        Prevents JDepChk from calling System.exit(). Instead, it writes the
+        error code to stderr on a separate line. Useful for integration with
+        Apache Ant.
+
 EXIT CODES
 
     0   if no extracted rule files changed and no violations were encountered.
@@ -122,8 +127,8 @@ CONFIG FILES
           --classes temp/classes/main/
           --classes temp/classes/generated/
           --extract-annotations
-          --local-rules temp/rules/local/main/ # extract local rules here
-          --global-rules temp/rules/global/main/ # extract global rules here
+              --local-rules temp/rules/local/main/ # local rules go here
+              --global-rules temp/rules/global/main/ # global rules go here
           --rule-set local
             --rules temp/rules/local/main/    # extracted rules
             --rules src/local/base-rules.jdep # base rules defined manually

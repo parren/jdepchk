@@ -58,14 +58,17 @@ public final class JDepChk {
 	final Collection<Scope> scopes = New.arrayList();
 
 	boolean autoRecheckWhenRulesChanged = false;
+	boolean allowSysExit = true;
 	boolean showRules = false;
 	boolean showStats = false;
 	int nMaxJobs = Runtime.getRuntime().availableProcessors() * 2;
 
 	public static void main(String[] args) throws Exception {
+		boolean allowSysExit = true;
 		try {
 			final JDepChk chk = new JDepChk();
 			chk.parseOptions(args);
+			allowSysExit = chk.allowSysExit;
 			final CountingListener counter = new CountingListener(new PrintingListener());
 			if (chk.autoRecheckWhenRulesChanged) {
 				final BufferingListener bufferer = new BufferingListener();
@@ -81,18 +84,34 @@ public final class JDepChk {
 			} else {
 				if (chk.run(counter)) {
 					System.out.println("Extracted rules changed.");
-					System.exit(2);
+					if (allowSysExit)
+						System.exit(2);
+					else {
+						System.err.println("\n2");
+						return;
+					}
 				}
 			}
 			System.out.println(counter);
 			if (counter.hasViolations())
-				System.exit(1);
+				if (allowSysExit)
+					System.exit(1);
+				else {
+					System.err.println("\n1");
+					return;
+				}
 		} catch (ErrorReport report) {
 			System.err.println(report.getMessage());
-			System.exit(9);
+			if (allowSysExit)
+				System.exit(9);
+			else
+				System.err.println("\n9");
 		} catch (Throwable report) {
 			report.printStackTrace();
-			System.exit(9);
+			if (allowSysExit)
+				System.exit(9);
+			else
+				System.err.println("\n9");
 		}
 	}
 
@@ -256,15 +275,15 @@ public final class JDepChk {
 			@Override protected void visitRulesInFile(File file) throws IOException, ErrorReport {
 				parseRulesInFile(file, rules, parsed);
 			}
-			
-			@Override protected void visitRulesInDir(File dir) throws IOException ,ErrorReport {
+
+			@Override protected void visitRulesInDir(File dir) throws IOException, ErrorReport {
 				parseRulesInDir(dir, rules, parsed);
 			}
-			
-			@Override protected void visitRulesInSubDirs(File dir) throws IOException ,ErrorReport {
+
+			@Override protected void visitRulesInSubDirs(File dir) throws IOException, ErrorReport {
 				parseRulesInDir(dir, rules, parsed);
 			}
-			
+
 			@Override protected void visitRuleSetEnd() throws IOException, ErrorReport {
 				scope.ruleSets.add(rules.finish());
 				rules = null;
@@ -298,6 +317,8 @@ public final class JDepChk {
 					nMaxJobs = Integer.parseInt(more.next());
 				} else if ("--auto-recheck".equals(arg) || "-a".equals(arg)) {
 					autoRecheckWhenRulesChanged = true;
+				} else if ("--no-exit".equals(arg)) {
+					allowSysExit = false;
 				} else if ("--show-rules".equals(arg)) {
 					showRules = true;
 				} else if ("--show-stats".equals(arg)) {
