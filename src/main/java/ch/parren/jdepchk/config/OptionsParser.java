@@ -58,7 +58,15 @@ public abstract class OptionsParser {
 			} else if ("--rules".equals(arg) || "-r".equals(arg)) {
 				final String spec = args.next();
 				startDefaultRuleSetIfNecessary(spec);
-				visitRuleSpec(spec);
+				if (spec.endsWith("/*/"))
+					visitRulesInSubDirs(new File(spec.substring(0, spec.length() - 2)));
+				else {
+					final File file = new File(spec);
+					if (spec.endsWith("/") || file.isDirectory())
+						visitRulesInDir(file);
+					else
+						visitRulesInFile(file);
+				}
 
 			} else if ("--local-rules".equals(arg) || "-l".equals(arg)) {
 				startDefaultScopeIfNecessary();
@@ -173,7 +181,9 @@ public abstract class OptionsParser {
 	protected abstract void visitScopeStart(String name) throws IOException, ErrorReport;
 	protected abstract void visitClassSets(ClassSets classSets) throws IOException, ErrorReport;
 	protected abstract void visitRuleSetStart(String name) throws IOException, ErrorReport;
-	protected abstract void visitRuleSpec(String spec) throws IOException, ErrorReport;
+	protected abstract void visitRulesInFile(File file) throws IOException, ErrorReport;
+	protected abstract void visitRulesInDir(File dir) throws IOException, ErrorReport;
+	protected abstract void visitRulesInSubDirs(File dir) throws IOException, ErrorReport;
 	protected abstract void visitRuleSetEnd() throws IOException, ErrorReport;
 	protected abstract void visitLocalRulesDir(File dir) throws IOException, ErrorReport;
 	protected abstract void visitGlobalRulesDir(File dir) throws IOException, ErrorReport;

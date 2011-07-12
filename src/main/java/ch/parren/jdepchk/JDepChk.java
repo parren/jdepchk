@@ -253,10 +253,18 @@ public final class JDepChk {
 				parsed = New.hashSet();
 			}
 
-			@Override protected void visitRuleSpec(String spec) throws IOException, ErrorReport {
-				parseRulesIn(spec, rules, parsed);
+			@Override protected void visitRulesInFile(File file) throws IOException, ErrorReport {
+				parseRulesInFile(file, rules, parsed);
 			}
-
+			
+			@Override protected void visitRulesInDir(File dir) throws IOException ,ErrorReport {
+				parseRulesInDir(dir, rules, parsed);
+			}
+			
+			@Override protected void visitRulesInSubDirs(File dir) throws IOException ,ErrorReport {
+				parseRulesInDir(dir, rules, parsed);
+			}
+			
 			@Override protected void visitRuleSetEnd() throws IOException, ErrorReport {
 				scope.ruleSets.add(rules.finish());
 				rules = null;
@@ -319,39 +327,24 @@ public final class JDepChk {
 		boolean checkClasses = true;
 	}
 
-	private static void parseRulesIn(String fileOrDirPaths, RuleSetBuilder builder, Set<File> parsed)
+	public static void parseRulesInSubDirs(final File parentDir, RuleSetBuilder builder, Set<File> parsed)
 			throws IOException, ErrorReport {
-		final String[] parts = fileOrDirPaths.split("[" + File.pathSeparator + "]");
-		for (String part : parts)
-			parseRulesInPart(part, builder, parsed);
-	}
-
-	private static void parseRulesInPart(String fileOrDirPath, RuleSetBuilder builder, Set<File> parsed)
-			throws IOException, ErrorReport {
-		if (fileOrDirPath.endsWith("/*/")) {
-			final File parentDir = new File(fileOrDirPath.substring(0, fileOrDirPath.length() - "/*/".length()));
-			final FilenameFilter filter = new FilenameFilter() {
-				public boolean accept(File dir, String name) {
-					return !name.startsWith(".");
-				}
-			};
-			if (parentDir.isDirectory())
-				for (File subDir : parentDir.listFiles(filter))
-					if (subDir.isDirectory())
-						parseRulesInDir(subDir, builder, parsed);
-		} else {
-			final File fileOrDir = new File(fileOrDirPath);
-			if (!fileOrDir.exists() && fileOrDirPath.endsWith("/"))
-				; // pass
-			else if (fileOrDir.isDirectory())
-				parseRulesInDir(fileOrDir, builder, parsed);
-			else
-				parseRulesInFile(fileOrDir, builder, parsed);
-		}
+		if (!parentDir.exists())
+			return;
+		final FilenameFilter filter = new FilenameFilter() {
+			public boolean accept(File dir, String name) {
+				return !name.startsWith(".");
+			}
+		};
+		for (File subDir : parentDir.listFiles(filter))
+			if (subDir.isDirectory())
+				parseRulesInDir(subDir, builder, parsed);
 	}
 
 	private static final void parseRulesInDir(File dir, RuleSetBuilder builder, Set<File> parsed) throws IOException,
 			ErrorReport {
+		if (!dir.exists())
+			return;
 		final FilenameFilter filter = new FilenameFilter() {
 			public boolean accept(File dir, String name) {
 				return !name.startsWith(".");
