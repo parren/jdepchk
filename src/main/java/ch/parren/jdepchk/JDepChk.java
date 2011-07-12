@@ -108,7 +108,7 @@ public final class JDepChk {
 
 			final boolean isSingleThreaded = (nMaxJobs <= 1);
 			final RuleFilesManager rulesMgr = scope.extractRules ? new RuleFilesManager(scope.localExtractedRulesDir,
-					scope.globalExtractedRulesDir, "", !isSingleThreaded) : null;
+					scope.globalExtractedRulesDir, !isSingleThreaded, true) : null;
 
 			class SingleThreaded {
 

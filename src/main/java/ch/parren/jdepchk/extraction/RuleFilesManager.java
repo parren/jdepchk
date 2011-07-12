@@ -3,11 +3,13 @@ package ch.parren.jdepchk.extraction;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
+
+import ch.parren.java.lang.New;
 
 public final class RuleFilesManager {
 
@@ -15,10 +17,16 @@ public final class RuleFilesManager {
 	public final DirManager external;
 	private final DirManager[] all;
 
-	public RuleFilesManager(File internalDir, File externalDir, String filePrefix, boolean isConcurrent) {
-		internal = new DirManager(internalDir, filePrefix, isConcurrent);
-		external = new DirManager(externalDir, filePrefix, isConcurrent);
+	public RuleFilesManager(File internalDir, File externalDir, boolean isConcurrent, boolean isFullScan) {
+		internal = new DirManager(internalDir, isConcurrent, isFullScan);
+		external = new DirManager(externalDir, isConcurrent, isFullScan);
 		all = new DirManager[] { internal, external };
+	}
+
+	public void scanning(String fileName) {
+		fileName = fileName.replace('/', '.');
+		internal.scanning(fileName);
+		external.scanning(fileName);
 	}
 
 	public boolean finish() {
@@ -31,30 +39,26 @@ public final class RuleFilesManager {
 
 	public static final class DirManager {
 
+		private final File dir;
 		private final Set<String> pending;
 		private volatile boolean changed = false;
-		private final File dir;
-		private final String filePrefix;
 
-		private DirManager(File dir, String filePrefix, boolean isConcurrent) {
+		private DirManager(File dir, boolean isConcurrent, boolean isFullScan) {
 			this.dir = dir;
-			this.filePrefix = filePrefix;
-			final Set<String> s = scanDir(dir, filePrefix);
+			final Set<String> s = New.hashSet();
+			if (isFullScan && dir.isDirectory()) {
+				FilenameFilter filter = new FilenameFilter() {
+					public boolean accept(File dir, String name) {
+						return !name.startsWith(".");
+					}
+				};
+				for (String fileName : dir.list(filter))
+					s.add(fileName);
+			}
 			this.pending = isConcurrent ? Collections.synchronizedSet(s) : s;
 		}
 
-		private static HashSet<String> scanDir(File dir, String filePrefix) {
-			final HashSet<String> names = new HashSet<String>();
-			if (dir.isDirectory())
-				for (String fileName : dir.list())
-					if (fileName.startsWith(filePrefix))
-						names.add(fileName);
-			return names;
-		}
-
 		public void update(String fileName, String newText) throws IOException {
-			if (!fileName.startsWith(filePrefix))
-				throw new IllegalArgumentException(fileName);
 			dir.mkdirs();
 			final File file = new File(dir, fileName);
 			final byte[] newContents = newText.getBytes();
@@ -67,13 +71,15 @@ public final class RuleFilesManager {
 			changed = true;
 		}
 
+		public void scanning(String fileName) {
+			if (new File(dir, fileName).exists())
+				pending.add(fileName);
+		}
+
 		private boolean finish() {
-			boolean deleted = false;
-			for (String fileName : pending) {
+			for (String fileName : pending)
 				new File(dir, fileName).delete();
-				deleted = true;
-			}
-			return deleted || changed;
+			return changed || !pending.isEmpty();
 		}
 
 	}

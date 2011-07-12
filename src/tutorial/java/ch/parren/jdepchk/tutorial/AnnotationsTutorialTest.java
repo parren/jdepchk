@@ -41,11 +41,12 @@ public class AnnotationsTutorialTest extends AbstractTutorialTest {
 		final File external = new File("temp/rules/external");
 		deleteRecursively(internal);
 		deleteRecursively(external);
-		final RuleFilesManager mgr = new RuleFilesManager(internal, external, "", false);
+		final RuleFilesManager mgr = new RuleFilesManager(internal, external, false, true);
 		final Extractor extractor = new Extractor(mgr);
 		final String classDirName = "temp/classes/tutorial";
 		final ClassSet classSet = new ClassesDirClassSet(new File(classDirName));
 		classSet.accept(extractor.newClassSetVisitor());
+		mgr.finish();
 
 		/**
 		 * JDepExtract writes the extracted rules to separate files, one per
