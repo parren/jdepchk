@@ -1,0 +1,31 @@
+<project>
+
+	<macrodef name="jdepchk">
+		<element name="args" optional="no" implicit="yes" />
+		<sequential>
+			<java classpath="${jdepchk.home}/build/jdepchk.jar"
+			      classname="ch.parren.jdepchk.JDepChk"
+			      errorproperty="stderr">
+				<arg value="--no-exit" />
+				<args />
+			</java>
+			<fail message="JDepChk error: ${stderr}">
+				<condition>
+					<length string="${stderr}" when="greater" length="0" />
+				</condition>
+			</fail>
+		</sequential>
+	</macrodef>
+
+	<macrodef name="jdepchk-nofail">
+		<element name="args" optional="no" implicit="yes" />
+		<sequential>
+			<java classpath="${jdepchk.home}/build/jdepchk.jar"
+			      classname="ch.parren.jdepchk.JDepChk">
+				<arg value="--no-exit" />
+				<args />
+			</java>
+		</sequential>
+	</macrodef>
+
+</project>

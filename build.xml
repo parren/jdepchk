@@ -126,33 +126,19 @@
 	<!-- Shows how to run JDepChk from Ant in a couple of different
 	     configurations. It needs the no-exit flag to run within the
 	     same JVM as Ant, which is far faster than launching a separate
-	     JVM.
+	     JVM. All of this is encapsulated in the file build-macro.jdepchk.xml
+	     for you. It needs jdepchk.home to point to your install dir for
+	     jdepchk.
 	 -->
-	<macrodef name="jdepchk">
-		<element name="args" optional="no" />
-		<sequential>
-			<java classpath="build/jdepchk.jar"
-			      classname="ch.parren.jdepchk.JDepChk"
-			      errorproperty="stderr">
-				<arg value="--no-exit" />
-				<args />
-			</java>
-			<fail message="JDepChk error: ${stderr}">
-				<condition>
-					<length string="${stderr}" when="greater" length="0" />
-				</condition>
-			</fail>
-		</sequential>
-	</macrodef>
+	<property name="jdepchk.home" value="${basedir}" />
+	<include file="${jdepchk.home}/build-macro-jdepchk.xml" />
 
 	<target name="check-classes"
 	        depends="jar, prepare-run"
 	        description="Runs JDepChk on its own compiled classes">
 		<jdepchk>
-			<args>
-				<arg value="--config-file" />
-				<arg file="jdepchk.conf" />
-			</args>
+			<arg value="--config-file" />
+			<arg file="jdepchk.conf" />
 		</jdepchk>
 	</target>
 
@@ -160,11 +146,9 @@
 	        depends="jar, prepare-run"
 	        description="Runs JDepChk on its own compiled classes using annotation rules">
 		<jdepchk>
-			<args>
-				<arg value="--config-file" />
-				<arg file="jdepextract.conf" />
-				<arg value="--auto-recheck" />
-			</args>
+			<arg value="--config-file" />
+			<arg file="jdepextract.conf" />
+			<arg value="--auto-recheck" />
 		</jdepchk>
 	</target>
 
@@ -323,6 +307,7 @@
 				<include name="README" />
 				<include name="LICENSE" />
 				<include name="build/jdepchk.jar" />
+				<include name="build-macro-*.xml" />
 				<exclude name="**/.DS_Store" />
 			</fileset>
 		</copy>
@@ -348,6 +333,7 @@
 				<include name="src/**" />
 				<include name="build.xml" />
 				<include name="build.default.properties" />
+				<include name="build-macro-*.xml" />
 				<include name=".project" />
 				<include name=".classpath" />
 				<include name=".hgignore" />

@@ -3,6 +3,10 @@
 	<target name="build" depends="compile, extract-config, both-config" />
 
 
+	<property name="jdepchk.home" value=".." />
+	<include file="${jdepchk.home}/build-macro-jdepchk.xml" />
+
+
 	<target name="clean">
 		<delete dir="temp" />
 	</target>
@@ -13,7 +17,9 @@
 		<element name="addlpath" optional="true" />
 		<sequential>
 			<mkdir dir="temp/@{module}/classes" />
-			<javac srcdir="src/@{module}/java" destdir="temp/@{module}/classes" includeantruntime="false">
+			<javac srcdir="src/@{module}/java"
+			       destdir="temp/@{module}/classes"
+			       includeantruntime="false">
 				<classpath>
 					<path location="../build/jdepchk.jar" />
 					<addlpath />
@@ -41,14 +47,7 @@
 	<macrodef name="extract-cmdline">
 		<attribute name="module" />
 		<sequential>
-			<!-- faster than a forked jar=... -->
-			<java classname="ch.parren.jdepchk.JDepChk">
-				<classpath>
-					<fileset dir="..">
-						<include name="build/*.jar" />
-					</fileset>
-				</classpath>
-				<arg value="--no-exit" />
+			<jdepchk-nofail>
 				<arg value="--classes" />
 				<arg value="temp/@{module}/classes" />
 				<arg value="--no-check" />
@@ -57,7 +56,7 @@
 				<arg value="temp/@{module}/local-rules" />
 				<arg value="--global-rules" />
 				<arg value="temp/global-rules/@{module}" />
-			</java>
+			</jdepchk-nofail>
 		</sequential>
 	</macrodef>
 
@@ -70,14 +69,7 @@
 	<macrodef name="check-cmdline">
 		<attribute name="module" />
 		<sequential>
-			<!-- faster than a forked jar=... -->
-			<java classname="ch.parren.jdepchk.JDepChk">
-				<classpath>
-					<fileset dir="..">
-						<include name="build/*.jar" />
-					</fileset>
-				</classpath>
-				<arg value="--no-exit" />
+			<jdepchk-nofail>
 				<arg value="--classes" />
 				<arg value="temp/@{module}/classes" />
 				<arg value="--rule-set" />
@@ -90,7 +82,7 @@
 				<arg value="global" />
 				<arg value="--rules" />
 				<arg value="temp/global-rules/*/" />
-			</java>
+			</jdepchk-nofail>
 		</sequential>
 	</macrodef>
 
@@ -105,14 +97,7 @@
 		<sequential>
 			<mkdir dir="temp/@{module}/local-rules" />
 			<mkdir dir="temp/global-rules/@{module}" />
-			<!-- faster than a forked jar=... -->
-			<java classname="ch.parren.jdepchk.JDepChk">
-				<classpath>
-					<fileset dir="..">
-						<include name="build/*.jar" />
-					</fileset>
-				</classpath>
-				<arg value="--no-exit" />
+			<jdepchk-nofail>
 				<arg value="--classes" />
 				<arg value="temp/@{module}/classes" />
 				<arg value="--extract-annotations" />
@@ -131,7 +116,7 @@
 				<arg value="--rules" />
 				<arg value="temp/global-rules/*/" />
 				<arg value="--auto-recheck" />
-			</java>
+			</jdepchk-nofail>
 		</sequential>
 	</macrodef>
 
@@ -145,19 +130,11 @@
 	<macrodef name="extract-config">
 		<attribute name="module" />
 		<sequential>
-			<!-- faster than a forked jar=... -->
-			<java classname="ch.parren.jdepchk.JDepChk">
-				<classpath>
-					<fileset dir="..">
-						<include name="build/*.jar" />
-					</fileset>
-				</classpath>
-				<arg value="--no-exit" />
+			<jdepchk-nofail>
 				<arg value="--config-file" />
 				<arg value="src/@{module}/jdepchk.conf" />
 				<arg value="--no-check" />
-			</java>
-			<fail if="stderr" message="${stdout}" />
+			</jdepchk-nofail>
 		</sequential>
 	</macrodef>
 
@@ -171,16 +148,10 @@
 		<attribute name="module" />
 		<sequential>
 			<!-- faster than a forked jar=... -->
-			<java classname="ch.parren.jdepchk.JDepChk">
-				<classpath>
-					<fileset dir="..">
-						<include name="build/*.jar" />
-					</fileset>
-				</classpath>
-				<arg value="--no-exit" />
+			<jdepchk-nofail>
 				<arg value="--config-file" />
 				<arg value="src/@{module}/jdepchk.conf" />
-			</java>
+			</jdepchk-nofail>
 		</sequential>
 	</macrodef>
 
