@@ -6,7 +6,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/** Restricts usage of this element to specific types. */
+/**
+ * Restricts usage of this element to specific scopes.
+ */
 @Target({ ElementType.PACKAGE, ElementType.TYPE, ElementType.ANNOTATION_TYPE, ElementType.FIELD, ElementType.METHOD })//
 @Retention(RetentionPolicy.CLASS)//
 @Documented//
