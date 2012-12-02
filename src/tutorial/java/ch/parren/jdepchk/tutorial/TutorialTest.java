@@ -43,11 +43,12 @@ public class TutorialTest extends AbstractTutorialTest {
 				"		java.**", // again via a prefix glob
 				"		! java.net.**", // and another, but negated
 				"", //
-				"rule: containment", "	applies-to:", // we confine the base package to see only itself within the package and its subs
+				"rule: containment",
+				"	applies-to:", // we confine the base package to see only itself within the package and its subs
 				"		ch.parren.jdepchk.tutorial.examples.*", // specified using a glob that doesn't see subpackages
 				"	allows:", //
 				"		! ch.parren.jdepchk.tutorial.examples.**", // starting with a negated rule allows everything else by default
-				"		xthis", // "this" refers to the "applies-to" or "contains" filter of the current rule
+				"		this", // "this" refers to the "applies-to" or "contains" filter of the current rule
 				"", //
 		};
 
@@ -97,7 +98,7 @@ public class TutorialTest extends AbstractTutorialTest {
 		 * <em>components</em>. The classes in components are checked by
 		 * JDepChk, those in libraries are not. But libraries can still be
 		 * referenced.
-		 * 
+		 *
 		 * For example, {@code com.example.foo.ui} might only be allowed to see
 		 * core Java, Swing, and {@code com.example.foo.core}. Here are the
 		 * corresponding definitions for JDepChk:
@@ -137,7 +138,7 @@ public class TutorialTest extends AbstractTutorialTest {
 				 * The UI, however, can see $default, and the core and Swing. We
 				 * specify this with a {@code uses:} clause, in which you
 				 * reference other components by listing their names.
-				 * 
+				 *
 				 * Note: With rules we used {@code allows}, not {@uses}.
 				 * The former directly specifies patterns, the latter refers to
 				 * other components. A component can actually have an
@@ -163,7 +164,7 @@ public class TutorialTest extends AbstractTutorialTest {
 	 * component using said API will also depend on what the API references. To
 	 * avoid having to repeat these dependencies for every user of the API,
 	 * JDepChk supports transient uses. They are written {@code extends:}.
-	 * 
+	 *
 	 * Say we have a component XMLSetup that centralizes the parsing of XML for
 	 * us. So it returns XML DOMs. Clearly, then, the API depends on Java's XML
 	 * support:
