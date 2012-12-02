@@ -19,7 +19,7 @@ public class ScopeBuilder extends AbstractScopeBuilder {
 		return this;
 	}
 
-	public final ScopeBuilder allows(FilterBuilder... filters) {
+	public ScopeBuilder allows(FilterBuilder... filters) {
 		for (FilterBuilder f : filters)
 			allows.add(f);
 		return this;

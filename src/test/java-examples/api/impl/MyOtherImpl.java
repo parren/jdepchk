@@ -1,9 +1,9 @@
 package api.impl;
 
-public class MyImpl {
+public class MyOtherImpl {
 
 	public void foo() {
-		// Illegal reference
+		// Reference granted by exceptional rule.
 		Class clazz = javax.net.SocketFactory.class;
 	}
 

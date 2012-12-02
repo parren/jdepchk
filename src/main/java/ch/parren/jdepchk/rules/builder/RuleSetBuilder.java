@@ -37,12 +37,20 @@ public final class RuleSetBuilder {
 	}
 
 	public ComponentBuilder lib(String name) {
-		final ComponentBuilder def = new ComponentBuilder(this, subst(name));
+		return lib(null, name);
+	}
+
+	public ComponentBuilder lib(ComponentBuilder parent, String name) {
+		final ComponentBuilder def = new ComponentBuilder(parent, this, subst(name));
 		return (ComponentBuilder) define(referenceScope(def.name, def));
 	}
 
 	public ComponentBuilder comp(String name) {
-		return check(lib(name));
+		return comp(null, name);
+	}
+
+	public ComponentBuilder comp(ComponentBuilder parent, String name) {
+		return check(lib(parent, name));
 	}
 
 	ComponentBuilder ref(String name) {

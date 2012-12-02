@@ -29,8 +29,9 @@ public class JDepChkTest {
 		classes.accept(checker.newClassSetVisitor());
 		assertEquals("" + //
 				"user/MyUser > api/impl/MyImpl\n" + //
-				"user/MyUser > api/impl/MyImpl#<init>#()V\n" + // 
+				"user/MyUser > api/impl/MyImpl#<init>#()V\n" + //
 				"api/BadRefByIntf > api/impl/MyImpl\n" + //
+				"api/impl/MyImpl > javax/net/SocketFactory\n" + //
 				"api/BadRefByClass > api/impl/MyImpl\n" //
 		, violations.toString());
 	}
@@ -45,6 +46,9 @@ public class JDepChkTest {
 		;
 		b.comp("api.impl.**") //
 				.extend("api") //
+				.except("api.impl.MyOtherImpl") //
+					.allows(b.prefix("javax.net.")) //
+				.done() //
 		;
 		b.comp("api.impl.one.**") //
 				.extend("api") //
