@@ -16,4 +16,8 @@ public class UsesBytes {
 		}
 	}
 
+	public void usesNet() {
+		UsesNet foo = new UsesNet();
+	}
+
 }

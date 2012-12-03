@@ -1,0 +1,14 @@
+# Exceptions (example from tests):
+
+lib: $default
+	contains: java.lang.**
+
+comp: api.*
+	uses: api.impl
+except: api.Foo
+	allows: java.net.**
+
+comp: api.impl.**
+	extends: api
+except api.impl.FooImpl
+	allows: java.net.**

@@ -40,6 +40,8 @@ TOKEN:
 	|	< Allows: "allows" >
 	|	< Extends: "extends" >
 	|	< Uses: "uses" >
+	|	< Except: "except" >
+	|	< End: "end" >
 	|	< This: "this" >
 	|	< Not: "!" >
 	|	< Intro: ":" > // optionally separates arguments from names
@@ -55,7 +57,7 @@ void ruleSet():
 		|	rule()
 		|	lib()
 		|	comp()
-		)*	
+		)*
 		<EOF>
 	}
 
@@ -85,7 +87,7 @@ void scopeBody(ScopeBuilder scope):
 	{
 			(<Contains> | <AppliesTo>) [<Intro>] filters(scope.containsFilters())
 		|	<Allows> [<Intro>] filters(scope.allowsFilters())
-	}	
+	}
 
 void lib():
 	{
@@ -107,6 +109,7 @@ void comp():
 		<Comp> [<Intro>] name=id()
 			{ comp = builder.comp(name); }
 		compBody(comp)
+		excepts(comp)
 	}
 
 void compBody(ComponentBuilder comp):
@@ -138,6 +141,24 @@ void use(ComponentBuilder comp):
 		)+
 	}
 
+void excepts(ComponentBuilder comp):
+	{}
+	{
+		(	<Except> [<Intro>] except(comp)
+		)*
+	}
+
+void except(ComponentBuilder comp):
+	{
+		String name;
+		ComponentBuilder exception;
+	}
+	{
+		name=id()
+			{ exception = comp.except(name); }
+		compBody(exception)
+	}
+
 void filters(Collection<FilterBuilder> filters):
 	{}
 	{
@@ -153,7 +174,7 @@ void filter(Collection<FilterBuilder> filters):
 		|	<Not> filter=spec()
 				{ filter = filter.not(); }
 		)
-			{ filters.add(filter); } 
+			{ filters.add(filter); }
 	}
 
 FilterBuilder spec():

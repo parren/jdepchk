@@ -104,7 +104,7 @@ public class ComponentBuilder extends ScopeBuilder {
 		for (ComponentBuilder exception : exceptions) {
 			// default for exceptions is to contain their name as prefix, assuming a class reference
 			if (exception.contains.isEmpty()) {
-				exception.contains.add(this.ruleSet.prefix(exception.name));
+				exception.contains.add(this.ruleSet.glob(exception.name));
 			}
 			for (FilterBuilder exceptionContains : exception.contains) {
 				contains.add(exceptionContains.not());

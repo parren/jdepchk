@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.StringReader;
 
 import org.junit.Test;
+import org.junit.experimental.theories.Theories;
 
 import ch.parren.jdepchk.check.Checker;
 import ch.parren.jdepchk.classes.ClassSet;
@@ -246,6 +247,61 @@ public class TutorialTest extends AbstractTutorialTest {
 		assertEquals("org/w3c/dom/Node", violations.get(1).toClassName);
 	}
 	// ---- cite
+
+	/**
+	 * You can define exceptional rules for a subset of patterns in a component.
+	 * This is handy when, for instance, only a single class needs java.net:
+	 */
+	@Test public void exceptions() throws Exception {
+
+		final String[] baseRulesLines = { "", //
+
+				/**
+				 * The default allows only java.lang/io.**.
+				 */
+				"lib: $default", //
+				"  contains:", //
+				"    java.lang.**", //
+				"    java.io.**", //
+
+				/**
+				 * The component uses $default lib only, so UsesNet gets flagged
+				 * because it uses java.net.
+				 */
+				"comp: com.example.members.**", //
+		};
+
+		check(baseRulesLines, "temp/classes/tutorial");
+		assertEquals(1, violations.size());
+		assertEquals("com/example/members/UsesNet", violations.get(0).fromClassName);
+		assertEquals("java/net/Socket", violations.get(0).toClassName);
+		violations.clear();
+
+		final String[] rulesLines = { "", //
+
+				"lib: $default", //
+				"  contains:", //
+				"    java.lang.**", //
+				"    java.io.**", //
+
+				/**
+				 * Now we allow UsesNet to use java.net.** in addition. Note
+				 * that UsesNet is still in scope for the main component, so
+				 * UsesBytes can access UsesNet:
+				 */
+				"comp: com.example.members.**", //
+				"except: com.example.members.UsesNet", //
+				"  allows: java.net.**", //
+
+				/**
+				 * "Except" clauses always follow the component they apply to. Currently
+				 * there is no way to nest exceptions.
+				 */
+		};
+
+		check(rulesLines, "temp/classes/tutorial");
+		assertEquals(0, violations.size());
+	}
 
 	/**
 	 * Sometimes you want to forbid access to only particulars members of types,

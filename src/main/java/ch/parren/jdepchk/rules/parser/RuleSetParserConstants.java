@@ -37,17 +37,21 @@ public interface RuleSetParserConstants {
   /** RegularExpression Id. */
   int Uses = 17;
   /** RegularExpression Id. */
-  int This = 18;
+  int Except = 18;
   /** RegularExpression Id. */
-  int Not = 19;
+  int End = 19;
   /** RegularExpression Id. */
-  int Intro = 20;
+  int This = 20;
   /** RegularExpression Id. */
-  int Bullet = 21;
+  int Not = 21;
   /** RegularExpression Id. */
-  int Id = 22;
+  int Intro = 22;
   /** RegularExpression Id. */
-  int RegExp = 23;
+  int Bullet = 23;
+  /** RegularExpression Id. */
+  int Id = 24;
+  /** RegularExpression Id. */
+  int RegExp = 25;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -72,6 +76,8 @@ public interface RuleSetParserConstants {
     "\"allows\"",
     "\"extends\"",
     "\"uses\"",
+    "\"except\"",
+    "\"end\"",
     "\"this\"",
     "\"!\"",
     "\":\"",
