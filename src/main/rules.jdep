@@ -35,6 +35,8 @@ comp $j.rules.parser.**
 comp $j.classes.asm.**
 	uses:
 		$p.java
+except $j.classes.asm.ClassReader
+	uses:
 		java.io
 
 comp $j.classes.*
