@@ -1,9 +1,8 @@
 package ch.parren.jdepchk.rules.builder;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.LinkedList;
+import java.util.ListIterator;
 import java.util.Set;
 
 import ch.parren.java.lang.New;
@@ -18,13 +17,14 @@ public class ComponentBuilder extends ScopeBuilder {
 	private final Set<ComponentBuilder> used = New.linkedHashSet();
 	private final Set<ComponentBuilder> exceptions = New.linkedHashSet();
 
-	// Aliased to "contains" normally, but independent for exceptions.
-	protected List<FilterBuilder> exports = this.contains;
-
 	private final RuleSetBuilder ruleSet;
 	private final ComponentBuilder parent;
 
-	private boolean prepared = false;
+	private static enum Done { NONE, DEFAULTS, DEPENDENCIES, EXCEPTIONS };
+
+	private Done done = Done.NONE;
+
+	boolean isComponent;
 
 	ComponentBuilder(RuleSetBuilder ruleSet, String name) {
 		this(null, ruleSet, name);
@@ -58,15 +58,7 @@ public class ComponentBuilder extends ScopeBuilder {
 
 	public ComponentBuilder except(String componentName) {
 		ComponentBuilder exception = this.ruleSet.comp(this, componentName);
-		exception.allows.addAll(this.exports);
-		exception.allows.addAll(this.allows);
-
-		if (exceptions.isEmpty()) {
-			// freeze "exports" but allow "contains" to be reduced
-			exports = new ArrayList<FilterBuilder>(contains);
-		}
 		this.exceptions.add(exception);
-
 		return exception;
 	}
 
@@ -81,7 +73,7 @@ public class ComponentBuilder extends ScopeBuilder {
 	void extend(ComponentBuilder comp) {
 		checkNotThis(comp);
 		extended.add(comp);
-		if (!used.isEmpty()) // already checked
+		if (isComponent)
 			used.add(comp);
 	}
 
@@ -95,10 +87,53 @@ public class ComponentBuilder extends ScopeBuilder {
 			throw new IllegalArgumentException(comp + " refers to itself.");
 	}
 
-	@Override protected void prepare(RuleSet ruleSet) {
-		if (prepared)
+	@Override protected void prepareDefaults(RuleSet ruleSet, ComponentBuilder defaultLib) {
+		if (done.ordinal() >= Done.DEFAULTS.ordinal())
 			return;
-		prepared = true;
+		done = Done.DEFAULTS;
+
+		if (!isComponent)
+			return;
+
+		for (ComponentBuilder exception : exceptions) {
+			// exceptions duplicate their host's usage
+			exception.used.add(this);
+			exception.used.addAll(used);
+			addFirst(exception.allows, allows);
+			// default for exceptions is to contain their name as prefix, assuming a class reference
+			if (exception.contains.isEmpty()) {
+				exception.contains.add(this.ruleSet.glob(exception.name));
+			}
+		}
+
+		// components see themselves by default
+		addFirst(allows, contains);
+		addFirst(allows, defaultLib.contains);
+	}
+
+	@Override protected void prepareDependencies(RuleSet ruleSet) {
+		if (done.ordinal() >= Done.DEPENDENCIES.ordinal())
+			return;
+		done = Done.DEPENDENCIES;
+
+		final Set<ComponentBuilder> seen = New.hashSet();
+		seen.add(this);
+		for (ComponentBuilder u : used)
+			closeOver(u, seen, allows);
+	}
+
+	private void closeOver(ComponentBuilder comp, Set<ComponentBuilder> seen, Collection<FilterBuilder> allows) {
+		if (!seen.add(comp))
+			return;
+		allows.addAll(comp.contains);
+		for (ComponentBuilder e : comp.extended)
+			closeOver(e, seen, allows);
+	}
+
+	@Override protected void prepareExceptions(RuleSet ruleSet) {
+		if (done.ordinal() >= Done.EXCEPTIONS.ordinal())
+			return;
+		done = Done.EXCEPTIONS;
 
 		// components don't contain their exceptions
 		for (ComponentBuilder exception : exceptions) {
@@ -110,31 +145,15 @@ public class ComponentBuilder extends ScopeBuilder {
 				contains.add(exceptionContains.not());
 			}
 		}
-
-		if (!used.isEmpty()) {
-			// components see themselves by default
-			final List<FilterBuilder> rev = New.arrayList(exports);
-			Collections.reverse(rev);
-			for (FilterBuilder it : rev)
-				allows.addFirst(it);
-		}
-
-		final Set<ComponentBuilder> seen = New.hashSet();
-		seen.add(this);
-		for (ComponentBuilder u : used)
-			closeOver(u, seen, allows);
-	}
-
-	private void closeOver(ComponentBuilder comp, Set<ComponentBuilder> seen, Collection<FilterBuilder> allows) {
-		if (!seen.add(comp))
-			return;
-		allows.addAll(comp.exports);
-		for (ComponentBuilder e : comp.extended)
-			closeOver(e, seen, allows);
 	}
 
 	@Override public String toString() {
 		return "component " + name;
 	}
 
+	private static <E> void addFirst(LinkedList<? super E> to, LinkedList<? extends E> what) {
+		ListIterator<? extends E> it = what.listIterator(what.size());
+		while (it.hasPrevious())
+			to.addFirst(it.previous());
+	}
 }

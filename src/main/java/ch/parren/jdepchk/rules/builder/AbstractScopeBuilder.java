@@ -45,7 +45,13 @@ public abstract class AbstractScopeBuilder {
 	}
 
 	@SuppressWarnings("unused")//
-	protected void prepare(RuleSet ruleSet) {}
+	protected void prepareDependencies(RuleSet ruleSet) {}
+
+	@SuppressWarnings("unused")//
+	protected void prepareExceptions(RuleSet ruleSet) {}
+
+	@SuppressWarnings("unused")//
+	protected void prepareDefaults(RuleSet ruleSet, ComponentBuilder defaultLib) {}
 
 	final void finish(RuleSet ruleSet) {
 		final CompositeClassFileFilter allows = buildAllows();

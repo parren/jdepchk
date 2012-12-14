@@ -1,7 +1,7 @@
 # Exceptions (example from tests):
 
 lib: $default
-	contains: java.lang.**
+	contains: java.lang.** !java.lang.StringBuffer
 
 comp: api.*
 	uses: api.impl
@@ -11,4 +11,4 @@ except: api.Foo
 comp: api.impl.**
 	extends: api
 except api.impl.FooImpl
-	allows: java.net.**
+	allows: java.net.** java.lang.StringBuffer

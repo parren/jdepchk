@@ -50,7 +50,9 @@ public final class RuleSetBuilder {
 	}
 
 	public ComponentBuilder comp(ComponentBuilder parent, String name) {
-		return check(lib(parent, name));
+		ComponentBuilder builder = lib(parent, name);
+		builder.isComponent = true;
+		return builder;
 	}
 
 	ComponentBuilder ref(String name) {
@@ -63,11 +65,6 @@ public final class RuleSetBuilder {
 		for (String[] def : defs)
 			res = res.replace(def[0], def[1]);
 		return res;
-	}
-
-	private ComponentBuilder check(ComponentBuilder scope) {
-		scope.use(defaultLib);
-		return scope;
 	}
 
 	private AbstractScopeBuilder define(AbstractScopeBuilder scope) {
@@ -125,7 +122,11 @@ public final class RuleSetBuilder {
 				throw new IllegalStateException("The " + refd + " has not been defined.");
 		final RuleSet ruleSet = new RuleSet(name);
 		for (AbstractScopeBuilder defd : scopesInDefinitionOrder)
-			defd.prepare(ruleSet);
+			defd.prepareDefaults(ruleSet, defaultLib);
+		for (AbstractScopeBuilder defd : scopesInDefinitionOrder)
+			defd.prepareDependencies(ruleSet);
+		for (AbstractScopeBuilder defd : scopesInDefinitionOrder)
+			defd.prepareExceptions(ruleSet);
 		for (AbstractScopeBuilder defd : scopesInDefinitionOrder)
 			defd.finish(ruleSet);
 		return ruleSet;

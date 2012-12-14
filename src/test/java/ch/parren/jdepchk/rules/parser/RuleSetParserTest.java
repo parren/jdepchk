@@ -66,37 +66,37 @@ public class RuleSetParserTest {
 				"		.contains: composite; default: false\n" + //
 				"				pattern: api/[^/]*([#].*$|$)\n" + //
 				"		.allows: composite; default: false\n" + //
-				"				pattern: api/[^/]*([#].*$|$)\n" + //
 				"				prefix: java/\n" + //
+				"				pattern: api/[^/]*([#].*$|$)\n" + //
 				"				prefix: api/impl/\n" + //
 				"	scope api.impl\n" + //
 				"		.contains: composite; default: false\n" + //
 				"				prefix: api/impl/\n" + //
 				"		.allows: composite; default: false\n" + //
-				"				prefix: api/impl/\n" + //
 				"				prefix: java/\n" + //
+				"				prefix: api/impl/\n" + //
 				"				pattern: api/[^/]*([#].*$|$)\n" + //
 				"	scope api.impl.one\n" + //
 				"		.contains: composite; default: false\n" + //
 				"				prefix: api/impl/one/\n" + //
 				"		.allows: composite; default: false\n" + //
-				"				prefix: api/impl/one/\n" + //
 				"				prefix: java/\n" + //
+				"				prefix: api/impl/one/\n" + //
 				"				pattern: api/[^/]*([#].*$|$)\n" + //
 				"	scope api.impl.two\n" + //
 				"		.contains: composite; default: false\n" + //
 				"				prefix: api/impl/two/\n" + //
 				"		.allows: composite; default: false\n" + //
-				"				prefix: api/impl/two/\n" + //
 				"				prefix: java/\n" + //
+				"				prefix: api/impl/two/\n" + //
 				"				pattern: api/[^/]*([#].*$|$)\n" + //
 				"				prefix: api/impl/one/\n" + //
 				"	scope user\n" + //
 				"		.contains: composite; default: false\n" + //
 				"				prefix: user/\n" + //
 				"		.allows: composite; default: false\n" + //
-				"				prefix: user/\n" + //
 				"				prefix: java/\n" + //
+				"				prefix: user/\n" + //
 				"				pattern: api/[^/]*([#].*$|$)\n" + //
 				"", set.describe());
 	}
@@ -118,33 +118,40 @@ public class RuleSetParserTest {
 				"				pattern: api/[^/]*([#].*$|$)\n" + //
 				"				not pattern: api/Foo([#].*$|$)\n" + //
 				"		.allows: composite; default: false\n" + //
-				"				pattern: api/[^/]*([#].*$|$)\n" + //
 				"				prefix: java/lang/\n" + //
+				"				not pattern: java/lang/StringBuffer([#].*$|$)\n" + //
+				"				pattern: api/[^/]*([#].*$|$)\n" + //
 				"				prefix: api/impl/\n" + //
 				"	scope api.Foo\n" + //
 				"		.contains: composite; default: false\n" + //
 				"				pattern: api/Foo([#].*$|$)\n" + //
 				"		.allows: composite; default: false\n" + //
-				"				pattern: api/Foo([#].*$|$)\n" + //
-				"				pattern: api/[^/]*([#].*$|$)\n" + //
-				"				prefix: java/net/\n" + //
 				"				prefix: java/lang/\n" + //
+				"				not pattern: java/lang/StringBuffer([#].*$|$)\n" + //
+				"				pattern: api/Foo([#].*$|$)\n" + //
+				"				prefix: java/net/\n" + //
+				"				pattern: api/[^/]*([#].*$|$)\n" + //
+				"				prefix: api/impl/\n" + //
 				"	scope api.impl\n" + //
 				"		.contains: composite; default: false\n" + //
 				"				prefix: api/impl/\n" + //
 				"				not pattern: api/impl/FooImpl([#].*$|$)\n" + //
 				"		.allows: composite; default: false\n" + //
-				"				prefix: api/impl/\n" + //
 				"				prefix: java/lang/\n" + //
+				"				not pattern: java/lang/StringBuffer([#].*$|$)\n" + //
+				"				prefix: api/impl/\n" + //
 				"				pattern: api/[^/]*([#].*$|$)\n" + //
 				"	scope api.impl.FooImpl\n" + //
 				"		.contains: composite; default: false\n" + //
 				"				pattern: api/impl/FooImpl([#].*$|$)\n" + //
 				"		.allows: composite; default: false\n" + //
-				"				pattern: api/impl/FooImpl([#].*$|$)\n" + //
-				"				prefix: api/impl/\n" + //
-				"				prefix: java/net/\n" + //
 				"				prefix: java/lang/\n" + //
+				"				not pattern: java/lang/StringBuffer([#].*$|$)\n" + //
+				"				pattern: api/impl/FooImpl([#].*$|$)\n" + //
+				"				prefix: java/net/\n" + //
+				"				pattern: java/lang/StringBuffer([#].*$|$)\n" + //
+				"				prefix: api/impl/\n" + //
+				"				pattern: api/[^/]*([#].*$|$)\n" + //
 				"", set.describe());
 	}
 
